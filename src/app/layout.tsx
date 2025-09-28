@@ -13,7 +13,7 @@ import "@/app/styles/index.css";
 // });
 
 export const metadata: Metadata = {
-	title: "Personal Website",
+	title: "Adam - Personal Website",
 	description: "Adam的个人网站",
 };
 
