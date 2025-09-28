@@ -1,0 +1,105 @@
+{
+	// 全局包管理器
+	"npm.packageManager": "pnpm",
+
+	// 文件识别
+	"files.associations": {
+		"*.css": "postcss",
+		"*.md": "markdown",
+		"*.mdx": "mdx"
+	},
+
+	// 缩进格式
+	"editor.tabSize": 4,
+	"editor.insertSpaces": false,
+	"editor.renderWhitespace": "all",
+
+	// 保存时自动格式化
+	"editor.formatOnSave": false,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit",
+		"source.fixAll.stylelint": "explicit",
+		"source.fixAll.markdownlint": "explicit"
+	},
+
+	// TS和React
+	"typescript.suggest.enabled": true,
+	"javascript.suggest.enabled": true,
+	"javascript.preferences.importModuleSpecifier": "shortest",
+	"typescript.validate.enable": true,
+	"typescript.suggest.jsdoc.generateReturns": false,
+	// "typescript.preferences.quoteStyle": "single",
+	// "javascript.preferences.quoteStyle": "single",
+	"[prisma]": {
+		"editor.defaultFormatter": "Prisma.prisma",
+		"editor.formatOnSave": true
+	},
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "dbaeumer.vscode-eslint"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	// 静态文件格式化
+	"[html]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[yaml]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[mdx]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[markdown]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+
+	// CSS
+	"[css]": {
+		"editor.defaultFormatter": "stylelint.vscode-stylelint"
+	},
+	"css.validate": false,
+	"less.validate": false,
+	"scss.validate": false,
+	"postcss.validate": false,
+	"emmet.includeLanguages": {
+		"postcss": "css"
+	},
+	"tailwindCSS.validate": false,
+	"stylelint.enable": true,
+	"stylelint.packageManager": "pnpm",
+	"stylelint.snippet": ["css", "scss", "less", "postcss"],
+	"stylelint.validate": ["css", "scss", "less", "postcss"],
+
+	// Copilot提示与vscode代码提示的冲突解决
+	// 确保默认补全提供程序都启用
+	"editor.inlineSuggest.enabled": true, // 启用内联建议(Copilot)
+	"editor.suggestSelection": "first", // 默认选择第一个建议
+	"editor.quickSuggestions": {
+		// 启用快速建议
+		"other": true,
+		"comments": false,
+		"strings": true
+	},
+	"github.copilot.enable": {
+		"*": true,
+		"plaintext": false,
+		"markdown": false,
+		"scminput": false
+	},
+	"yaml.maxItemsComputed": 50000,
+	"tailwindCSS.experimental.configFile": "src/app/styles/tailwind.css"
+}

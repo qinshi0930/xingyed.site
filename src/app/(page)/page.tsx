@@ -1,0 +1,12 @@
+export default function Home() {
+	return (
+		<div>
+			<h1>这是标题1</h1>
+			<h2>这是标题2</h2>
+			<h3>这是标题3</h3>
+			<h4>这是标题4</h4>
+			<h5>这是标题5</h5>
+			<h6>这是标题6</h6>
+		</div>
+	);
+}

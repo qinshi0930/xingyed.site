@@ -1,0 +1,25 @@
+@theme {
+	/* 默认字体 */
+	--font-base:
+		-apple-system, blinkmacsystemfont, tahoma, arial, "Hiragino Sans GB", "Microsoft YaHei",
+		"WenQuanYi Micro Hei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+		"Noto Color Emoji";
+
+	/* 霞鹜文楷字体 */
+	--font-lxgw:
+		"LXGW WenKai", "楷体", "STKaiti", -apple-system, blinkmacsystemfont, tahoma, arial,
+		"Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif,
+		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+	/* 霞鹜文楷等宽字体 */
+	--font-lxgw-mono:
+		"LXGW WenKai Mono", "楷体", "STKaiti", -apple-system, blinkmacsystemfont, tahoma, arial,
+		"Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif,
+		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+	/* 默认代码字体 */
+	--font-code:
+		"Fira Code", -apple-system, blinkmacsystemfont, tahoma, arial, "Hiragino Sans GB",
+		"Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+		"Segoe UI Symbol", "Noto Color Emoji";
+}
