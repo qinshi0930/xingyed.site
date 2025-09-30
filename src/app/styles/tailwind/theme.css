@@ -22,4 +22,11 @@
 		"Fira Code", -apple-system, blinkmacsystemfont, tahoma, arial, "Hiragino Sans GB",
 		"Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
 		"Segoe UI Symbol", "Noto Color Emoji";
+
+	/** 谷歌字体 */
+	--font-geist-sans: "Geist", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
+
+	/** 谷歌等宽字体 */
+	--font-geist-mono:
+		"Geist Mono", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
 }

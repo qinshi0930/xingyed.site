@@ -1,0 +1,7 @@
+@utility page-container {
+	@apply max-w-[90%] md:max-w-[80%];
+}
+
+@utility page-item {
+	@apply flex flex-auto flex-col max-w-[100%] items-center;
+}
