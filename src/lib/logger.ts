@@ -1,3 +1,4 @@
+// eslint-disable-next-line unused-imports/no-unused-vars
 type LogLevel = "log" | "error" | "warn" | "info";
 
 interface Logger {
