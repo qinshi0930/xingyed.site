@@ -1,3 +1,11 @@
+@import "./fonts/fira-code.css";
+@import "./fonts/lxgwwenkai-regular.css";
+@import "./fonts/lxgwwenkaimono-regular.css";
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark, .dark *, [data-theme=dark], [data-theme=dark] *));
+
 @theme inline {
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -34,6 +42,9 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
+	--color-scrollbar-track: var(--scrollbar-track);
+	--color-scrollbar-thumb: var(--scrollbar-thumb);
+	--color-scrollbar-corner: var(--scrollbar-corner);
 }
 
 :root {
@@ -69,10 +80,14 @@
 	--sidebar-accent-foreground: oklch(21% 0.006 285.885deg);
 	--sidebar-border: oklch(92% 0.004 286.32deg);
 	--sidebar-ring: oklch(70.5% 0.015 286.067deg);
+	--scrollbar-size: 0.25rem;
+	--scrollbar-track: oklch(96.7% 0.003 264.542deg);
+	--scrollbar-thumb: oklch(87.2% 0.01 258.338deg);
+	--scrollbar-corner: oklch(96.7% 0.003 264.542deg);
 }
 
 .dark {
-	--background: oklch(14.1% 0.005 285.823deg);
+	--background: oklch(20.1% 0.005 285.823deg);
 	--foreground: oklch(98.5% 0 0deg);
 	--card: oklch(21% 0.006 285.885deg);
 	--card-foreground: oklch(98.5% 0 0deg);
@@ -103,6 +118,43 @@
 	--sidebar-accent-foreground: oklch(98.5% 0 0deg);
 	--sidebar-border: oklch(100% 0 0deg / 10%);
 	--sidebar-ring: oklch(55.2% 0.016 285.938deg);
+	--scrollbar-size: 0.25rem;
+	--scrollbar-track: oklch(27.4% 0.006 286.033deg);
+	--scrollbar-thumb: oklch(44.2% 0.017 285.786deg);
+	--scrollbar-corner: oklch(27.4% 0.006 286.033deg);
+}
+
+@theme {
+	/* 默认字体 */
+	--font-base:
+		-apple-system, blinkmacsystemfont, tahoma, arial, "Hiragino Sans GB", "Microsoft YaHei",
+		"WenQuanYi Micro Hei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+		"Noto Color Emoji";
+
+	/* 霞鹜文楷字体 */
+	--font-lxgw:
+		"LXGW WenKai", "楷体", "STKaiti", -apple-system, blinkmacsystemfont, tahoma, arial,
+		"Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif,
+		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+	/* 霞鹜文楷等宽字体 */
+	--font-lxgw-mono:
+		"LXGW WenKai Mono", "楷体", "STKaiti", -apple-system, blinkmacsystemfont, tahoma, arial,
+		"Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif,
+		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+	/* 默认代码字体 */
+	--font-code:
+		"Fira Code", -apple-system, blinkmacsystemfont, tahoma, arial, "Hiragino Sans GB",
+		"Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+		"Segoe UI Symbol", "Noto Color Emoji";
+
+	/** 谷歌字体 */
+	--font-geist-sans: "Geist", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
+
+	/** 谷歌等宽字体 */
+	--font-geist-mono:
+		"Geist Mono", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
 }
 
 @layer base {
@@ -110,7 +162,93 @@
 		@apply border-border outline-ring/50;
 	}
 
+	html {
+		font-size: 100%;
+	}
+
+	/* 以下为自定义样式 */
+
+	html,
+	body {
+		@apply font-base h-[100vh] w-full p-0 m-0;
+	}
+
 	body {
 		@apply bg-background text-foreground;
 	}
+
+	body {
+		@apply text-lg;
+	}
+
+	h1 {
+		@apply text-3xl;
+	}
+
+	h2 {
+		@apply text-2xl;
+	}
+
+	h3 {
+		@apply text-xl;
+	}
+
+	h4 {
+		@apply text-lg;
+	}
+
+	h5 {
+		@apply text-sm;
+	}
+
+	h6 {
+		@apply text-xs;
+	}
+
+	button,
+	[role="button"] {
+		cursor: pointer;
+	}
+
+	:disabled {
+		cursor: default;
+	}
+
+	* {
+		scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+		scrollbar-width: thin;
+	}
+
+	@supports selector(::-webkit-scrollbar) {
+		* {
+			scrollbar-color: initial;
+			scrollbar-width: initial;
+		}
+
+		::-webkit-scrollbar {
+			width: var(--scrollbar-size);
+			height: var(--scrollbar-size);
+		}
+
+		::-webkit-scrollbar-track {
+			background: var(--scrollbar-track);
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: var(--scrollbar-thumb);
+			border-radius: var(--radius-sm);
+		}
+
+		::-webkit-scrollbar-corner {
+			background: var(--scrollbar-corner);
+		}
+	}
+}
+
+@utility page-container {
+	@apply max-w-[90%] md:max-w-[80%] h-screen mx-auto;
+}
+
+@utility page-item {
+	@apply flex flex-auto flex-col max-w-[100%] items-center;
 }
