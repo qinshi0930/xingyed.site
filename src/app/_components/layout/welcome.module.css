@@ -1,0 +1,13 @@
+@reference "#globals.css";
+
+.welcome {
+	@apply hidden gap-x-2 items-center justify-center p-1.5 shadow-lg xl:flex;
+}
+
+.welcomePrimary {
+	@apply bg-linear-to-r from-orange-200 to-red-300;
+}
+
+:where([data-theme="dark"]) .welcomePrimary {
+	@apply border-b border-neutral-800 bg-linear-to-t from-purple-600 to-indigo-500;
+}
