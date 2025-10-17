@@ -10,6 +10,7 @@ import { cn } from "@/app/_components/shadcn/utils";
 import ThemeToggle from "@/app/_components/theme/theme-toggle";
 import { useScroll } from "@/hooks/useScroll";
 
+import { Divider } from "../divider";
 import Navigate from "../navigate/navigate";
 
 function SidebarHeader() {
@@ -104,12 +105,12 @@ function SidebarFooter() {
 
 export default function AppSidebar() {
 	return (
-		<aside id="siderbar" className="lg:sticky lg:top-0 lg:py-8">
+		<div id="siderbar" className="lg:sticky lg:top-0 lg:py-8">
 			<SidebarHeader />
-			<div className="border-b my-4"></div>
+			<Divider />
 			<Navigate />
-			<div className="border-b my-4"></div>
+			<Divider />
 			<SidebarFooter />
-		</aside>
+		</div>
 	);
 }

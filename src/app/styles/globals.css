@@ -173,7 +173,7 @@
 
 	html,
 	body {
-		@apply font-lxgw h-[100vh] w-full p-0 m-0;
+		@apply font-lxgw p-0 m-0;
 	}
 
 	body {
@@ -252,12 +252,12 @@
 	}
 }
 
-@utility page-container {
-	@apply mt-20 mb-10 lg:mt-0 p-8;
+@utility wrapper {
+	@apply w-full h-[100vh];
 }
 
-@utility page-item {
-	@apply flex flex-auto flex-col max-w-[100%] items-center;
+@utility page-container {
+	@apply mt-20 mb-10 lg:mt-0 p-8;
 }
 
 @utility graph-primary {
