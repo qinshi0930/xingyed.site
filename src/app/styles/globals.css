@@ -253,11 +253,15 @@
 }
 
 @utility page-container {
-	@apply max-w-[90%] md:max-w-[80%] h-screen mx-auto;
+	@apply mt-20 mb-10 lg:mt-0 p-8;
 }
 
 @utility page-item {
 	@apply flex flex-auto flex-col max-w-[100%] items-center;
+}
+
+@utility graph-primary {
+	@apply text-[1rem] leading-[1.8] md:leading-loose text-neutral-800 dark:text-neutral-300;
 }
 
 @keyframes wave {

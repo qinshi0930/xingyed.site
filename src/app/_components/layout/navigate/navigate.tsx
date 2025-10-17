@@ -25,15 +25,15 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-	{ href: "#Home", label: "Home", icon: "house" },
-	{ href: "#Dashboard", label: "Dashboard", icon: "cpu" },
-	{ href: "#Project", label: "Project", icon: "coffee" },
-	{ href: "#Blog", label: "Blog", icon: "rss" },
-	{ href: "#Weekly", label: "Weekly", icon: "layers" },
-	{ href: "#Cheatsheet", label: "Cheatsheet", icon: "code" },
-	{ href: "#Learn", label: "Learn", icon: "bookOpen" },
-	{ href: "#About", label: "About", icon: "user" },
-	{ href: "#Contact", label: "Contact", icon: "mail" },
+	{ href: "/", label: "Home", icon: "house" },
+	{ href: "/dashboard", label: "Dashboard", icon: "cpu" },
+	{ href: "/projects", label: "Projects", icon: "coffee" },
+	{ href: "/blog", label: "Blog", icon: "rss" },
+	{ href: "/weekly", label: "Weekly", icon: "layers" },
+	{ href: "/cheatsheet", label: "Cheatsheet", icon: "code" },
+	{ href: "/learn", label: "Learn", icon: "bookOpen" },
+	{ href: "/about", label: "About", icon: "user" },
+	{ href: "/contact", label: "Contact", icon: "mail" },
 ];
 
 export default function Navigate() {
