@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 
+import { Divider } from "@/app/_components/layout";
+import ProjectGrid from "@/app/_components/project-grid";
+
 const _TITLE = "Projects";
 
 export const metadata: Metadata = {
@@ -10,11 +13,16 @@ export const metadata: Metadata = {
 export default function Projects() {
 	return (
 		<div className="page-container">
-			<h2>{_TITLE}</h2>
-			<p className="graph-primary pt-2">
-				Several projects that I have worked on, both private and open source.
-			</p>
-			<div className="border-b border-dashed border-neutral-600 mt-6"></div>
+			<header>
+				<h1>{_TITLE}</h1>
+				<p className="graph-primary pt-2">
+					Several projects that I have worked on, both private and open source.
+				</p>
+			</header>
+			<Divider className="mt-6" />
+			<section>
+				<ProjectGrid />
+			</section>
 		</div>
 	);
 }

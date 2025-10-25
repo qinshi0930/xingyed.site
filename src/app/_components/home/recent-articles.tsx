@@ -1,39 +1,14 @@
 "use client";
 
 import { Calendar } from "lucide-react";
-import { useEffect, useState } from "react";
 
-import type { BlogPost } from "@/lib/seed/faker-generator";
-
-import { generateRandomBlogPosts } from "@/lib/seed/faker-generator";
+import blogs from "@/lib/seed/data/blogs.json";
 
 export default function RecentArticles() {
-	const [posts, setPosts] = useState<BlogPost[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [count, setCount] = useState<number>(5); // 默认生成5篇
-
-	// 模拟异步加载数据
-	useEffect(() => {
-		let isMounted = true;
-
-		const loadPosts = () => {
-			if (isMounted) {
-				const generatedPosts = generateRandomBlogPosts(count);
-				setPosts(generatedPosts);
-			}
-		};
-
-		loadPosts();
-
-		return () => {
-			isMounted = false;
-		};
-	}, [count]); // 当 count 改变时重新生成
-
 	return (
 		<div className="flex flex-row p-1 gap-4 overflow-x-auto scrollbar-hide scroll-smooth">
-			{posts.length > 0 &&
-				posts.map((post) => (
+			{blogs.length > 0 &&
+				blogs.map((post) => (
 					<div
 						key={post.id}
 						className="rounded-xl bg-blue-700/70 shadow-xl border-1 p-4 h-100"
@@ -55,11 +30,14 @@ export default function RecentArticles() {
 									<div className="flex flex-row items-center space-x-1">
 										<Calendar className="scale-75" />
 										<div className="text-xs">
-											{post.publishDate.toLocaleDateString("zh-CN", {
-												year: "numeric",
-												month: "long",
-												day: "numeric",
-											})}
+											{new Date(post.publishDate).toLocaleDateString(
+												"zh-CN",
+												{
+													year: "numeric",
+													month: "long",
+													day: "numeric",
+												},
+											)}
 										</div>
 									</div>
 									<div className="line-clamp-5 text-sm">{post.content}</div>

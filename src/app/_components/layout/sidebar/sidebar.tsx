@@ -14,7 +14,7 @@ import { Divider } from "../divider";
 import Navigate from "../navigate/navigate";
 
 function SidebarHeader() {
-	const isScrolled = useScroll(10);
+	const isScrolled = useScroll(20);
 
 	return (
 		<div className="flex items-start justify-between lg:flex-col lg:space-y-4 md:px-2">

@@ -20,7 +20,7 @@ interface BlogPost {
  * @param count 要生成的博客文章数量
  * @returns 包含随机博客文章的数组
  */
-function generateRandomBlogPosts(count: number): BlogPost[] {
+async function generateRandomBlogPosts(count: number) {
 	// 确保 count 是有效的正整数
 	if (count <= 0) {
 		return [];
