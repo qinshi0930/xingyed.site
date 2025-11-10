@@ -1,47 +1,38 @@
 import type { Metadata } from "next";
 
-import { siGithub } from "simple-icons/icons";
+import { SWRConfig } from "swr";
 
-import { Divider } from "@/app/_components/layout";
+import Container from "@/common/components/elements/Container";
+import PageHeading from "@/common/components/elements/PageHeading";
+import Dashboard from "@/modules/dashboard";
+import { getGithubUser } from "@/services/github";
 
-const _TITLE = "Dashboard";
+const PAGE_TITLE = "Dashboard";
+const PAGE_DESCRIPTION =
+	"This is my personal dashboard, built with Next.js API routes deployed as serverless functions.";
 
 export const metadata: Metadata = {
-	title: `${_TITLE} - Personal Site`,
-	description: "Adam 的个人博客网站",
+	title: `${PAGE_TITLE} - Ryan Aulia`,
+	description: PAGE_DESCRIPTION,
 };
 
-export default function Dashboard() {
+const DashboardPage = async () => {
+	const githubUserPersonal = await getGithubUser("personal");
+
 	return (
-		<div className="page-container">
-			<header>
-				<h1>{_TITLE}</h1>
-				<p className="graph-primary pt-2">
-					This is my personal dashboard, built with Next.js API routes deployed as
-					serverless functions.
-				</p>
-			</header>
-			<Divider className="border-dashed mt-6" />
-			<section className="flex flex-col gap-2">
-				<div className="flex items-center gap-2">
-					<div className="size-5">
-						<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-							<title>GitHub</title>
-							<path d={siGithub.path} fill="currentColor" />
-						</svg>
-					</div>
-					<h2>Contributions</h2>
-				</div>
-				<div className="flex justify-between items-center">
-					<p className="graph-primary text-lg">
-						My contributions from last year on github.
-					</p>
-					<small>@qinshi1333</small>
-				</div>
-				<div>
-					<p className="graph-primary text-lg">No Data</p>
-				</div>
-			</section>
-		</div>
+		<SWRConfig
+			value={{
+				fallback: {
+					"/api/github?type=personal": githubUserPersonal?.data,
+				},
+			}}
+		>
+			<Container data-aos="fade-up">
+				<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
+				<Dashboard />
+			</Container>
+		</SWRConfig>
 	);
-}
+};
+
+export default DashboardPage;

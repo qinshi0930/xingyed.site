@@ -1,28 +1,51 @@
-import type { Metadata } from "next";
+import type { ProjectItemProps } from "@/common/types/projects";
 
-import { Divider } from "@/app/_components/layout";
-import ProjectGrid from "@/app/_components/project-grid";
+import Container from "@/common/components/elements/Container";
+import EmptyState from "@/common/components/elements/EmptyState";
+import PageHeading from "@/common/components/elements/PageHeading";
+import Projects from "@/modules/projects";
+import prisma from "@/prisma/prisma";
 
-const _TITLE = "Projects";
+// interface ProjectsPageProps {
+// 	projects: ProjectItemProps[];
+// }
 
-export const metadata: Metadata = {
-	title: `${_TITLE} - Personal Site`,
-	description: "Adam 的个人博客网站",
-};
+const PAGE_TITLE = "Projects";
+const PAGE_DESCRIPTION = "Several projects that I have worked on, both private and open source.";
 
-export default function Projects() {
+async function getProjects(): Promise<ProjectItemProps[]> {
+	const response = await prisma.projects.findMany({
+		orderBy: [
+			{
+				is_featured: "desc",
+			},
+			{
+				updated_at: "desc",
+			},
+		],
+	});
+
+	return JSON.parse(JSON.stringify(response));
+}
+
+export default async function ProjectsPage() {
+	const projects = await getProjects();
+	const filteredProjects = projects?.filter((project) => project?.is_show);
+	// const [visibleProjects, setVisibleProjects] = useState(6);
+
+	// const loadMore = () => setVisibleProjects((prev) => prev + 2);
+	// const hasMore = visibleProjects < projects.length;
+
+	if (filteredProjects?.length === 0) {
+		return <EmptyState message="No Data" />;
+	}
+
 	return (
-		<div className="page-container">
-			<header>
-				<h1>{_TITLE}</h1>
-				<p className="graph-primary pt-2">
-					Several projects that I have worked on, both private and open source.
-				</p>
-			</header>
-			<Divider className="mt-6" />
-			<section>
-				<ProjectGrid />
-			</section>
-		</div>
+		<>
+			<Container data-aos="fade-up">
+				<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
+				<Projects projects={filteredProjects} />
+			</Container>
+		</>
 	);
 }

@@ -4,6 +4,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* @import "../../mdx/styles/index.css"; */
+
 @custom-variant dark (&:is(.dark, .dark *, [data-theme=dark], [data-theme=dark] *));
 
 @theme inline {
@@ -155,9 +157,6 @@
 	/** 谷歌等宽字体 */
 	--font-geist-mono:
 		"Geist Mono", -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
-
-	/** animation */
-	--animate-waving-hand: wave 2s linear infinite;
 }
 
 @layer base {
@@ -264,36 +263,80 @@
 	@apply text-[1rem] leading-[1.8] md:leading-loose text-neutral-800 dark:text-neutral-300;
 }
 
-@keyframes wave {
-	0% {
-		transform: rotate(0);
+code[class*="language-"],
+pre[class*="language-"] {
+	@apply font-code;
+}
+
+/** custom animations **/
+@theme {
+	--animate-waving-hand: wave 2s linear infinite;
+	--animate-flying-card: flying 3s infinite normal;
+	--animate-badge-pulse: badge 1.5s ease-out infinite;
+	--animate-looping-tag: loop 100s linear infinite;
+
+	@keyframes wave {
+		0% {
+			transform: rotate(0);
+		}
+
+		10% {
+			transform: rotate(14deg);
+		}
+
+		20% {
+			transform: rotate(-8deg);
+		}
+
+		30% {
+			transform: rotate(14deg);
+		}
+
+		40% {
+			transform: rotate(-4deg);
+		}
+
+		50% {
+			transform: rotate(10deg);
+		}
+
+		60% {
+			transform: rotate(0);
+		}
+
+		100% {
+			transform: rotate(0);
+		}
 	}
 
-	10% {
-		transform: rotate(14deg);
+	@keyframes flying {
+		0% {
+			transform: translateY(0);
+		}
+
+		50% {
+			transform: translateY(0.5rem);
+		}
+
+		100% {
+			transform: translateY(0);
+		}
 	}
 
-	20% {
-		transform: rotate(-8deg);
+	@keyframes badge {
+		100% {
+			opacity: 0;
+			transform: scaleY(1.7) scaleX(1.25);
+		}
 	}
 
-	30% {
-		transform: rotate(14deg);
-	}
+	@keyframes loop {
+		0% {
+			transform: translateX(0);
+		}
 
-	40% {
-		transform: rotate(-4deg);
-	}
-
-	50% {
-		transform: rotate(10deg);
-	}
-
-	60% {
-		transform: rotate(0);
-	}
-
-	100% {
-		transform: rotate(0);
+		100% {
+			transform: translateX(-50%);
+		}
 	}
 }

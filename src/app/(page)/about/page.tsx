@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
 
-const _TITLE = "About";
-// const _TITLE = "开发速查表";
+import Container from "@/common/components/elements/Container";
+import PageHeading from "@/common/components/elements/PageHeading";
+import About from "@/modules/about";
+
+const PAGE_TITLE = "About";
+const PAGE_DESCRIPTION =
+	"An insightful glimpse into who I am – because every detail adds depth to the canvas of life.";
 
 export const metadata: Metadata = {
-	title: `${_TITLE} - Personal Site`,
-	description: "Adam 的个人博客网站",
+	title: `${PAGE_TITLE} - Adam`,
+	description: `${PAGE_DESCRIPTION}`,
 };
 
-export default function About() {
+const AboutPage = () => {
 	return (
-		<div className="page-container">
-			<h2>{_TITLE}</h2>
-			<p className="graph-primary pt-2">
-				A short story of me, not important but seem better than nothing.
-			</p>
-			<div className="border-b border-dashed border-neutral-600 mt-6"></div>
-		</div>
+		<>
+			<Container data-aos="fade-up">
+				<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
+				<About />
+			</Container>
+		</>
 	);
-}
+};
+
+export default AboutPage;

@@ -10,6 +10,7 @@
 			"@/*": ["./src/*"]
 		},
 		"resolveJsonModule": true,
+		"types": ["node", "@prisma/client"],
 		"allowJs": true,
 		"strict": true,
 		"noEmit": true,
@@ -27,7 +28,7 @@
 		"**/*.ts",
 		"**/*.tsx",
 		".next/types/**/*.ts",
-		"src/mdx/components/index.tss"
+		"src/common/mdx/components/index.tss"
 	],
 	"exclude": ["node_modules"]
 }

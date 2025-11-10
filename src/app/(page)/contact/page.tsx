@@ -1,22 +1,27 @@
 import type { Metadata } from "next";
 
-const _TITLE = "Contact";
-// const _TITLE = "开发速查表";
+import Container from "@/common/components/elements/Container";
+import PageHeading from "@/common/components/elements/PageHeading";
+import Contact from "@/modules/contact";
+
+const PAGE_TITLE = "Contact";
+const PAGE_DESCRIPTION =
+	"Feel free to get in touch and let's have a discussion about how we can work together.";
 
 export const metadata: Metadata = {
-	title: `${_TITLE} - Personal Site`,
-	description: "Adam 的个人博客网站",
+	title: `${PAGE_TITLE} - Adam`,
+	description: `${PAGE_DESCRIPTION}`,
 };
 
-export default function Contact() {
+const ContactPage = () => {
 	return (
-		<div className="page-container">
-			<h2>{_TITLE}</h2>
-			<p className="graph-primary pt-2">
-				Feel free to get in touch and let's have a discussion about how we can work
-				together.
-			</p>
-			<div className="border-b border-dashed border-neutral-600 mt-6"></div>
-		</div>
+		<>
+			<Container data-aos="fade-up">
+				<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
+				<Contact />
+			</Container>
+		</>
 	);
-}
+};
+
+export default ContactPage;

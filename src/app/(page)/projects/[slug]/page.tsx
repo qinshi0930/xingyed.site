@@ -1,36 +1,55 @@
-import { isNil } from "lodash";
 import { notFound } from "next/navigation";
 
-import type { ProjectSchema } from "@/lib/seed/generators/projects";
+import BackButton from "@/common/components/elements/BackButton";
+import Container from "@/common/components/elements/Container";
+import PageHeading from "@/common/components/elements/PageHeading";
+import ProjectDetail from "@/modules/projects/components/ProjectDetail";
+import prisma from "@/prisma/prisma";
 
-import projects from "@/lib/seed/data/projects.json";
-import MDXRenderer from "@/mdx/mdxRenderer";
-
-function getProjectBySlug(slug: string): ProjectSchema | undefined {
-	return projects.find((value) => value.slug === slug);
-}
+// interface ProjectsDetailPageProps {
+// 	project: ProjectItemProps;
+// }
 
 export async function generateStaticParams() {
-	const slugs = projects.map((post) => ({
-		slug: post.slug,
+	const projects = await prisma.projects.findMany({
+		select: {
+			slug: true,
+		},
+	});
+
+	return projects.map((project) => ({
+		slug: project.slug,
 	}));
-	return slugs;
 }
 
-function MDXContet({ content }: { content: string }) {
-	return <MDXRenderer source={content} />;
+async function getProject(slug: string) {
+	const response = await prisma.projects.findUnique({
+		where: {
+			slug,
+		},
+	});
+
+	if (!response) {
+		notFound();
+	}
+
+	return JSON.parse(JSON.stringify(response));
 }
 
-// export default async function ProjectDetail(props: PageProps<"/projects/[slug]">) {
-export default async function ProjectDetail({ params }: { params: Promise<{ slug: string }> }) {
+async function ProjectsDetailPage({ params }: { params: Promise<{ slug: string }> }) {
 	const { slug } = await params;
-	const post = getProjectBySlug(slug);
+	const project = await getProject(slug);
+	const PAGE_TITLE = project?.title;
+	const PAGE_DESCRIPTION = project?.description;
 
 	return (
-		<div className="page-container">
-			<div className="text-wrap overflow-hidden">
-				{isNil(post) ? notFound() : <MDXContet content={post.content} />}
-			</div>
-		</div>
+		<>
+			<Container data-aos="fade-up">
+				<BackButton url="/projects" />
+				<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
+				<ProjectDetail {...project} />
+			</Container>
+		</>
 	);
 }
+export default ProjectsDetailPage;

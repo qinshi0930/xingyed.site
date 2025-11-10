@@ -1,22 +1,29 @@
 import type { Metadata } from "next";
 
-const _TITLE = "Learn";
-// const _TITLE = "开发速查表";
+import Container from "@/common/components/elements/Container";
+import PageHeading from "@/common/components/elements/PageHeading";
+import { LEARN_CONTENTS } from "@/common/constant/learn";
+import LearnModule from "@/modules/learn";
+
+const PAGE_TITLE = "Learn";
+const PAGE_DESCRIPTION = `It's not a course, it's my personal learning notes. But if you are interested, let's learn together.`;
 
 export const metadata: Metadata = {
-	title: `${_TITLE} - Personal Site`,
-	description: "Adam 的个人博客网站",
+	title: `${PAGE_TITLE} - Adam`,
+	description: `${PAGE_DESCRIPTION}`,
 };
 
-export default function Learn() {
+function LearnPage() {
+	const filteredContents = LEARN_CONTENTS.filter((content) => content.is_show) || [];
+
 	return (
-		<div className="page-container">
-			<h2>{_TITLE}</h2>
-			<p className="graph-primary pt-2">
-				It's not a course, it's my personal learning notes. But if you are interested, let's
-				learn together.
-			</p>
-			<div className="border-b border-dashed border-neutral-600 mt-6"></div>
-		</div>
+		<>
+			<Container data-aos="fade-up">
+				<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
+				<LearnModule contents={filteredContents} />
+			</Container>
+		</>
 	);
 }
+
+export default LearnPage;

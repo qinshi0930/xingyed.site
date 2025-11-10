@@ -1,0 +1,44 @@
+import { useMemo } from "react";
+import useSWR from "swr";
+
+import type { CommentItemProps } from "@/common/types/blog";
+
+import EmptyState from "@/common/components/elements/EmptyState";
+import Loading from "@/common/components/elements/Loading";
+import { fetcher } from "@/services/fetcher";
+
+import CommentItem from "./CommentItem";
+
+interface CommentListProps {
+	id: number;
+	totalComments: number;
+}
+
+const CommentList = ({ id, totalComments }: CommentListProps) => {
+	const { data, isLoading } = useSWR(`/api/comments?post_id=${id}`, fetcher);
+
+	const commentsData: CommentItemProps[] = useMemo(() => {
+		return data?.data || [];
+	}, [data]);
+
+	if (isLoading) return <Loading />;
+
+	return (
+		<section className="space-y-5 pb-6 pt-4">
+			{totalComments >= 1 ? (
+				<>
+					<div className="pb-5 text-xl font-semibold">
+						{totalComments} Comment{totalComments > 1 && "s"}
+					</div>
+					{commentsData?.map((comment) => (
+						<CommentItem key={comment?.id_code} {...comment} />
+					))}
+				</>
+			) : (
+				<EmptyState message="No Comment." />
+			)}
+		</section>
+	);
+};
+
+export default CommentList;
