@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 
-import { getCookie } from "cookies-next/server";
-import { cookies } from "next/headers";
 import "prism-themes/themes/prism-one-dark.css";
 
 import "./styles/globals.css";
@@ -13,15 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-	// 服务端初始化状态
-	const theme = await getCookie("theme", { cookies });
-	const initialTheme = theme === "light" || theme === "dark" ? theme : "light";
-
-	// console.log(`theme: ${theme} initialTheme: ${initialTheme}`);
 	return (
-		<html lang="zh-CN" className={initialTheme} data-theme={initialTheme}>
+		<html lang="zh-CN" suppressHydrationWarning>
 			<body>
-				<AppStoreProvider initialTheme={initialTheme}>{children}</AppStoreProvider>
+				<AppStoreProvider>{children}</AppStoreProvider>
 			</body>
 		</html>
 	);

@@ -1,13 +1,12 @@
 import Giscus from "@giscus/react";
-
-import { useThemeState } from "@/common/stores/theme/theme-provider";
+import { useTheme } from "next-themes";
 
 interface GiscusCommentProps {
 	isEnableReaction?: boolean;
 }
 
 const GiscusComment = ({ isEnableReaction = false }: GiscusCommentProps) => {
-	const theme = useThemeState((s) => s.theme);
+	const { resolvedTheme } = useTheme();
 
 	return (
 		<div className="mb-2 mt-5">
@@ -20,7 +19,7 @@ const GiscusComment = ({ isEnableReaction = false }: GiscusCommentProps) => {
 				reactionsEnabled={isEnableReaction ? "1" : "0"}
 				emitMetadata="1"
 				inputPosition="top"
-				theme={theme === "dark" ? "transparent_dark" : "light"}
+				theme={resolvedTheme === "dark" ? "transparent_dark" : "light"}
 				lang="en"
 				loading="lazy"
 			/>

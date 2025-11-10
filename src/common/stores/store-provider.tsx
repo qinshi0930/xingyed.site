@@ -1,14 +1,13 @@
 import type { ReactNode } from "react";
 
+import { ThemeProvider } from "next-themes";
+
 import { TooltipProvider } from "@/common/components/shadcn/ui/tooltip";
 
 import { AuthProvider } from "./auth/auth-provider";
-import { ThemeBridge } from "./theme/theme-birdge";
-import { ThemeProvider } from "./theme/theme-provider";
 
 export function AppStoreProvider({
 	children,
-	initialTheme,
 	initialToken,
 }: {
 	children: ReactNode;
@@ -16,12 +15,9 @@ export function AppStoreProvider({
 	initialToken?: string | null;
 }) {
 	return (
-		<ThemeProvider initialTheme={initialTheme}>
+		<ThemeProvider enableSystem={false} attribute={"class"}>
 			<AuthProvider initialToken={initialToken}>
-				<TooltipProvider>
-					<ThemeBridge />
-					{children}
-				</TooltipProvider>
+				<TooltipProvider>{children}</TooltipProvider>
 			</AuthProvider>
 		</ThemeProvider>
 	);

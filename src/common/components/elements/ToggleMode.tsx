@@ -1,14 +1,11 @@
 "use client";
+import { useTheme } from "next-themes";
 import { BiMoon as DarkModeIcon, BiSun as LightModeIcon } from "react-icons/bi";
 
 import { useHasMounted } from "@/common/hooks";
-import { useThemeState } from "@/common/stores/theme/theme-provider";
 
 const ToggleMode = () => {
-	const { resolvedTheme, setTheme } = useThemeState((s) => ({
-		resolvedTheme: s.theme,
-		setTheme: s.setTheme,
-	}));
+	const { resolvedTheme, setTheme } = useTheme();
 	const hasMounted = useHasMounted();
 
 	const isDarkTheme = hasMounted && resolvedTheme === "dark";

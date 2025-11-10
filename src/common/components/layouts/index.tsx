@@ -3,12 +3,12 @@
 import type { ReactNode } from "react";
 
 import clsx from "clsx";
+import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 import { useWindowSize } from "usehooks-ts";
 
 // import ChatButton from "@/modules/chat/components/ChatButton";
 import useHasMounted from "@/common/hooks/useHasMounted";
-import { useThemeState } from "@/common/stores/theme/theme-provider";
 
 import HeaderSidebar from "./header/HeaderSidebar";
 import HeaderTop from "./header/HeaderTop";
@@ -20,7 +20,7 @@ interface LayoutProps {
 }
 
 const Layout = ({ children }: LayoutProps) => {
-	const { resolvedTheme } = useThemeState((s) => ({ resolvedTheme: s.theme }));
+	const { resolvedTheme } = useTheme();
 	const hasMounted = useHasMounted();
 	const { width } = useWindowSize();
 	const isMobile = width < 480;

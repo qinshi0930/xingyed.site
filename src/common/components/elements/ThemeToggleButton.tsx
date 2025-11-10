@@ -1,17 +1,10 @@
 "use client";
 import styled from "@emotion/styled";
-import { useEffect } from "react";
-
-import { useThemeState } from "@/common/stores/theme/theme-provider";
+import { useTheme } from "next-themes";
 
 const ThemeToggleButton = () => {
-	const resolvedTheme = useThemeState((s) => s.theme);
-	const toggleTheme = useThemeState((s) => s.toggleTheme);
-
-	useEffect(() => {
-		document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
-		document.documentElement.setAttribute("data-theme", resolvedTheme);
-	}, [resolvedTheme]);
+	const { resolvedTheme, setTheme } = useTheme();
+	const toggleTheme = () => setTheme(resolvedTheme === "light" ? "dark" : "light");
 
 	return (
 		<StyledToggle className="flex">
