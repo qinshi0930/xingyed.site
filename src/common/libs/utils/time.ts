@@ -47,7 +47,7 @@ export const convertToTimeZone = (
 
 export const formatDate = (
 	date: string,
-	type: string = "MMMM dd, yyyy",
+	type: string = "dddd, MMM DD, YYYY",
 	timezone: string = `${DEFAULT_TIMEZONE}`,
 ): string => {
 	if (!date) {

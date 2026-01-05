@@ -14,7 +14,7 @@ const SocialMediaList = () => {
 				{SOCIAL_MEDIA?.map((item) => (
 					<Button
 						className={clsx(
-							"flex w-full items-center justify-center transition-all duration-300 hover:scale-105 md:w-1/5",
+							"flex w-full items-center justify-center transition-all duration-300 hover:scale-105",
 							item?.className,
 						)}
 						key={item.href}

@@ -1,20 +1,33 @@
+import { notFound } from "next/navigation";
+
 import type { MdxFileContentProps } from "@/common/types/learn";
 
 import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
+import { LEARN_CONTENTS } from "@/common/constant/learn";
 import { loadMdxFiles } from "@/common/libs/mdx";
 import ContentDetail from "@/modules/learn/components/ContentDetail";
 import ContentDetailHeader from "@/modules/learn/components/ContentDetailHeader";
 
-function LearnContentDetailPage({
-	data,
-	params,
-}: {
-	data: MdxFileContentProps;
-	params: { content: string; slug: string };
-}) {
-	const { content, frontMatter } = data;
-	const parentSlug = params.content;
+interface LearnContentDetailProps {
+	params: Promise<{ content: string; slug: string }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+function getLearnContent({ content, slug }: { content: string; slug: string }) {
+	const contentList = loadMdxFiles(content);
+	return contentList.find((item) => item.slug === slug);
+}
+
+async function LearnContentDetailPage({ params }: LearnContentDetailProps) {
+	const contentData = getLearnContent(await params);
+
+	if (!contentData) {
+		notFound();
+	}
+
+	const { content, frontMatter } = contentData as unknown as MdxFileContentProps;
+	const parentSlug = (await params).content;
 	const meta = frontMatter;
 
 	return (
@@ -30,17 +43,23 @@ function LearnContentDetailPage({
 
 export default LearnContentDetailPage;
 
-export async function generateMetadata({ params }: { params: { content: string; slug: string } }) {
-	const parentContent = params.content;
-	const slug = params.slug;
+export async function generateStaticParams() {
+	const params = LEARN_CONTENTS.map((item) => {
+		const content = item.slug;
+		const contentList = loadMdxFiles(content);
+		return contentList.map((item) => ({ content, slug: item.slug }));
+	});
+	return params.flat();
+}
 
-	const contentList = await loadMdxFiles(parentContent);
+export async function generateMetadata({ params }: LearnContentDetailProps) {
+	const { content: parentContent, slug } = await params;
+
+	const contentList = loadMdxFiles(parentContent);
 	const contentData = contentList.find((item) => item.slug === slug);
 
 	if (!contentData) {
-		return {
-			title: "404 - Page Not Found",
-		};
+		notFound();
 	}
 
 	const meta = contentData.frontMatter;

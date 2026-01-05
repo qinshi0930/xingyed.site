@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
+
 import Container from "@/common/components/elements/Container";
 import BlogListNew from "@/modules/blog";
 
@@ -11,11 +13,11 @@ export const metadata: Metadata = {
 
 const BlogPage = () => {
 	return (
-		<>
+		<Suspense>
 			<Container className="xl:!-mt-5" data-aos="fade-up">
 				<BlogListNew />
 			</Container>
-		</>
+		</Suspense>
 	);
 };
 

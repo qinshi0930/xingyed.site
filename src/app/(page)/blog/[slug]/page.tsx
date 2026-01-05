@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import axios from "axios";
-import dynamic from "next/dynamic";
+// import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 
 import BackButton from "@/common/components/elements/BackButton";
@@ -10,7 +10,7 @@ import { formatExcerpt } from "@/common/helpers";
 import BlogDetail from "@/modules/blog/components/BlogDetail";
 import { getBlogDetail } from "@/services/blog";
 
-const GiscusComment = dynamic(() => import("@/modules/blog/components/GiscusComment"));
+// const GiscusComment = dynamic(() => import("@/modules/blog/components/GiscusComment"));
 
 interface BlogDetailPageProps {
 	params: Promise<{ slug: string }>;
@@ -92,9 +92,7 @@ export default async function BlogDetailPage({ searchParams }: BlogDetailPagePro
 		<Container data-aos="fade-up">
 			<BackButton url="/blog" />
 			<BlogDetail {...blogData} />
-			<section id="comments">
-				<GiscusComment isEnableReaction={false} />
-			</section>
+			<section id="comments">{/* <GiscusComment isEnableReaction={false} /> */}</section>
 		</Container>
 	);
 }

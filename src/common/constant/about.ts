@@ -1,23 +1,20 @@
 export const ABOUT = `
 <p>
-    Hello! Thanks for stopping by my personal website.
+    嘿，你好！感谢您访问我的个人网站。
 </p>
 <p>
-    I'm Ryan. I've been working in web development for over 10 years, doing both the coding you see on the screen (frontend) and the stuff that happens behind the scenes (backend). I know how to manage projects using methods like Waterfall and Agile. But what really gets me excited is making websites and apps that are easy for everyone to use and look good too!
+    我是Adam. 我拥有超过 8+ 年的 Web 开发经验，涵盖前端和后端，精通瀑布和敏捷等项目管理方法。我特别热衷于前端，我专注于创建不仅精确而且用户友好的 Web 应用程序。
 </p>
 <p>
-    I'm really into JavaScript and PHP, which are languages used to build websites. I also know a bunch of frameworks that make building websites even easier, like React, Vue, Angular, Node.js, and PHP frameworks like Codeigniter and Laravel. I love learning about new web tools and features.
+    我专注于 JavaScript，还有它的框架，包括 React(Next.js，Vite，TurboPack)，Node.js(Express, hono.js)。我喜欢探索新的网络技术和功能。
 </p>
 <p>
-    In my career, I've led teams to build software for a wide range of companies, from large corporations to innovative startups.
+    我坚信，有效的沟通对于任何角色的成功都至关重要。
 </p>
 <p>
-    I believe that good communication is super important in any job.
+    我适应能力强，思维高效，总是追求卓越。我的经验使我具备了强大的分析能力，而且我同样喜欢在团队中协作。我很高兴有机会为团队的成功做出贡献。
 </p>
 <p>
-    I'm good at adapting to different situations, working efficiently, and always trying to do my best. My experience has taught me how to solve problems and lead teams, but I'm also happy to work with others to get things done. I'm excited about the chance to work together and make cool stuff!
-</p>
-<p>
-    I'm looking forward to the possibility of working with you!
+    期待我们的合作！
 </p>
 `;

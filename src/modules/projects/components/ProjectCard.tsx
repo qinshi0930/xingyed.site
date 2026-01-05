@@ -31,7 +31,7 @@ const ProjectCard = ({
 				<div className="relative">
 					<Image
 						src={image}
-						width={400}
+						width={550}
 						height={200}
 						alt={title}
 						className="h-48 rounded-t-xl object-cover object-left"

@@ -24,6 +24,8 @@ model projects {
   updated_at  DateTime @default(now())
   content     String?  @db.Text
   is_featured Boolean  @default(false)
+
+  @@map("projects")
 }
 
 model content_meta {
@@ -32,6 +34,8 @@ model content_meta {
   type       String
   views      Int      @default(0)
   updated_at DateTime @default(now())
+
+  @@map("content_meta")
 }
 
 model User {
@@ -45,8 +49,12 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  username        String?
+  displayUsername String?
+
   @@unique([email])
   @@map("user")
+  @@unique([username])
 }
 
 model Session {

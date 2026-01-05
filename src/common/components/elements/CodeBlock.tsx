@@ -28,14 +28,14 @@ SyntaxHighlighter.registerLanguage(languages.css, css);
 interface CodeBlockProps {
 	className?: string;
 	children?: React.ReactNode;
-	inline?: boolean;
 	[key: string]: any;
 }
-const CodeBlock = ({ className = "", children, inline, ...props }: CodeBlockProps) => {
+const CodeBlock = ({ className = "", children, ...props }: CodeBlockProps) => {
 	const [isCopied, setIsCopied] = useState<boolean>(false);
 	// eslint-disable-next-line unused-imports/no-unused-vars
 	const [value, copy] = useCopyToClipboard();
 	const match = /language-(\w+)/.exec(className || "");
+	const isCodeBlock = Boolean(match);
 
 	const handleCopy = (code: string) => {
 		copy(code);
@@ -54,7 +54,7 @@ const CodeBlock = ({ className = "", children, inline, ...props }: CodeBlockProp
 
 	return (
 		<>
-			{!inline ? (
+			{isCodeBlock ? (
 				<div className="relative">
 					<button
 						className="absolute right-3 top-3 rounded-lg border border-neutral-700 p-2 hover:bg-neutral-800"
@@ -70,6 +70,7 @@ const CodeBlock = ({ className = "", children, inline, ...props }: CodeBlockProp
 						)}
 					</button>
 
+					{/* {children} */}
 					<SyntaxHighlighter
 						{...props}
 						style={themeColor}

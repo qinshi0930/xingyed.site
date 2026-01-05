@@ -101,5 +101,6 @@
 		"scminput": false
 	},
 	"yaml.maxItemsComputed": 50000,
-	"tailwindCSS.experimental.configFile": "src/app/styles/tailwind.css"
+	"tailwindCSS.experimental.configFile": "src/app/styles/tailwind.css",
+	"prisma.pinToPrisma6": true
 }

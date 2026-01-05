@@ -59,6 +59,7 @@ export default antfu(
 	// ...tailwind.configs['flat/recommended'],
 	jsxA11y.flatConfigs.recommended,
 	{
+		files: ["**/*.{js,jsx,ts,tsx}"],
 		plugins: {
 			"@next/next": nextPlugin,
 		},

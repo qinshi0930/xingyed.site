@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks-extra/no-direct-set-state-in-use-effect */
 "use client";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import useSWR from "swr";
 
@@ -34,7 +34,7 @@ const ContentDetail = ({ content, frontMatter }: ContentDetailProps) => {
 	const [previousTitle, setPreviousTitle] = useState<string | null>(null);
 
 	const router = useRouter();
-	const currentUrl = router.asPath;
+	const currentUrl = usePathname();
 	const { parentSlug, contentSlug } = parseUrl(currentUrl);
 
 	const meta = frontMatter;

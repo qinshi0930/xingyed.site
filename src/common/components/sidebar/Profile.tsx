@@ -1,9 +1,10 @@
+"use client";
 import clsx from "clsx";
 import { AnimatePresence } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
-import { useWindowSize } from "usehooks-ts";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { MenuContext } from "@/common/context/MenuContext";
+import useIsMobile from "@/common/hooks/useIsMobile";
 
 import SearchBox from "../elements/SearchBox";
 import ThemeToggleButton from "../elements/ThemeToggleButton";
@@ -16,22 +17,20 @@ interface ProfileProps {
 }
 
 const Profile = ({ isScrolled = false }: ProfileProps) => {
-	const { width } = useWindowSize();
-	const isMobile = width < 1024;
+	// 监听窗口宽度变化，控制移动端响应式布局，并根据设备状态和滚动位置动态计算头像尺寸
+	const isMobile = useIsMobile();
 
-	const getImageSize = () => {
+	const getImageSize = useCallback(() => {
 		let size = isMobile ? 40 : 80;
 		if (!isMobile && isScrolled) {
 			size = 55;
 		}
 		return size;
-	};
+	}, [isMobile]);
 
+	// 控制移动端菜单展开状态，并提供全局上下文管理菜单显示/隐藏，同时处理菜单展开时的页面滚动锁定
 	const [expandMenu, setExpandMenu] = useState<boolean>(false);
 
-	// const hideNavbar = () => {
-	// 	setExpandMenu(false);
-	// };
 	const context = useMemo(() => {
 		return {
 			hideNavbar: () => {
@@ -46,7 +45,6 @@ const Profile = ({ isScrolled = false }: ProfileProps) => {
 		} else {
 			document.body.style.overflow = "auto";
 		}
-
 		return () => {
 			document.body.style.overflow = "auto";
 		};

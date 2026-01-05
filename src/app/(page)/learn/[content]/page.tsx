@@ -12,9 +12,7 @@ import { loadMdxFiles } from "@/common/libs/mdx";
 import ContentList from "@/modules/learn/components/ContentList";
 
 interface ContentPageProps {
-	params: {
-		content: string;
-	};
+	params: Promise<{ content: string }>;
 }
 
 export async function generateStaticParams() {
@@ -24,7 +22,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: ContentPageProps): Promise<Metadata> {
-	const content = LEARN_CONTENTS.find((item) => item?.slug === params.content);
+	const content = LEARN_CONTENTS.find(async (item) => item?.slug === (await params).content);
 
 	if (!content) {
 		return {
@@ -32,7 +30,7 @@ export async function generateMetadata({ params }: ContentPageProps): Promise<Me
 		};
 	}
 
-	const canonicalUrl = `https://adam.id/learn/${content.slug}`;
+	const canonicalUrl = `https://localhost:8080/learn/${content.slug}`;
 
 	return {
 		title: `Learn ${content.title} - Adam`,
@@ -53,7 +51,8 @@ export async function generateMetadata({ params }: ContentPageProps): Promise<Me
 }
 
 export default async function LearnContentPage({ params }: ContentPageProps) {
-	const content = LEARN_CONTENTS.find((item) => item?.slug === params.content);
+	const slug = (await params).content;
+	const content = LEARN_CONTENTS.find((item) => item?.slug === slug);
 
 	if (!content) {
 		notFound();

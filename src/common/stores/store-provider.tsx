@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "@/common/components/shadcn/ui/tooltip";
 
 import { AuthProvider } from "./auth/auth-provider";
+// import NextAuthProvider from "./nextauth-provider";
 
 export function AppStoreProvider({
 	children,
@@ -15,10 +16,12 @@ export function AppStoreProvider({
 	initialToken?: string | null;
 }) {
 	return (
+		// <NextAuthProvider>
 		<ThemeProvider enableSystem={false} attribute={"class"}>
 			<AuthProvider initialToken={initialToken}>
 				<TooltipProvider>{children}</TooltipProvider>
 			</AuthProvider>
 		</ThemeProvider>
+		// </NextAuthProvider>
 	);
 }

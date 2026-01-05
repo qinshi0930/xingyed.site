@@ -9,7 +9,7 @@ import { fetcher } from "@/services/fetcher";
 import BlogFeaturedHero from "./BlogFeaturedHero";
 
 const BlogFeaturedSection = () => {
-	const { data, isLoading } = useSWR(`/api/blog?page=1&per_page=4&categories=11`, fetcher, {
+	const { data, isLoading } = useSWR(`/api/blog?page=1&per_page=4&categories=16`, fetcher, {
 		revalidateOnFocus: false,
 		refreshInterval: 0,
 	});

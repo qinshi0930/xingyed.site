@@ -35,7 +35,7 @@ const BlogCardNew = ({
 }: BlogCardProps) => {
 	const [isHovered, setIsHovered] = useState<boolean>(false);
 
-	const readingTimeMinutes = calculateReadingTime(content?.rendered) ?? 0;
+	const readingTimeMinutes = calculateReadingTime(content?.markdown) ?? 0;
 	const tagList = tags_list || [];
 
 	const defaultImage = "/images/placeholder.png";
@@ -99,10 +99,10 @@ const BlogCardNew = ({
 						</div>
 						<Breakline className="!border-neutral-700" />
 						<div className="flex justify-between gap-4 px-0.5 text-neutral-400">
-							<Tooltip title="by aulianza">
+							<Tooltip title="by adam">
 								<Image
-									src="/images/aulianza-new.png"
-									alt="Ryan Aulia"
+									src="/images/avatar.jpg"
+									alt="Adam"
 									width={25}
 									height={25}
 									rounded="rounded-full"

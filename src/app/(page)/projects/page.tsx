@@ -1,10 +1,11 @@
+import type { Metadata } from "next";
+
 import type { ProjectItemProps } from "@/common/types/projects";
 
 import Container from "@/common/components/elements/Container";
-import EmptyState from "@/common/components/elements/EmptyState";
 import PageHeading from "@/common/components/elements/PageHeading";
+import { PROJECT_CONTENTS } from "@/common/constant/projects";
 import Projects from "@/modules/projects";
-import prisma from "@/prisma/prisma";
 
 // interface ProjectsPageProps {
 // 	projects: ProjectItemProps[];
@@ -13,16 +14,16 @@ import prisma from "@/prisma/prisma";
 const PAGE_TITLE = "Projects";
 const PAGE_DESCRIPTION = "Several projects that I have worked on, both private and open source.";
 
+export const metadata: Metadata = {
+	title: PAGE_TITLE,
+	description: PAGE_DESCRIPTION,
+};
+
 async function getProjects(): Promise<ProjectItemProps[]> {
-	const response = await prisma.projects.findMany({
-		orderBy: [
-			{
-				is_featured: "desc",
-			},
-			{
-				updated_at: "desc",
-			},
-		],
+	const response = PROJECT_CONTENTS.sort((a, b) => {
+		if (a.is_featured && !b.is_featured) return -1;
+		if (!a.is_featured && b.is_featured) return 1;
+		return b.updated_at.getTime() - a.updated_at.getTime();
 	});
 
 	return JSON.parse(JSON.stringify(response));
@@ -31,14 +32,6 @@ async function getProjects(): Promise<ProjectItemProps[]> {
 export default async function ProjectsPage() {
 	const projects = await getProjects();
 	const filteredProjects = projects?.filter((project) => project?.is_show);
-	// const [visibleProjects, setVisibleProjects] = useState(6);
-
-	// const loadMore = () => setVisibleProjects((prev) => prev + 2);
-	// const hasMore = visibleProjects < projects.length;
-
-	if (filteredProjects?.length === 0) {
-		return <EmptyState message="No Data" />;
-	}
 
 	return (
 		<>

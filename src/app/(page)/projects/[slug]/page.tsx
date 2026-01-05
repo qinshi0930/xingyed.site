@@ -1,37 +1,38 @@
 import { notFound } from "next/navigation";
 
+import type { MdxFileContentProps } from "@/common/types/learn";
+
 import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
 import PageHeading from "@/common/components/elements/PageHeading";
+import { PROJECT_CONTENTS } from "@/common/constant/projects";
+import { loadMdxFiles } from "@/common/libs/mdx";
 import ProjectDetail from "@/modules/projects/components/ProjectDetail";
-import prisma from "@/prisma/prisma";
 
 // interface ProjectsDetailPageProps {
 // 	project: ProjectItemProps;
 // }
 
 export async function generateStaticParams() {
-	const projects = await prisma.projects.findMany({
-		select: {
-			slug: true,
-		},
-	});
-
-	return projects.map((project) => ({
-		slug: project.slug,
-	}));
+	const contentList = loadMdxFiles(`../projects`);
+	return contentList.map((item) => ({ slug: item.slug }));
 }
 
 async function getProject(slug: string) {
-	const response = await prisma.projects.findUnique({
-		where: {
-			slug,
-		},
-	});
+	const contentList = loadMdxFiles("../projects");
+	const contentData = contentList.find((item) => item.slug === slug);
 
-	if (!response) {
+	if (!contentData) {
 		notFound();
 	}
+
+	const projectData = PROJECT_CONTENTS.find((item) => item.slug === slug);
+	const { content } = contentData as unknown as MdxFileContentProps;
+
+	const response = {
+		...projectData,
+		content,
+	};
 
 	return JSON.parse(JSON.stringify(response));
 }

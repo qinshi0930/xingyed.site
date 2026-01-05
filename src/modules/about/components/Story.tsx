@@ -1,4 +1,3 @@
-import Image from "@/common/components/elements/Image";
 import { ABOUT } from "@/common/constant/about";
 
 const Story = () => {
@@ -10,10 +9,10 @@ const Story = () => {
 				dangerouslySetInnerHTML={{ __html: ABOUT }}
 			/>
 
-			<div className="space-y-4">
+			{/* <div className="space-y-4">
 				<span>Best Regards,</span>
 				<Image src="/images/signature.png" width={150} height={150} alt="Aulianza" />
-			</div>
+			</div> */}
 		</div>
 	);
 };
