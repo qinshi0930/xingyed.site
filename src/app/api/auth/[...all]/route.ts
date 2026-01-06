@@ -1,8 +1,8 @@
-import { toNextJsHandler } from "better-auth/next-js";
+// import { toNextJsHandler } from "better-auth/next-js";
 
-import { auth } from "@/common/libs/auth";
+// import { auth } from "@/common/libs/auth";
 
-export const { POST, GET } = toNextJsHandler(auth);
+// export const { POST, GET } = toNextJsHandler(auth);
 
 // import NextAuth from "next-auth";
 // import GithubProvider from "next-auth/providers/github";

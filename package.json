@@ -6,11 +6,8 @@
 	"imports": {
 		"#globals.css": "./src/app/styles/globals.css"
 	},
-	"prisma": {
-		"schema": "/src/prisma/schema/schema.prisma"
-	},
 	"scripts": {
-		"dev": "rimraf -rf .next && prisma generate && next dev --turbopack",
+		"dev": "rimraf -rf .next && next dev --turbopack",
 		"build": "rimraf -rf .next && next build --turbopack",
 		"start": "next start",
 		"lint": "eslint",
