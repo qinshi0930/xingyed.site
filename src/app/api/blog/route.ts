@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 
-import type { BlogItemProps } from "@/common/types/blog";
-
-import prisma from "@/prisma/prisma";
+// import prisma from "@/prisma/prisma";
 import { getBlogList } from "@/services/blog";
 
 export async function GET(request: Request) {
@@ -20,23 +18,23 @@ export async function GET(request: Request) {
 			search: search ? String(search) : undefined,
 		});
 
-		const blogItemsWithViews = await Promise.all(
-			responseData?.data?.posts?.map(async (blogItem: BlogItemProps) => {
-				const { slug } = blogItem;
+		// const blogItemsWithViews = await Promise.all(
+		// 	responseData?.data?.posts?.map(async (blogItem: BlogItemProps) => {
+		// 		const { slug } = blogItem;
 
-				const contentMeta = await prisma.content_meta.findUnique({
-					where: { slug: slug as string },
-					select: { views: true },
-				});
+		// 		const contentMeta = await prisma.content_meta.findUnique({
+		// 			where: { slug: slug as string },
+		// 			select: { views: true },
+		// 		});
 
-				const viewsCount = contentMeta?.views ?? 0;
+		// 		const viewsCount = contentMeta?.views ?? 0;
 
-				return {
-					...blogItem,
-					total_views_count: viewsCount,
-				};
-			}),
-		);
+		// 		return {
+		// 			...blogItem,
+		// 			total_views_count: viewsCount,
+		// 		};
+		// 	}),
+		// );
 
 		const response = NextResponse.json({
 			status: true,
@@ -45,7 +43,7 @@ export async function GET(request: Request) {
 				total_posts: responseData?.data?.total_posts,
 				page: responseData?.data?.page,
 				per_page: responseData?.data?.per_page,
-				posts: blogItemsWithViews,
+				// posts: blogItemsWithViews,
 				categories: responseData?.data?.categories,
 			},
 		});
