@@ -1,0 +1,84 @@
+name: Deploy Next.js to ECS
+
+on:
+  push:
+    branches: [ main ]  # 可根据需要修改触发分支
+
+env:
+  PNPM_VERSION: '10'
+  NODE_VERSION: '22'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐿️ Setup pnpm
+        uses: pnpm/action-setup@v2
+        id: pnpm-setup
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: ⎔ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 💾 Cache pnpm dependencies
+        uses: actions/cache@v4
+        id: pnpm-cache
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js app
+        run: pnpm build
+
+      - name: Deploy to ECS via SSH
+        env:
+          SSH_USER_PRIVATE_KEY: ${{ secrets.ALIYUN_SSH_PRIVATE_KEY }}
+          SSH_CA_PRIVATE_KEY: ${{ secrets.SSH_CA_PRIVATE_KEY }}
+          ECS_HOST: ${{ secrets.ALIYUN_ECS_HOST }}
+          ECS_PORT: ${{ secrets.ALIYUN_ECS_PORT }}
+          ECS_USER: ${{ secrets.ALIYUN_ECS_USER }}
+        run: |
+          # 创建临时密钥文件
+          mkdir -p ~/.ssh
+          echo "$SSH_USER_PRIVATE_KEY" > ~/.ssh/deploy_key
+          echo "$SSH_CA_PRIVATE_KEY" > ~/.ssh/ca_key
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/ca_key
+
+          # 1. 使用CA私钥为用户私钥签发一个短期证书
+          ssh-keygen -s ~/.ssh/ca_key \
+            -I "github-actions-deploy" \
+            -n "$ECS_USER" \
+            -V +1h \
+            ~/.ssh/deploy_key
+
+          # 2. 同步构建产物到 ECS（排除 node_modules、.next/cache 等）
+          rsync -avz \
+            --exclude='node_modules' \
+            --exclude='.git' \
+            --exclude='.next/cache' \
+            --exclude='pnpm-lock.yaml' \
+            ./ \
+            -e "ssh -p $ECS_PORT -i ~/.ssh/deploy_key -o CertificateFile=~/.ssh/deploy_key-cert.pub -o StrictHostKeyChecking=no" \
+            $ECS_USER@$ECS_HOST:/var/www/xingye_site/
+
+          # 远程执行部署脚本
+          ssh -p $ECS_PORT \
+              -i ~/.ssh/deploy_key \
+              -o CertificateFile=~/.ssh/deploy_key-cert.pub \
+              -o StrictHostKeyChecking=no \
+              $ECS_USER@$ECS_HOST "zsh /var/www/xingye_site/deploy.sh"
