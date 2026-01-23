@@ -10,7 +10,7 @@
 			"@/*": ["./src/*"]
 		},
 		"resolveJsonModule": true,
-		"types": ["node", "@prisma/client"],
+		"types": ["node"],
 		"allowJs": true,
 		"strict": true,
 		"noEmit": true,
