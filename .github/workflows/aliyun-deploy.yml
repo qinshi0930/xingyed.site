@@ -44,6 +44,12 @@ jobs:
 
       - name: Build Next.js app
         run: pnpm build
+        env:
+          GITHUB_APP_ID: ${{ secrets.APP_ID }}
+          GITHUB_APP_OWNER: ${{ secrets.APP_OWNER }}
+          GITHUB_APP_REPO: ${{ secrets.APP_REPO }}
+          GITHUB_PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}
+          GITHUB_INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
 
       - name: Deploy to ECS via SSH
         env:
@@ -52,6 +58,11 @@ jobs:
           ECS_HOST: ${{ secrets.ALIYUN_ECS_HOST }}
           ECS_PORT: ${{ secrets.ALIYUN_ECS_PORT }}
           ECS_USER: ${{ secrets.ALIYUN_ECS_USER }}
+          GITHUB_APP_ID: ${{ secrets.APP_ID }}
+          GITHUB_APP_OWNER: ${{ secrets.APP_OWNER }}
+          GITHUB_APP_REPO: ${{ secrets.APP_REPO }}
+          GITHUB_PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}
+          GITHUB_INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
         run: |
           # 创建临时密钥文件
           mkdir -p ~/.ssh
