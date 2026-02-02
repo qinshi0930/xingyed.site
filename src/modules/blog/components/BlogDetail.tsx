@@ -17,12 +17,12 @@ import { fetcher } from "@/services/fetcher";
 
 import BlogHeader from "./BlogHeader";
 
-const BlogDetail = ({ id, title, date, slug, content, tags_list }: BlogDetailProps) => {
+const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) => {
 	const { data: viewsData } = useSWR(`/api/views?slug=${slug}&id=${id}`, fetcher);
 	const isMobile = useIsMobile();
 
 	const viewsCount = viewsData?.views || 0;
-	const tagList = tags_list || [];
+	const tagList = tags || [];
 
 	const readingTimeMinutes = calculateReadingTime(content?.markdown) ?? 0;
 
@@ -60,13 +60,13 @@ const BlogDetail = ({ id, title, date, slug, content, tags_list }: BlogDetailPro
 					<div className="my-10 space-y-2">
 						<h6 className="text-lg font-medium">Tags:</h6>
 						<div className="flex flex-wrap gap-2 pt-2">
-							{tagList?.map((tag) => (
+							{tagList?.map((tag, index) => (
 								<div
-									key={tag?.term_id}
+									key={index}
 									className="rounded-full bg-neutral-200 px-4 py-1 text-[14px] font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200"
 								>
 									<span className="mr-1 font-semibold">#</span>
-									{tag?.name.charAt(0).toUpperCase() + tag?.name.slice(1)}
+									{tag.charAt(0).toUpperCase() + tag.slice(1)}
 								</div>
 							))}
 						</div>

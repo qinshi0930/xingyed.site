@@ -7,8 +7,8 @@ import { notFound, redirect } from "next/navigation";
 import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
 import { formatExcerpt } from "@/common/helpers";
+import { getBlogById, loadBlogFiles } from "@/common/libs/blog";
 import BlogDetail from "@/modules/blog/components/BlogDetail";
-import { getBlogDetail } from "@/services/blog";
 
 // const GiscusComment = dynamic(() => import("@/modules/blog/components/GiscusComment"));
 
@@ -23,6 +23,11 @@ async function incrementViews(slug: string) {
 	}
 }
 
+export async function generateStaticParams() {
+	const blogs = loadBlogFiles();
+	return blogs.map((blog) => ({ slug: blog.slug }));
+}
+
 export async function generateMetadata({
 	// params,
 	searchParams,
@@ -34,13 +39,12 @@ export async function generateMetadata({
 		return {};
 	}
 
-	const response = await getBlogDetail(Number.parseInt(id));
+	const blogData = getBlogById(Number.parseInt(id));
 
-	if (response?.status === 404) {
+	if (!blogData) {
 		return {};
 	}
 
-	const blogData = response?.data || {};
 	const description = formatExcerpt(blogData?.excerpt?.rendered);
 	const blogSlug = `blog/${blogData?.slug}?id=${blogData?.id}`;
 	const canonicalUrl = `https://Adam.id/${blogSlug}`;
@@ -75,16 +79,14 @@ export default async function BlogDetailPage({ searchParams }: BlogDetailPagePro
 	const { id } = await searchParams;
 
 	if (!id) {
-		redirect("/");
+		redirect("/blog");
 	}
 
-	const response = await getBlogDetail(Number.parseInt(id));
+	const blogData = getBlogById(Number.parseInt(id));
 
-	if (response?.status === 404) {
+	if (!blogData) {
 		notFound();
 	}
-
-	const blogData = response?.data || {};
 
 	await incrementViews(blogData?.slug);
 

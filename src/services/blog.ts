@@ -1,3 +1,9 @@
+/**
+ * @deprecated 此文件已废弃，blog 数据已迁移到本地 MDX 文件
+ * 现在使用 /src/common/libs/blog.ts 中的函数读取本地数据
+ * 保留此文件仅供参考，可在确认迁移完成后删除
+ */
+
 import type { AxiosError, AxiosResponse } from "axios";
 
 import axios from "axios";

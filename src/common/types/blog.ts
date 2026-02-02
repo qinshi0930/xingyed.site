@@ -38,8 +38,8 @@ export interface BlogItemProps {
 	meta: {
 		footnotes: string;
 	};
-	categories: number[];
-	tags: number[];
+	categories: string[]; // 修改为字符串数组
+	tags: string[]; // 修改为字符串数组
 	tags_list: {
 		term_id: number;
 		name: string;
@@ -54,6 +54,7 @@ export interface BlogItemProps {
 	}[];
 	amp_enabled: boolean;
 	featured_image_url: string;
+	is_featured: boolean; // 新增字段
 	total_views_count: number;
 }
 
