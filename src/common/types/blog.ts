@@ -61,12 +61,12 @@ export interface BlogItemProps {
 export interface BlogDetailProps {
 	id: number;
 	date: string;
-	date_gmt: string;
+	date_gmt?: string;
 	modified: string;
-	modified_gmt: string;
+	modified_gmt?: string;
 	slug: string;
 	status: string;
-	type: string;
+	type?: string;
 	link: string;
 	title: {
 		rendered: string;
@@ -90,9 +90,9 @@ export interface BlogDetailProps {
 	meta: {
 		footnotes: string;
 	};
-	categories: number[];
-	tags: number[];
-	tags_list: {
+	categories: string[]; // 修改为字符串数组
+	tags: string[]; // 修改为字符串数组
+	tags_list?: {
 		term_id: number;
 		name: string;
 		slug: string;
@@ -106,34 +106,35 @@ export interface BlogDetailProps {
 	}[];
 	amp_enabled: boolean;
 	featured_image_url: string;
-	guid: {
+	is_featured: boolean; // 新增字段
+	guid?: {
 		rendered: string;
 	};
-	replies: {
+	replies?: {
 		embeddable: true;
 		href: string;
 	};
-	version_history: {
+	version_history?: {
 		count: number;
 		href: string;
 	};
-	predecessor_version: {
+	predecessor_version?: {
 		id: number;
 		href: string;
 	};
-	wp_featuredmedia: {
+	wp_featuredmedia?: {
 		embeddable: true;
 		href: string;
 	};
-	wp_attachment: {
+	wp_attachment?: {
 		href: string;
 	};
-	wp_term: {
+	wp_term?: {
 		taxonomy: string;
 		embeddable: true;
 		href: string;
 	}[];
-	curies: {
+	curies?: {
 		name: string;
 		href: string;
 		templated: true;

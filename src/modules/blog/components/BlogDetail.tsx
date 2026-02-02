@@ -60,9 +60,9 @@ const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) =
 					<div className="my-10 space-y-2">
 						<h6 className="text-lg font-medium">Tags:</h6>
 						<div className="flex flex-wrap gap-2 pt-2">
-							{tagList?.map((tag, index) => (
+							{tagList?.map((tag) => (
 								<div
-									key={index}
+									key={tag}
 									className="rounded-full bg-neutral-200 px-4 py-1 text-[14px] font-medium text-neutral-600 dark:bg-neutral-700 dark:text-neutral-200"
 								>
 									<span className="mr-1 font-semibold">#</span>

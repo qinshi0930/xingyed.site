@@ -71,9 +71,9 @@ const BlogCardNew = ({
 
 				<div className="absolute flex h-full flex-col justify-between space-y-4 p-5">
 					<div className="flex flex-wrap gap-2">
-						{tagList?.map((tag, index) => (
+						{tagList?.map((tag) => (
 							<div
-								key={index}
+								key={tag}
 								className="rounded-full bg-neutral-900/50 px-2.5 py-1 font-mono text-xs text-neutral-400"
 							>
 								<span className="mr-1 font-semibold">#</span>
