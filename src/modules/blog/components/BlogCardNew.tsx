@@ -30,13 +30,13 @@ const BlogCardNew = ({
 	content,
 	excerpt,
 	total_views_count,
-	tags_list,
+	tags,
 	isExcerpt = true,
 }: BlogCardProps) => {
 	const [isHovered, setIsHovered] = useState<boolean>(false);
 
 	const readingTimeMinutes = calculateReadingTime(content?.markdown) ?? 0;
-	const tagList = tags_list || [];
+	const tagList = tags || [];
 
 	const defaultImage = "/images/placeholder.png";
 
@@ -73,11 +73,11 @@ const BlogCardNew = ({
 					<div className="flex flex-wrap gap-2">
 						{tagList?.map((tag) => (
 							<div
-								key={tag?.term_id}
+								key={tag}
 								className="rounded-full bg-neutral-900/50 px-2.5 py-1 font-mono text-xs text-neutral-400"
 							>
 								<span className="mr-1 font-semibold">#</span>
-								{tag?.name.charAt(0).toUpperCase() + tag?.name.slice(1)}
+								{tag.charAt(0).toUpperCase() + tag.slice(1)}
 							</div>
 						))}
 					</div>

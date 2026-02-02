@@ -41,23 +41,33 @@ const Layout = ({ children }: LayoutProps) => {
 	return (
 		<>
 			{/* <TopBar /> */}
-			<div className={clsx("mx-auto max-w-6xl", isDarkTheme ? "dark:text-darkText" : "")}>
+			<div
+				className={clsx(
+					"mx-auto flex min-h-screen max-w-6xl flex-col",
+					isDarkTheme ? "dark:text-darkText" : "",
+				)}
+			>
 				{isFullPageHeader ? (
-					<div className="flex flex-col xl:pb-8">
+					<div className="flex flex-1 flex-col xl:pb-8">
 						<HeaderTop />
-						<main className="transition-all duration-300">{children}</main>
+						<main className="flex-1 transition-all duration-300">{children}</main>
 					</div>
 				) : (
-					<div className="flex flex-col lg:flex-row lg:gap-2 lg:py-4 xl:pb-8">
+					<div className="flex flex-1 flex-col lg:flex-row lg:gap-2 lg:py-4 xl:pb-8">
 						<HeaderSidebar />
-						<main className="mx-auto max-w-[915px] transition-all duration-300 lg:w-4/5">
+						<main className="mx-auto flex-1 max-w-[915px] transition-all duration-300 lg:w-4/5">
 							{children}
 						</main>
 					</div>
 				)}
-				<footer className="flex justify-center">
-					<p>ICP备案号：</p>
-					<a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer noopener">
+				<footer className="mt-auto flex justify-center gap-1 py-6 text-sm text-neutral-600 dark:text-neutral-400">
+					<span>ICP备案号：</span>
+					<a
+						href="https://beian.miit.gov.cn/"
+						target="_blank"
+						rel="noreferrer noopener"
+						className="hover:text-neutral-900 dark:hover:text-neutral-200"
+					>
 						赣ICP备2025078961号
 					</a>
 				</footer>

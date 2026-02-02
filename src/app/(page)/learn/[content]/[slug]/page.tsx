@@ -15,7 +15,7 @@ interface LearnContentDetailProps {
 }
 
 function getLearnContent({ content, slug }: { content: string; slug: string }) {
-	const contentList = loadMdxFiles(content);
+	const contentList = loadMdxFiles(`learn/${content}`);
 	return contentList.find((item) => item.slug === slug);
 }
 
@@ -46,7 +46,7 @@ export default LearnContentDetailPage;
 export async function generateStaticParams() {
 	const params = LEARN_CONTENTS.map((item) => {
 		const content = item.slug;
-		const contentList = loadMdxFiles(content);
+		const contentList = loadMdxFiles(`learn/${content}`);
 		return contentList.map((item) => ({ content, slug: item.slug }));
 	});
 	return params.flat();
@@ -55,7 +55,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: LearnContentDetailProps) {
 	const { content: parentContent, slug } = await params;
 
-	const contentList = loadMdxFiles(parentContent);
+	const contentList = loadMdxFiles(`learn/${parentContent}`);
 	const contentData = contentList.find((item) => item.slug === slug);
 
 	if (!contentData) {
