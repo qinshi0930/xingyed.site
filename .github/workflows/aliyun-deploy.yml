@@ -73,12 +73,12 @@ jobs:
             -V +1h \
             ~/.ssh/deploy_key
 
-          # 2. 清理远程服务器上的旧构建产物
+          # 2. 清理远程服务器上的旧构建产物和内容文件
           ssh -p $ECS_PORT \
               -i ~/.ssh/deploy_key \
               -o CertificateFile=~/.ssh/deploy_key-cert.pub \
               -o StrictHostKeyChecking=no \
-              $ECS_USER@$ECS_HOST "rm -rf /var/www/xingye_site/.next /var/www/xingye_site/out || true"
+              $ECS_USER@$ECS_HOST "rm -rf /var/www/xingye_site/.next /var/www/xingye_site/out /var/www/xingye_site/src/contents /var/www/xingye_site/public || true"
 
           # 3. 同步构建产物到 ECS（仅传输 .next 目录和必要文件）
           rsync -avz \
