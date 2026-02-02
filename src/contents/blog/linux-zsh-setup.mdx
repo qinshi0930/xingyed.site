@@ -1,0 +1,121 @@
+---
+id: 4
+title: "Linux开发环境配置（一）：安装及配置zsh"
+slug: "linux-zsh-setup"
+date: "2025-12-11"
+excerpt: "zsh为Bash提供了大量增强功能，使用 zsh + oh-my-zsh 的组合，为日常开发工作带来更效率、更美观、以及更有趣的开发体验"
+featured_image: ""
+categories: ["Linux", "Tutorial"]
+tags: ["linux", "shell", "zsh", "oh-my-zsh"]
+is_featured: false
+total_views_count: 0
+---
+
+zsh(Z Shell)是一款非常流行的linux命令行解释器。基于Bash提供了大量增强功能，集成了许多现代特性，如果你追求更美观、更高效、及更可定制化的开发体验，zsh是一个非常优秀的选择。
+
+首先更新软件包列表
+
+```shell
+sudo apt update
+```
+
+安装`zsh`
+
+```shell
+sudo apt install zsh -y
+```
+
+ -y 表示自动确认
+
+验证安装是否成功(可选)
+
+```shell
+zsh --version
+```
+
+切换默认`shell`
+
+```shell
+chsh -s /usr/bin/zsh
+```
+
+切换`shell`后，需要重启终端才能生效。
+
+第一次启动`zsh`时，需要完成zsh的配置向导
+
+```shell
+
+```
+
+### 安装curl
+
+安装`curl`，用于从网上下载文件的命令行工具
+
+```shell
+sudo apt install curl -y
+```
+
+验证安装是否成功(可选)
+
+```shell
+curl --version
+```
+
+### 安装git
+
+为了从github上克隆仓库，需要安装git工具
+
+```shell
+sudo apt install git -y
+```
+
+验证安装是否成功(可选)
+
+```shell
+git --version
+```
+
+### 安装ohmyzsh
+
+`ohmyzsh`是`zsh`的增强框架，提供多种主题，以及丰富的插件生态。可以美化终端显示效果，通过插件提供许多便利功能，提升开发体验。
+
+使用`curl`下载`ohmyzsh`
+
+```shell
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+安装`zsh`插件`zsh-autosuggestions`和`zsh-syntax-highlighting`
+
+```shell
+# zsh-autosuggestions: 根据历史命令和补全建议自动提示
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+# zsh-syntax-highlighting: 对命令语法高亮
+git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+```
+
+打开`zsh`配置文件
+
+```shell
+nano ~/.zshrc
+```
+
+找到`ZSH_THEME`，将主题修改为`awesomepanda`
+
+```shell
+ZSH_THEME="awesomepanda"
+```
+
+找到plugins，在括号里添加刚下载的插件，使用空格分隔
+
+```shell
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+```
+
+重新加载`.zshrc`配置
+
+```shell
+source ~/.zshrc
+```
+
+访问[Oh My Zsh Wiki](https://github.com/ohmyzsh/ohmyzsh/wiki)获得更多主题及插件的信息，选择符合自己偏好的主题风格。

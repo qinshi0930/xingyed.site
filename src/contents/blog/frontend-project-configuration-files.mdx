@@ -1,0 +1,74 @@
+---
+id: 11
+title: "前端项目配置文件详解"
+slug: "frontend-project-configuration-files"
+date: "2025-12-22"
+excerpt: "详细介绍前端项目中各类配置文件的作用和区别，包括模块系统、TypeScript、代码检查和格式化等关键配置"
+featured_image: ""
+categories: ["Frontend", "Tutorial"]
+tags: ["配置文件", "Node.js", "TypeScript", "ESLint", "前端工程化"]
+is_featured: false
+total_views_count: 0
+---
+
+本篇仅作为对各配置文件的说明与一些注意事项。不对各配置文件的配置项作详细说明。
+
+## .js与.mjs的区别
+
+ Node.js通过两个主要机制来判断一个文件的模块系统：
+
+ package.json中的`"type"`字段：
+
+- `"type": "module"`: 项目中的所有 .js 文件将被是为 ES 模块。
+- `"type": "commonjs"`(或未设置)：项目中的所有 .js 文件将被视为 CommonJS 模块。
+
+ 文件扩展名（覆盖项目级别的设置）：
+
+- .mjs：总是被当做 ES 模块处理。
+- .cjs：总是被当做 CommonJS 模块处理
+
+ 随着Node.js生态的持续发展，模块系统逐渐从CommonJS系统向更新的ES系统过渡，两者最主要的区别在于导入模块的方式不一样。
+ .js文件
+
+- 文件后缀：.js/.cjs
+- 模块系统：CommonJS
+- 导入语法：require('package')
+- 导出语法：`module.export = { ... }`
+- 使用场景：传统Node.js环境，大多数现有项目
+- 注意事项：无法导入仅支持ESM的包
+ .mjs文件
+- 文件后缀：.mjs
+- 模块系统：ESM (ES Modules)
+- 导入语法：import package from 'package'
+- 导出语法：`export default { ... }`
+- 使用场景：现代Node.js环境，明确使用ESM的包
+- 注意事项：兼容CommonJS系统，可以通过import导入一个CommonJS包
+
+## package.json
+
+ 作用：Node.js核心配置文件，是项目的核心清单和依赖管理文件。包含了项目的元数据、脚本命令以及所有依赖包的信息。
+
+## tsconfig.json
+
+ 作用：Typescripte核心配置文件，用于指定编译选项、定义文件范围、路径映射等。
+
+## postcss.config.mjs
+
+ 作用：postcss配置文件，告诉postcss应该使用哪些插件来处理css文件，以及如何配置这些插件。
+ 常见插件：autoprefixer、tailwindcss、cssnano、postcss-import等
+
+## .eslint.config.mjs
+
+ 作用：eslint配置文件，用于检查JavaScript/TypeScript代码中的错误和代码风格。
+
+## .stylelint.config.mjs
+
+ 作用：stylelint配置文件，是css的eslint，用于检查css代码中的错误和代码风格。
+
+## .prettierrc.mjs (或.prettier.mjs)
+
+ 作用：prettier代码格式化工具的配置文件，强制项目使用完全一致的代码样式，与eslint和stylelint一起使用
+
+## components.json
+
+ 作用：shadcn/ui库的配置文件，定义了如何在项目中添加和管理shadcn/ui组件

@@ -1,0 +1,149 @@
+---
+id: 10
+title: "VirtualBox安装Ubuntu虚拟机完整指南"
+slug: "virtualbox-ubuntu-installation-guide"
+date: "2025-12-23"
+excerpt: "详细介绍使用VirtualBox安装Ubuntu虚拟机的完整流程，包括虚拟机创建、系统安装、增强功能配置和共享文件夹设置"
+featured_image: ""
+categories: ["Linux", "Tutorial"]
+tags: ["VirtualBox", "Ubuntu", "虚拟机", "Linux", "系统安装"]
+is_featured: false
+total_views_count: 0
+---
+
+本文档提供使用VirtualBox安装Ubuntu Linux虚拟机的详细步骤，包括安装增强功能和配置共享文件夹。
+
+## 1. 下载并安装VirtualBox
+
+1. 访问 **VirtualBox官网** 下载页面： [https://www.virtualbox.org/wiki/Downloads](https://www.virtualbox.org/wiki/Downloads)
+2. 根据您的主机操作系统（Windows、macOS 或 Linux），下载对应的安装程序。
+3. 运行下载的安装文件，遵循安装向导的提示完成安装。建议使用所有默认设置。
+
+## 2. 下载Ubuntu ISO镜像
+
+ISO镜像是操作系统的安装文件。推荐从国内镜像站下载，速度更快。
+
+- **Ubuntu官网**： [https://ubuntu.com/download/desktop](https://ubuntu.com/download/desktop)
+- **阿里云镜像**： [https://mirrors.aliyun.com/ubuntu-releases/](https://mirrors.aliyun.com/ubuntu-releases/)
+- **清华TUNA镜像**： [https://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/](https://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/)
+
+**建议**：选择最新的 **LTS** 版本，因为它更稳定且支持周期长。例如：**Ubuntu 22.04 LTS**。
+
+## 3. 创建虚拟机
+
+此步骤相当于配置一台虚拟电脑的硬件。不同版本的安装向导提供的配置选项可能有所不同，以下配置项基于**VirtualBox 7.2.2 Windows**版本提供的配置指南，请根据自身情况进行调整。
+
+1. 打开VirtualBox，点击顶部工具栏的 **"新建"** 按钮。
+
+2. **名称和操作系统**：(Virtual machine name and operating system)
+
+- **名称(VM Name)**： 输入一个虚拟机的名称（如 `MyUbuntu`）。
+  - **存储位置(VM Folder)**： 选择虚拟机文件的存储位置（确保有足够空间）。
+  - **系统安装文件(ISO Image)**： 选择前面下载的ISO文件路径。
+
+3. **用户名和密码**（Set up unattended guest OS installation）
+
+- **用户名(User Name)**：设置一个用于登录操作系统的用户名。
+- **密码(Password)**：输入登录密码
+- **主机名称(Host Name)**：设置操作系统的主机名称
+- **域名(Domain Name)**：设置虚拟机的域名
+
+4. **勾选Install Guest Additions**，极大提升使用体验，以下列出部分比较重要的功能：
+
+- **共享剪贴板**：支持在宿主机和虚拟机之间，双向进行直接的复制粘贴。
+- **拖放支持**：支持在宿主机和虚拟机之间，双向进行文件拖放复制。
+- **共享文件夹**：支持将宿主机上的一个文件夹共享给虚拟机，虚拟机可以直接在系统中访问该文件夹。
+- **时间同步**：保持宿虚拟机和主机的系统时间同步
+
+5. **设置虚拟机硬件参数**：(Specify virtual hardware)
+
+- **内存大小(Base Memory)**： 为虚拟机分配内存。建议至少 **4096 MB**。或者根据你自己的硬件资源合理分配即可。
+- **CPU核心数量(Number of CPUs)**：为虚拟机分配CPU核心数量，建议分配2个核心，基本可以满足绝大部分开发需求。
+
+6. **设置硬盘参数**： (Specify virtual hard disk)
+
+- 选择 **"现在创建虚拟硬盘"**(Create a New Virtual Hard Disk)。
+- **虚拟硬盘文件位置**：指定虚拟硬盘的存放位置，建议与虚拟机的存储位置保持一致。
+- **硬盘大小(Disk Size)**：为虚拟机分配硬盘，建议设置**100 GB**。或者根据你自身的硬件资源合理分配即可。
+- **硬盘文件类型(Hard Disk File Type and Format)**： 保持默认的 `VDI (VirtualBox Disk Image)`。
+
+7. 点击**完成**。
+
+### 4.安装Ubuntu操作系统
+
+启动虚拟机后，请根据以下向导提示完成安装流程。
+
+1. 在VirtualBox主界面选中新创建的虚拟机，点击"启动"。
+
+2. 虚拟机将从您选择的ISO镜像启动，进入Ubuntu安装界面。
+
+3. 选择语言，然后点击"安装Ubuntu"。
+
+4. 在"安装类型"界面，**选择"清除整个磁盘并安装Ubuntu"**（不用担心，这只会清除虚拟硬盘，不会影响主机系统）。
+
+5. 根据屏幕提示设置地区、键盘布局、创建用户账户和密码。
+
+6. 等待安装完成，然后根据提示重启虚拟机。**重启后，在弹出的界面中按回车键并手动从虚拟光驱中弹出安装ISO**。
+
+## 5. 安装Guest Additions（增强功能）
+
+安装增强功能可以显著提升使用体验，实现无缝鼠标切换、共享剪贴板、调整分辨率等功能。如果在前面勾选了**Install Guest Additions**，VirtualBox会尝试进行安装。如果安装失败，或者没有勾选该功能，这里提供另外一种安装方式。
+
+1. 启动Ubuntu虚拟机后，在VirtualBox窗口的顶部菜单中，点击 **"设备"** -> **"安装增强功能"**。
+    - 此时，VirtualBox会在虚拟机内自动创建一个包含安装程序的CD镜像，并显示在任务栏上。
+
+2. **打开终端**：
+
+```shell
+# 创建用于挂载的文件夹
+sudo mkdir /mnt/cdrom
+
+# 将CD镜像挂载到指定路径
+sudo mount /dev/cdrom /mnt/cdrom
+
+# 切换到挂载的路径
+cd /mnt/cdrom
+
+# 安装GA增强功能
+sudo ./VBoxLinuxAdditions.run
+```
+
+1. **重启虚拟机**： 安装完成后，在终端中输入以下命令重启：
+
+```shell
+sudo reboot
+```
+
+重启后，增强功能即可生效。您可以尝试调整窗口大小，虚拟机桌面应能自动适应。
+
+## 6. 配置共享文件夹
+
+共享文件夹允许在主机和虚拟机之间轻松共享文件。必须先安装**Guest Additions**增强功能才能使用，否则设置了也无法在虚拟机中访问该文件夹。
+
+1. **关闭** 虚拟机。
+
+2. 在VirtualBox主界面，选中虚拟机，点击 **"设置"** -> **"共享文件夹"**。
+
+3. 点击右侧的 **"添加共享文件夹"** 按钮（带加号的文件夹图标）。
+    - **文件夹路径(Folder Path)**： 选择主机上的一个文件夹（例如 `D:\VBoxShare`）。
+    - **文件夹名称(Folder Name)**： 指定这个共享文件夹在虚拟机内的名称（例如`share`）。
+    - **挂载点(Mount Point)**：默认为空即可。
+    - 勾选 **"自动挂载"**：设置虚拟机启动时自动挂载这个共享文件夹。
+
+4. 点击 **"确定"** 保存设置，然后启动虚拟机。
+
+5. 共享文件夹会自动挂载到 `/media/sf_共享文件夹名称` 路径下（例如 `/media/sf_share`）。
+
+6. **修改用户组**： 默认情况下，普通用户无权访问该文件夹。需要将当前用户添加到 `vboxsf` 用户组中。在虚拟机终端中执行：
+
+```shell
+sudo usermod -a -G vboxsf $USER
+```
+
+1. **重启虚拟机** 使更改生效：
+
+```shell
+sudo reboot
+```
+
+重启后，就可以在 `/media/sf_share` 目录下访问主机共享文件夹中的文件了。

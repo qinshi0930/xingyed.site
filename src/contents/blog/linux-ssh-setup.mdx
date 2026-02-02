@@ -1,0 +1,252 @@
+---
+id: 5
+title: "Linux开发环境配置（二）：安装及配置SSH"
+slug: "linux-ssh-setup"
+date: "2025-12-11"
+excerpt: "配置 SSH 实现快速安全登录远程服务器"
+featured_image: ""
+categories: ["Linux", "Tutorial"]
+tags: ["linux", "ssh"]
+is_featured: false
+total_views_count: 0
+---
+
+## 技术概念
+
+- ssh：一种加密网络协议，用于安全地远程登录和管理主机。
+- sshd：SSH 守护进程，运行在服务器端，监听并处理来自 SSH 客户端的连接请求。
+- ssh-add：将私钥添加到 ssh-agent 的缓存中，供后续 SSH 连接使用。
+- ssh-keygen：用于生成、管理和转换 SSH 密钥对（公钥/私钥）的工具。
+- ssh-agent：在后台运行的程序，用于缓存私钥，避免重复输入密码。
+
+## 安装
+
+基于 Ubuntu 系统安装 SSH 服务：
+
+```shell
+# 更新软件列表
+sudo apt update
+sudo apt install openssh-server openssh-client
+```
+
+启动服务
+
+```shell
+sudo systemctl enable --now ssh
+```
+
+- 某些系统上服务名为`sshd`而非`ssh`。
+
+## 基本配置
+
+### 步骤1：在本地生成SSH密钥对
+
+在本地计算机（SSH客户端）上执行：
+
+```shell
+# -t: ecdsa | ecdsa-sk | ed25519 | ed25519-sk | rsa
+# -b: 指定密钥位数，指定 rsa 和 ecdsa 时有效
+#     取值范围: 
+#       rsa: 1024 | 2048 | 3072 | 4096
+#       ecdsa: 256 | 384 | 521
+# -C: 密钥描述信息[可选]
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+```
+
+- 指定密钥保存路径及输入密码后，就可以成功生成密钥对了！
+- 默认会生成`~/.ssh/id_rsa`（私钥）和`~/.ssh/id_rsa.pub`（公钥）
+- 可根据需要指定密钥对的生成路径
+
+> [!Tips] 提示
+> 在Windows系统中，.ssh目录位于`C:\Users\(用户名)\.ssh，跟随 ssh-keygen 的生成向导操作即可。
+
+### 步骤2：将公钥上传到服务器
+
+在服务器（SSH服务端）上创建 `authorized_keys`文件：
+
+``` shell
+# 登录服务器，创建并编辑 authorized_keys
+sudo mkdir -p ~/.ssh
+sudo chmod 700 ~/.ssh
+sudo touch ~/.ssh/authorized_keys
+sudo chmod 600 ~/.ssh/authorized_keys
+```
+
+- 确保`~/.ssh`目录权限为`700`，`authorized_keys`权限为`600`，否则 SSH 可能拒绝使用。
+
+添加公钥到`authorized_keys`文件中
+
+```shell
+# 查看公钥内容（本地计算机）
+cat ~/.ssh/id_rsa.pub
+
+# 编辑 authorized_keys（服务器）
+echo "公钥内容" >> ~/.ssh/authorized_keys
+```
+
+### 步骤3：修改 SSH 服务配置（SSH 服务端）
+
+编辑配置文件：
+
+```shell
+sudo nano /etc/ssh/sshd_config
+```
+
+确保以下设置**已取消注释并正确配置**：
+
+```shell
+# 启用公钥认证
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+```
+
+### 步骤4：检查配置语法并重启 SSH 服务
+
+```shell
+# 检查配置是否合法
+sudo sshd -t
+
+# 重启服务
+sudo systemctl restart sshd
+# 或 ssh
+sudo systemctl restart ssh
+```
+
+- `ssh`服务在不同系统上服务名可能不一样，根据情况二选一执行即可。
+
+### 步骤5：测试连接
+
+在本地计算机上打开终端窗口，将私钥添加到`ssh-agent`：
+
+```shell
+ssh-add ~/.ssh/id_rsa
+```
+
+尝试登录：
+
+```shell
+ssh username@your_server_ip
+```
+
+- 首次登录可能需要输入密钥密码
+- 如果无需输入密码直接登录 → 成功
+- 如果提示权限被拒 → 回到服务端会话检查配置或密钥
+
+## 安全策略
+
+禁用密码登录：
+
+```shell
+# 编辑配置文件
+sudo nano /etc/ssh/sshd_config
+
+# 禁用密码登录
+PasswordAuthentication no
+# （可选）禁止空密码
+PermitEmptyPasswords no
+# （可选）禁止 root 密码登录（即使你已禁用密码，也建议设为 no 或 prohibit-password）
+PermitRootLogin no
+# 或
+PermitRootLogin prohibit-password  # 允许 root 用密钥登录，但不能用密码
+```
+
+- 修改配置并报错后，记得检查语法并重启 SSH 服务
+
+> [!Warning] 重要
+> 在禁用密码之前，请**务必确认公钥已成功配置，并且能登录！**否则可能被所在服务器外
+
+修改默认监听端口：
+
+```shell
+# 编辑配置文件
+sudo nano /etc/ssh/sshd_config
+
+# 指定监听端口，如 2222
+Port 2222
+AddressFaimly any       # （可选）默认为 any
+ListenAddress 0.0.0.0   # （可选）默认为 0.0.0.0
+ListenAddress ::        # （可选）默认为 ::
+```
+
+- SSH 服务允许监听多个端口，应用新端口前，建议先保留默认的 22 端口。
+
+检查配置语法并重启 SSH 服务监听配置：
+
+```shell
+# 检查语法
+sudo sshd -t
+# 重载 systemd 配置
+sudo systemctl daemon-reload
+# 重启 ssh.socket
+sudo systemctl restart ssh.socket
+```
+
+- 如果有报错，可能是系统不支持`socket activation`模式，重启ssh服务`systemctl restart sshd/ssh`即可。
+
+配置防火墙：
+
+```shell
+# 启用 ufw
+sudo ufw enable
+# 查看当前规则
+sudo ufw status numbered
+# 添加新端口规则，指定协议（TCP 或 UDP）
+sudo ufw allow 2222/tcp
+# 删除旧规则
+sudo ufw delete allow 22/tcp
+```
+
+- 建议先临时保留Port 22，等新端口测试成功后，再注释掉 22 并应用新配置，以及配置防火墙阻止 22 端口。
+- 如果使用云服务器（阿里云、腾讯云等），需要在控制台同步更新防火墙设置。
+
+>[!tips]提示
+>云服务商提供的云防火墙已经非常成熟，可以选择不启用UFW，减轻负担。
+
+## 部署公钥
+
+如果已经有配置好的 SSH 服务，使用 `ssh-copy-id`部署公钥（更简单）：
+
+```shell
+# -i: 指定公钥文件
+# -p: 指定端口
+ssh-copy-id -i ~/.ssh/custom_key.pub -p 2222 username@your_server_ip
+```
+
+## 客户端配置管理
+
+SSH配置文件（~/.ssh/config）
+
+```shell
+Host myserver                              # 主机别名
+ HostName server.example.com            # 实际主机名
+    User username                          # 用户名
+    Port 2222                              # 端口
+    IdentityFile ~/.ssh/custom_key         # 私钥文件
+    ServerAliveInterval 60                 # 保活间隔（秒）
+    ServerAliveCountMax 3                  # 保活次数
+    StrictHostKeyChecking no               # 不检查主机密钥
+    UserKnownHostsFile /dev/null           # 不保存主机密钥
+    LogLevel ERROR                         # 日志级别
+    Compression yes                        # 启用压缩
+    ForwardAgent yes                       # 启用代理转发
+    ForwardX11 yes                         # 启用X11转发
+    
+Host *.internal.com                        # 通配符匹配
+    User admin
+    
+Host 192.168.*.*                           # IP段匹配
+    User root
+```
+
+## 常用命令
+
+```shell
+# 查看 SSH 服务配置项
+sudo sshd -T | grep key
+# ssh-agent 管理
+ssh-add ~/.ssh/id_rsa         # 添加密钥到代理
+ssh-add -l                    # 列出已加载密钥
+ssh-add -L                    # 列出公钥
+ssh-add -d ~/.ssh/id_rsa      # 删除特定密钥
+ssh-add -D                    # 删除所有密钥
+```

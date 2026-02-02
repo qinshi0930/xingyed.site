@@ -26,45 +26,50 @@ export const loadBlogFiles = (): BlogItemProps[] => {
 	const files = fs.readdirSync(dirPath).filter((f) => f.endsWith(".mdx"));
 
 	const blogs = files.map((file) => {
-		const filePath = path.join(dirPath, file);
-		const source = fs.readFileSync(filePath, "utf-8");
-		const { content, data } = matter(source);
+		try {
+			const filePath = path.join(dirPath, file);
+			const source = fs.readFileSync(filePath, "utf-8");
+			const { content, data } = matter(source);
 
-		// 处理 MDX 内容
-		const mdxCompiler = remark().use(remarkParse).use(remarkGfm).use(remarkMdx);
-		const mdxContent = mdxCompiler.processSync(content).toString();
+			// 处理 MDX 内容
+			const mdxCompiler = remark().use(remarkParse).use(remarkGfm).use(remarkMdx);
+			const mdxContent = mdxCompiler.processSync(content).toString();
 
-		return {
-			id: data.id,
-			slug: data.slug || file.replace(".mdx", ""),
-			title: { rendered: data.title },
-			content: {
-				rendered: mdxContent,
-				markdown: content,
-				protected: false,
-			},
-			excerpt: { rendered: data.excerpt, protected: false },
-			date: data.date,
-			modified: data.date,
-			featured_image_url: data.featured_image,
-			categories: data.categories || [],
-			tags: data.tags || [],
-			is_featured: data.is_featured || false,
-			total_views_count: data.total_views_count || 0,
-			// 添加其他必需字段的默认值
-			status: "publish",
-			link: `/blog/${data.slug}?id=${data.id}`,
-			author: 1,
-			featured_media: 0,
-			comment_status: "open",
-			ping_status: "open",
-			sticky: false,
-			template: "",
-			format: "standard",
-			meta: { footnotes: "" },
-			tags_list: [],
-			amp_enabled: false,
-		} as BlogItemProps;
+			return {
+				id: data.id,
+				slug: data.slug || file.replace(".mdx", ""),
+				title: { rendered: data.title },
+				content: {
+					rendered: mdxContent,
+					markdown: content,
+					protected: false,
+				},
+				excerpt: { rendered: data.excerpt, protected: false },
+				date: data.date,
+				modified: data.date,
+				featured_image_url: data.featured_image,
+				categories: data.categories || [],
+				tags: data.tags || [],
+				is_featured: data.is_featured || false,
+				total_views_count: data.total_views_count || 0,
+				// 添加其他必需字段的默认值
+				status: "publish",
+				link: `/blog/${data.slug}?id=${data.id}`,
+				author: 1,
+				featured_media: 0,
+				comment_status: "open",
+				ping_status: "open",
+				sticky: false,
+				template: "",
+				format: "standard",
+				meta: { footnotes: "" },
+				tags_list: [],
+				amp_enabled: false,
+			} as BlogItemProps;
+		} catch (error) {
+			console.error(`Error processing MDX file "${file}":`, error);
+			throw error;
+		}
 	});
 
 	// 按日期排序（最新的在前）
