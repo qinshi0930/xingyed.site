@@ -84,7 +84,9 @@ jobs:
           rsync -avz \
             --include='.next/***' \
             --include='public/***' \
-            --include='src/contents/***' \
+            --include='src/' \
+            --include='src/contents/' \
+            --include='src/contents/**' \
             --include='package.json' \
             --exclude='**' \
             ./ \
