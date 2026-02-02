@@ -1,0 +1,226 @@
+---
+id: 7
+title: "使用 Github Actions 实现 CI/CD 自动化工作流（二）"
+slug: "github-actions-nextjs-cicd"
+date: "2025-12-22"
+excerpt: "以Next.js项目为例，实现包含构建、测试和部署的完整CI流程，详细介绍Jest配置和自动化工作流实现"
+featured_image: ""
+categories: ["DevOps", "CI/CD"]
+tags: ["Github Actions", "CI", "CD", "Next.js", "Jest", "yml"]
+is_featured: false
+total_views_count: 0
+---
+
+现在我们已经拥有：
+
+- 一个空项目
+- 创建并运行过一个基本的工作流
+接下来以Next.js项目为例，实现一个包含构建、测试、以及部署的完整CI流程。
+
+## 核心目标
+
+- 创建一个简单的`Next.js`项目，包含几项测试
+- 使用`jest`运行测试用例
+- 设计一份包含完整流程的工作流
+
+## 创建 Next.js 项目
+
+首先我们需要先准备一个简单的`Next.js`项目，并为其添加`jest`配置，最后再创建几个测试。
+
+### 初始化
+
+通过`Next.js`官方脚本初始化项目：
+
+```shell
+pnpm create next-app ~/dev/github-actions-demo
+# 选择默认推荐配置
+```
+
+由于默认情况下官方Next.js模板不包含测试配置，因此需要添加Jest配置：
+
+### Jest 配置
+
+安装`jest`相关依赖：
+
+```shell
+pnpm install -D jest jest-environment-jsdom @testing-library/react @testing-library/dom @testing-library/jest-dom ts-node @types/jest
+```
+
+执行以下命令创建一个基本的`jest`配置文件：
+
+```shell
+pnpm create jest@latest
+```
+
+根据引导完成一系列配置后，会在根目录创建`jest.config.mjs`文件
+
+修改该配置文件，使用`next/jest`为`jest`注入`Next.js`必要的配置：
+
+```typescript
+import type { Config } from 'jest'
+import nextJest from 'next/jest.js'
+
+const createJestConfig = nextJest({
+ div: './',
+})
+
+const config: Config = {
+ // ...
+ coverageProvider: 'v8',
+ testEnvironment: 'jsdom',
+ // ...
+}
+```
+
+最后，在`package.json`中添加`test`脚本：
+
+```json
+{
+ // ...
+ "script": {
+  // ...
+  "test": "jest",
+  "test:watch": "jest --watch",
+ }
+ // ...
+}
+```
+
+### 创建测试用例
+
+前置工作已完成，开始创建测试用例。在项目根目录创建`__tests__`文件夹。
+
+在本例中，我们创建一个测试用例来检查`<Page />`组件是否渲染了一个标题（如：`h1`）
+
+修改`app/page.tsx`文件：
+
+```tsx
+// /app/page.tsx
+export default function Page() {
+ return (
+  <div>
+   <h1>Home</h1>
+   <p>测试用例：检测是否渲染标题</p>
+  </div>
+ )
+}
+```
+
+创建`__tests__/page.test.jsx`：
+
+```jsx
+import '@testing-library/jest-dom'
+import { render, screen } from '@testing-library/react'
+import Page from '../app/page'
+ 
+describe('Page', () => {
+  it('renders a heading', () => {
+    render(<Page />)
+ 
+    const heading = screen.getByRole('heading', { level: 1 })
+ 
+    expect(heading).toBeInTheDocument()
+  })
+})
+```
+
+添加一个快照测试，用于追踪`<Page />`组件的任何改动
+
+创建`__tests__/snapshot.js`:
+
+```js
+import { render } from '@testing-library/react'
+import Page from '../app/page'
+ 
+it('renders homepage unchanged', () => {
+  const { container } = render(<Page />)
+  expect(container).toMatchSnapshot()
+})
+```
+
+### 运行测试
+
+配置完成后，运行`test`脚本会使用`jest`测试框架，查找并运行`*.test.js`匹配的测试文件
+
+```shell
+pnpm test
+```
+
+## 创建工作流
+
+接下来我们需要完成工作流设计，并用工作流文件实现该设计
+
+### 工作流设计
+
+- 阶段一：安装依赖
+- 阶段二：运行代码质量检查（ESLint）
+- 阶段三：运行单元测试
+- 阶段四：打包构建
+
+### 实现工作流
+
+创建`.github/workflows/ci-for-next-app.yml`：
+
+```yml
+name: CI for Next.js App # 工作流名称
+
+on: [push, pull_request]
+
+env:
+  NODE_VERSION: 22
+  PNPM_VERSION: 10
+  
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 获取代码
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 设置pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      # 3. 设置Node环境
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      # 4. 安装依赖
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 5. 代码检查
+      - name: Run lint
+        run: pnpm lint
+
+      # 6. 运行测试
+      - name: Run tests
+        run: pnpm test
+
+      # 7. 构建生产包
+      - name: Build
+        run: pnpm build
+
+      # 8. 上传构建产物，供后续下载
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: .next/
+          include-hidden-files: true
+          if-no-files-found: error
+```
+
+将`ci-for-next-app.yml`推送到线上仓库，进入Actions页查看执行结果。
+
+使用AI生成工作流文件时，通常AI默认使用`npm`作为包管理器，这是因为使用`actions/setup-node`设置`Node`环境时，默认会启用`npm`和`yarn`。由于我在日常开发工作中使用了`pnpm`作为默认包管理器，为了与本地开发环境保持一致，在本例中也使用了`pnpm`作为工作流的包管理器。
+
+如果要使用`pnpm`作为包管理器，需要在执行设置`Node`环境前，先使用`pnpm/action-setup`安装`pnpm`。
+
+## 总结

@@ -1,0 +1,169 @@
+---
+id: 8
+title: "PostgreSQL安装及配置方法"
+slug: "postgresql-installation-configuration"
+date: "2025-12-23"
+excerpt: "详细介绍PostgreSQL数据库的安装步骤、服务器配置、用户权限管理，包含完整的命令示例和最佳实践"
+featured_image: ""
+categories: ["Database", "Tutorial"]
+tags: ["PostgreSQL", "database", "installation", "configuration", "permission"]
+is_featured: false
+total_views_count: 0
+---
+
+## 安装
+
+### step1.添加 PostgreSQL 存储库
+
+```shell
+# 更新包索引
+sudo apt update
+# 安装gnupg2和wget
+# gunpg2: 密钥管理和安全验证
+# wget: 命令行工具, 从网络上下载文件
+sudo apt install gnupg2 wget
+# 添加 PostgreSQL 官方的 APT 存储库
+sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+# 将 PostgreSQL 官方的GPG公钥添加到系统的可信密钥库
+# 用于验证从第三方软件源下载的包的完整性和真实性
+curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+# 再次更新包索引
+sudo apt update
+```
+
+### step2.安装 PostgreSQL
+
+```shell
+# 安装PostgreSQL 16及其 contrib 模块
+sudo apt install postgresql-16 postgresql-contrib-16
+# 启动 PostgreSQL 服务
+sudo systemctl start postgresql
+# 设置开机启动(不推荐)
+# WSL2 每次启动都会重置, 建议每次手动打开服务
+sudo systemctl enable postgresql
+```
+
+## step3.配置 PostgreSQL 服务器(可选)
+
+```shell
+# 本地私人开发环境, 以下步骤都是非必须的, 不推荐执行！！！
+# 本地私人开发环境, 以下步骤都是非必须的, 不推荐执行！！！
+# 本地私人开发环境, 以下步骤都是非必须的, 不推荐执行！！！
+
+# 打开 PostgreSQL 的配置文件: postgresql.conf
+sudo nano /etc/postgresql/16/main/postgresql.conf
+# 将listen_addresses设置为*以允许远程连接
+listen_addresses = '*'
+# 将所有以host开头的行的认证方法从ident替换为md5, 允许远程密码登录
+sudo sed -i '/^host/s/ident/md5/' /etc/postgresql/16/main/pg_hba.conf
+# 将所有以local开头的行的认证方法从peer改为trust, 允许本地用户无密码登录
+# 仅适用于开发/测试环境
+sudo sed -i '/^local/s/peer/trust/' /etc/postgresql/16/main/pg_hba.conf
+# 允许任意IP地址通过TCP/IP连接数据库
+# 仅适用于开发/测试环境
+echo "host all all 0.0.0.0/0 md5" | sudo tee -a /etc/postgresql/16/main/pg_hba.conf
+# 重启PostgreSQL更新配置
+sudo systemctl restart postgresql
+# 允许PostgreSQL端口通过防火墙, WSL2中ufw可能不启用
+sudo ufw allow 5432/tcp
+```
+
+## step4.创建用户和数据库
+
+```shell
+# 设置postgres用户密码
+sudo -u postgres psql -c "ALTER ROLE postgres PASSWORD '<password>';"
+# 创建新用户
+sudo -u postgres createuser --pwprompt yourname
+# (可选)设置/修改<user_name>用户密码
+sudo -u postgres psql -c "ALTER ROLE <user_name> PASSWORD '<password>';"
+# 创建新数据库
+sudo -u postgres createdb <db_name>
+# 验证连接
+psql -U <user_name> -h 127.0.0.1 -d <db_name>
+# (可选)删除用户
+sudo -u postgres psql -c "DROP ROLE <user_name>;"
+# (可选)修改用户名
+sudo -u postgres psql -c "ALTER ROLE <old_name> RENAME TO <new_name>;"
+# (可选)修改用户属性: 密码永不过期
+sudo -u postgres psql -c "ALTER ROLE <user_name> VALID UNIT 'infinity';"
+```
+
+## step5.加载示例数据库(可选)
+
+```shell
+# 下载示例数据库
+curl -O https://neon.com/postgresqltutorial/dvdrental.zip
+# 解压dvdrental.zip
+unzip dvdrental.zip
+# 连接到PostgreSQL数据库服务器
+sudo -u postgres psql
+# 创建数据库
+create database dedrental;
+# 退出psql
+\q
+# 使用pg_restore工具恢复数据库
+pg_restore -U postgres --dbname=dvdrental --verbose dvdrental.tar
+# 再次访问PostgreSQL服务器
+psql
+# 切换到数据库
+\c dvdrental
+# 测试
+select count(*) from film;
+```
+
+## step6.配置用户权限
+
+```shell
+# GRANT为授予权限, REVOKE取消权限
+
+# 使用具有足够权限的用户登录, 这里使用默认的postgres
+psql -U postgres -h localhost -p 5432
+# 允许连接到指定数据库
+GRANT CONNECT ON DATABASE <db_name> TO <user_name>;
+# 允许用户访问public模式(schema)的对象
+GRANT USAGE ON SCHEMA public TO <user_name>;
+# 允许用户在public模式(schema)中创建表、视图、序列等
+GRANT CREATE ON SCHEMA public TO <user_name>;
+# (可选)批量授予对现有表/序列的权限, 针对新用户
+# (可选)批量授予对public模式(schema)下所有所有表的 SELECT, INSERT, UPDATE, DELETE 权限
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO <user_name>;
+# (可选)批量授予对所有现有序列的访问(USAGE)权限(用于自增主键)
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO <user_name>;
+# (可选)批量授予执行函数/存储过程的权限
+GRANT EXECUTE ON ALL FUNCTION IN SCHEMA public TO <user_name>;
+# 设置默认权限：<user_name>创建的表, <user_name>自己拥有所有权限
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO <user_name>;
+# 设置默认权限: <user_name>创建的序列, <user_name>自己可以使用
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO <user_name>;
+# 设置默认权限: <user_name>创建的函数/存储过程, <user_name>自己拥有所有权限
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO <user_name>;
+# (可选)如果希望其他开发者或者应用用户也能读取<user_name>创建的表
+ALERT DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO <other_user>;
+```
+
+## 权限管理
+
+```shell
+# 授予<user_name>权限：创建数据库(CREATEDB)
+ALTER ROLE <user_name> CREATEDB;
+# 授予<user_name>权限：允许创建/修改/删除其他角色
+ALTER ROLE <user_name> CREATEROLE;
+# 授予<user_name>权限: 超级用户权限
+ALTER ROLE <user_name> SUPERUSER;
+# 授予<user_name>权限: 允许用户登录
+ALTER ROLE <user_name> LOGIN;
+
+# 撤销<user_name>权限：创建数据库(CREATEDB)
+ALTER ROLE <user_name> NOCREATEDB;
+# 撤销<user_name>权限：允许创建/修改/删除其他角色
+ALTER ROLE <user_name> NOCREATEROLE;
+# 撤销<user_name>权限: 超级用户权限
+ALTER ROLE <user_name> NOSUPERUSER;
+# 撤销<user_name>权限: 允许用户登录
+ALTER ROLE <user_name> NOLOGIN;
+
+# 查看权限
+\du
+\du <user_name>
+```

@@ -1,0 +1,75 @@
+---
+id: 6
+title: "使用 Github Actions 实现 CI/CD 自动化工作流（一）"
+slug: "github-actions-cicd-basics"
+date: "2025-12-13"
+excerpt: "从零搭建第一个自动化工作流，熟悉Github Actions基本结构。"
+featured_image: ""
+categories: ["DevOps", "CI/CD"]
+tags: ["Github Actions", "CI", "CD", "yml"]
+is_featured: false
+total_views_count: 0
+---
+
+为什么写这篇文档？
+
+最近在学习如何利用 Github Actions 实现自动化 CI/CD 工作流，通过写文档的方式，我可以梳理知识点、强化记忆、深化学习效果，同时也可以作为备忘录，方便未来发挥实践指南作用。如果本文恰好有幸为你提供帮助，那也是极好的。
+
+## Overview
+---
+Github Actions 是由 Github 提供的一种持续集成（CI）和持续交付（CD）平台，通过创建工作流，可以实现推送（push）更改或合并（pull reqeust）请求时，自动运行生成、测试、部署到生产环境等流程。
+
+## 核心目标
+---
+- 从零搭建第一个自动化工作流
+- 熟悉Actions的基本结构
+- 每次`git push`后自动运行构建、测试步骤
+
+## 核心概念
+---
+- .yml文件：描述自动化流程清单的工作流文件
+- Runner：Github提供的免费**虚拟机**
+- Job/Step：描述Actions要做什么（job）和具体怎么做（step）
+
+## 步骤一：初始化项目
+---
+1. 在Github上创建仓库`github-actions-demo`
+
+2. Fork仓库到本地
+
+```shell
+# 将 <owner> 替换为你自己的账号
+git clone git@github.com:<owner>/github-actions-demo.git ~/dev/github-actions-demo
+# 或
+git clone https://github.com/<owner>/github-actions-demo.git ~/dev/github-actions-demo
+```
+
+## 步骤二：创建工作流
+---
+1. 在仓库创建`.github/workflows/ci-demo.yml`
+
+```yaml
+name: CI demo # 工作流名称，会显示在Actions页面
+on: [push] # 触发时机：每次推送时运行
+jobs: # 定义工作流要做什么
+  say-hello: # job id
+    runs-on: ubuntu-latest # 指定job运行的运行环境
+    steps:
+      - run: echo '代码推送成功，自动化流程启动！'
+      - run: echo '当前分支：${{ github.ref }}'
+```
+
+2. 推送代码，在线上仓库的Actions页观察运行结果
+
+```shell
+git add .
+git commit -C '创建工作流：ci-demo.yml'
+git push -u origin main
+```
+
+3. 在Actions页面点击`CI demo`标签，查看工作流运行日志
+
+## 参考资料
+---
+[Git - Reference](https://git-scm.com/docs)
+[Github Actions 的 Workflow 语法](https://docs.github.com/zh/actions/reference/workflows-and-actions/workflow-syntax)
