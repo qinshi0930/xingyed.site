@@ -13,7 +13,7 @@ interface MdxFileProps {
 }
 
 export const loadMdxFiles = (slug: string): MdxFileProps[] => {
-	const dirPath = path.join(process.cwd(), "src", "contents", "learn", slug);
+	const dirPath = path.join(process.cwd(), "src", "contents", slug);
 
 	if (!fs.existsSync(dirPath)) {
 		return [];
@@ -40,7 +40,7 @@ export const loadMdxFiles = (slug: string): MdxFileProps[] => {
 };
 
 export const getMdxFileCount = (slug: string) => {
-	const dirPath = path.join(process.cwd(), "src", "contents", "learn", slug);
+	const dirPath = path.join(process.cwd(), "src", "contents", slug);
 	const files = fs.readdirSync(dirPath);
 	const mdxFiles = files.filter((file) => file.endsWith(".mdx"));
 	return mdxFiles.length;

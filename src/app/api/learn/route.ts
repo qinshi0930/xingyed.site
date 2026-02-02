@@ -5,7 +5,7 @@ import { getMdxFileCount } from "@/common/libs/mdx";
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const slug = searchParams.get("slug") as string;
-	const count = await getMdxFileCount(slug);
+	const count = await getMdxFileCount(`learn/${slug}`);
 
 	return NextResponse.json({ count });
 }

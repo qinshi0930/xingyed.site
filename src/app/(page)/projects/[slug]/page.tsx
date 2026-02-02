@@ -14,12 +14,12 @@ import ProjectDetail from "@/modules/projects/components/ProjectDetail";
 // }
 
 export async function generateStaticParams() {
-	const contentList = loadMdxFiles(`../projects`);
+	const contentList = loadMdxFiles("projects");
 	return contentList.map((item) => ({ slug: item.slug }));
 }
 
 async function getProject(slug: string) {
-	const contentList = loadMdxFiles("../projects");
+	const contentList = loadMdxFiles("projects");
 	const contentData = contentList.find((item) => item.slug === slug);
 
 	if (!contentData) {

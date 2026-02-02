@@ -58,7 +58,7 @@ export default async function LearnContentPage({ params }: ContentPageProps) {
 		notFound();
 	}
 
-	const subContentList = loadMdxFiles(content.slug) as unknown as MdxFileContentProps[];
+	const subContentList = loadMdxFiles(`learn/${content.slug}`) as unknown as MdxFileContentProps[];
 	const sortedSubContents = subContentList.sort((a, b) => a.frontMatter.id - b.frontMatter.id);
 
 	return (
