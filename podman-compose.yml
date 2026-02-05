@@ -17,11 +17,13 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
+      # Override specific variables for container environment
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
     depends_on:
       - redis
     networks:
