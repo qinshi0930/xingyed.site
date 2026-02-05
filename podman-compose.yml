@@ -1,7 +1,6 @@
 services:
   redis:
     image: redis:7-alpine
-    container_name: personalblog-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -15,7 +14,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: personalblog-app
     restart: unless-stopped
     ports:
       - "3000:3000"
