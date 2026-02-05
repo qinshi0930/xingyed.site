@@ -88,9 +88,8 @@ jobs:
             --include='src/contents/' \
             --include='src/contents/**' \
             --include='package.json' \
-            --include='docker-compose.yml' \
             --include='podman-compose.yml' \
-            --include='Dockerfile.production' \
+            --include='Dockerfile' \
             --exclude='**' \
             ./ \
             -e "ssh -p $ECS_PORT -i ~/.ssh/deploy_key -o CertificateFile=~/.ssh/deploy_key-cert.pub -o StrictHostKeyChecking=no" \
