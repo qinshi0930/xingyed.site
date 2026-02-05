@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
-import redis from "@/common/libs/redis";
 
-interface ResponseData {
-	views: number;
-}
+import redis from "@/common/libs/redis";
 
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
@@ -15,7 +12,7 @@ export async function GET(request: Request) {
 
 	try {
 		const views = await redis.get(`views:${slug}`);
-		const viewsCount = views ? parseInt(views, 10) : 0;
+		const viewsCount = views ? Number.parseInt(views, 10) : 0;
 
 		return NextResponse.json({ views: viewsCount });
 	} catch (error) {

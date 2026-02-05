@@ -19,7 +19,9 @@ interface BlogDetailPageProps {
 
 async function incrementViews(slug: string) {
 	if (process.env.NODE_ENV === "production") {
-		await axios.post(`/api/views?&slug=${slug}`);
+		// 使用完整 URL 以支持服务端渲染
+		const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+		await axios.post(`${baseUrl}/api/views?slug=${slug}`);
 	}
 }
 

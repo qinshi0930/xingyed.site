@@ -8,10 +8,7 @@ export async function POST(request: Request) {
 
 		// 验证必填字段
 		if (!formData.name || !formData.email || !formData.message) {
-			return NextResponse.json(
-				{ error: "请填写所有必填字段" },
-				{ status: 400 },
-			);
+			return NextResponse.json({ error: "请填写所有必填字段" }, { status: 400 });
 		}
 
 		// 发送邮件
@@ -30,9 +27,6 @@ export async function POST(request: Request) {
 		});
 	} catch (error) {
 		console.error("Contact API error:", error);
-		return NextResponse.json(
-			{ error: "服务器错误，请稍后重试" },
-			{ status: 500 },
-		);
+		return NextResponse.json({ error: "服务器错误，请稍后重试" }, { status: 500 });
 	}
 }
