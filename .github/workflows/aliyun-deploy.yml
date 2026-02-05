@@ -88,14 +88,17 @@ jobs:
             --include='src/contents/' \
             --include='src/contents/**' \
             --include='package.json' \
+            --include='docker-compose.yml' \
+            --include='podman-compose.yml' \
+            --include='Dockerfile' \
             --exclude='**' \
             ./ \
             -e "ssh -p $ECS_PORT -i ~/.ssh/deploy_key -o CertificateFile=~/.ssh/deploy_key-cert.pub -o StrictHostKeyChecking=no" \
             $ECS_USER@$ECS_HOST:/var/www/xingye_site/
 
-          # 4. 远程执行部署脚本
+          # 4. 远程执行部署脚本（使用 Podman Compose）
           ssh -p $ECS_PORT \
               -i ~/.ssh/deploy_key \
               -o CertificateFile=~/.ssh/deploy_key-cert.pub \
               -o StrictHostKeyChecking=no \
-              $ECS_USER@$ECS_HOST "zsh /var/www/xingye_site/deploy.sh"
+              $ECS_USER@$ECS_HOST "cd /var/www/xingye_site && podman compose down && podman compose up -d --build"

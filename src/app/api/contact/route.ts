@@ -1,28 +1,32 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import { NextResponse } from "next/server";
 
 import { sendMessage } from "@/services/contact";
-
-const FORM_API_KEY = process.env.CONTACT_FORM_API_KEY as string;
 
 export async function POST(request: Request) {
 	try {
 		const { formData } = await request.json();
 
-		const updatedFormData = new FormData();
-		updatedFormData.append("access_key", FORM_API_KEY);
-
-		for (const key in formData) {
-			updatedFormData.append(key, formData[key]);
+		// 验证必填字段
+		if (!formData.name || !formData.email || !formData.message) {
+			return NextResponse.json({ error: "请填写所有必填字段" }, { status: 400 });
 		}
 
-		const response = await sendMessage(updatedFormData);
+		// 发送邮件
+		const response = await sendMessage(formData);
+
+		if (response.status !== 200) {
+			return NextResponse.json(
+				{ error: response.message || "邮件发送失败" },
+				{ status: response.status },
+			);
+		}
 
 		return NextResponse.json({
 			status: 200,
-			message: response?.data?.message,
+			message: response.data?.message || "消息发送成功",
 		});
 	} catch (error) {
-		return NextResponse.json({ error: "Something went wrong!" }, { status: 500 });
+		console.error("Contact API error:", error);
+		return NextResponse.json({ error: "服务器错误，请稍后重试" }, { status: 500 });
 	}
 }

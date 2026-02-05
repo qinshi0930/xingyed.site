@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	/* config options here */
+	output: "standalone",
 	pageExtensions: ["js", "jsx", "ts", "tsx"],
 	transpilePackages: ["next-mdx-remote"],
 	// serverExternalPackages: [""],

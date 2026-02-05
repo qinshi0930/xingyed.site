@@ -1,31 +1,22 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import { NextResponse } from "next/server";
 
-// import prisma from "@/prisma/prisma";
-
-interface ResponseData {
-	views: number;
-}
+import redis from "@/common/libs/redis";
 
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const slug = searchParams.get("slug");
 
+	if (!slug) {
+		return NextResponse.json({ error: "slug parameter is required" }, { status: 400 });
+	}
+
 	try {
-		// const contentMeta = await prisma.content_meta.findUnique({
-		// 	where: { slug: slug as string },
-		// 	select: { views: true },
-		// });
+		const views = await redis.get(`views:${slug}`);
+		const viewsCount = views ? Number.parseInt(views, 10) : 0;
 
-		// const contentViewsCount = contentMeta?.views ?? 0;
-		const contentViewsCount = 0;
-
-		const response: ResponseData = {
-			views: contentViewsCount,
-		};
-
-		return NextResponse.json(response);
+		return NextResponse.json({ views: viewsCount });
 	} catch (error) {
+		console.error("Failed to fetch views:", error);
 		return NextResponse.json({ error: "Failed to fetch content meta" }, { status: 500 });
 	}
 }
@@ -34,19 +25,15 @@ export async function POST(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const slug = searchParams.get("slug");
 
+	if (!slug) {
+		return NextResponse.json({ error: "slug parameter is required" }, { status: 400 });
+	}
+
 	try {
-		// const contentMeta = await prisma.content_meta.update({
-		// 	where: { slug: slug as string },
-		// 	data: {
-		// 		views: {
-		// 			increment: 1,
-		// 		},
-		// 	},
-		// 	select: { views: true },
-		// });
-		const contentMeta = { views: 0 };
-		return NextResponse.json(contentMeta);
+		const views = await redis.incr(`views:${slug}`);
+		return NextResponse.json({ views });
 	} catch (error) {
+		console.error("Failed to update views:", error);
 		return NextResponse.json({ error: "Failed to update views count" }, { status: 500 });
 	}
 }
