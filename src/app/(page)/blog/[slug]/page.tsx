@@ -1,8 +1,5 @@
-import redis from "@/common/libs/redis";
-
 import type { Metadata } from "next";
 
-import axios from "axios";
 // import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 
@@ -10,6 +7,7 @@ import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
 import { formatExcerpt } from "@/common/helpers";
 import { getBlogById, loadBlogFiles } from "@/common/libs/blog";
+import redis from "@/common/libs/redis";
 import BlogDetail from "@/modules/blog/components/BlogDetail";
 
 // const GiscusComment = dynamic(() => import("@/modules/blog/components/GiscusComment"));
