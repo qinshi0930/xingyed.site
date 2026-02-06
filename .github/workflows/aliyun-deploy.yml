@@ -83,10 +83,7 @@ jobs:
           # 3. 同步构建产物到 ECS（仅传输 .next 目录和必要文件）
           rsync -avz \
             --include='.next/***' \
-            --include='public/' \
-            --include='public/images/***' \
-            --include='public/fonts/***' \
-            --include='public/*.svg' \
+            --include='public/***' \
             --include='src/' \
             --include='src/contents/***' \
             --include='package.json' \
