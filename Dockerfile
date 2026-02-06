@@ -13,6 +13,7 @@ RUN adduser --system --uid 1001 nextjs
 # 直接复制预构建产物（由 GitHub Actions 生成）
 COPY --chown=nextjs:nodejs .next/standalone ./
 COPY --chown=nextjs:nodejs .next/static ./.next/static
+# standalone模式下，public目录需要与server.js在同一级目录
 COPY --chown=nextjs:nodejs public ./public
 COPY --chown=nextjs:nodejs src/contents ./src/contents
 
