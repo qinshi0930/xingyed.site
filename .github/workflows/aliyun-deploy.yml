@@ -94,9 +94,9 @@ jobs:
             -e "ssh -p $ECS_PORT -i ~/.ssh/deploy_key -o CertificateFile=~/.ssh/deploy_key-cert.pub -o StrictHostKeyChecking=no" \
             $ECS_USER@$ECS_HOST:/var/www/xingye_site/
 
-          # 4. 远程执行部署脚本（使用预构建产物，不重新构建）
+          # 4. 远程执行部署脚本（使用预构建产物，重新构建镜像）
           ssh -p $ECS_PORT \
               -i ~/.ssh/deploy_key \
               -o CertificateFile=~/.ssh/deploy_key-cert.pub \
               -o StrictHostKeyChecking=no \
-              $ECS_USER@$ECS_HOST "cd /var/www/xingye_site && podman compose down && podman compose up -d"
+              $ECS_USER@$ECS_HOST "cd /var/www/xingye_site && podman compose down && podman compose build --no-cache && podman compose up -d"
