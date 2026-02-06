@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: ContentPageProps): Promise<Me
 		};
 	}
 
-	const canonicalUrl = `https://localhost:8080/learn/${content.slug}`;
+	const canonicalUrl = `https://xingyed.site/learn/${content.slug}`;
 
 	return {
 		title: `Learn ${content.title} - Adam`,
