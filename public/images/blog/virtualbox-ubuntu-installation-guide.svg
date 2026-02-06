@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
+  <defs>
+    <linearGradient id="virtualbox-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#virtualbox-gradient)"/>
+  <g transform="translate(480, 200)">
+    <rect x="-80" y="-60" width="160" height="120" rx="8" fill="white" opacity="0.2"/>
+    <rect x="-70" y="-50" width="140" height="100" rx="5" fill="rgba(0,0,0,0.2)"/>
+    <rect x="-65" y="-45" width="130" height="15" rx="3" fill="#ff6b6b" opacity="0.6"/>
+    <circle cx="-55" cy="-37.5" r="4" fill="white" opacity="0.8"/>
+    <circle cx="-45" cy="-37.5" r="4" fill="white" opacity="0.8"/>
+    <circle cx="-35" cy="-37.5" r="4" fill="white" opacity="0.8"/>
+    <path d="M-50,-15 L-35,-5 L-50,5 M-25,-15 L-10,-5 L-25,5 M0,-15 L15,-5 L0,5" stroke="#6bcf7f" stroke-width="3" fill="none" opacity="0.6"/>
+    <rect x="-55" y="15" width="90" height="3" rx="1.5" fill="white" opacity="0.4"/>
+    <rect x="-55" y="23" width="70" height="3" rx="1.5" fill="white" opacity="0.4"/>
+    <rect x="-55" y="31" width="80" height="3" rx="1.5" fill="white" opacity="0.4"/>
+  </g>
+  <text x="480" y="320" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle">VirtualBox Ubuntu安装</text>
+  <text x="480" y="365" font-family="Arial, sans-serif" font-size="22" fill="white" opacity="0.9" text-anchor="middle">Virtual Machine Setup Guide</text>
+</svg>
