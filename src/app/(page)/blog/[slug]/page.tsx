@@ -1,3 +1,5 @@
+import redis from "@/common/libs/redis";
+
 import type { Metadata } from "next";
 
 import axios from "axios";
@@ -19,9 +21,12 @@ interface BlogDetailPageProps {
 
 async function incrementViews(slug: string) {
 	if (process.env.NODE_ENV === "production") {
-		// 使用完整 URL 以支持服务端渲染
-		const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-		await axios.post(`${baseUrl}/api/views?slug=${slug}`);
+		try {
+			// 直接调用 Redis，避免 SSR 期间的 HTTP 自我调用
+			await redis.incr(`views:${slug}`);
+		} catch (error) {
+			console.error("Failed to increment views:", error);
+		}
 	}
 }
 
