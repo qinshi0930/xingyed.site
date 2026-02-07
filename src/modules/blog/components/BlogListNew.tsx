@@ -1,8 +1,7 @@
-/* eslint-disable react-hooks-extra/no-direct-set-state-in-use-effect */
 "use client";
 import { motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -18,14 +17,18 @@ import BlogCardNew from "./BlogCardNew";
 import BlogFeaturedSection from "./BlogFeaturedSection";
 
 const BlogListNew = () => {
-	const [page, setPage] = useState<number>(1);
-	const [searchTerm, setSearchTerm] = useState<string>("");
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
+	// 从 URL 读取状态，作为单一数据源
+	const page = Number(searchParams.get("page")) || 1;
+	const urlSearchTerm = searchParams.get("search") || "";
+
+	// 使用本地状态处理搜索输入，避免每次输入都触发路由变化
+	const [searchTerm, setSearchTerm] = useState<string>(urlSearchTerm);
 	const [debouncedValue] = useDebounceValue(searchTerm, 500);
 
-	const { data, error, mutate, isValidating } = useSWR(
+	const { data, error, isValidating } = useSWR(
 		`/api/blog?page=${page}&per_page=6&search=${debouncedValue}`,
 		fetcher,
 		{
@@ -36,21 +39,15 @@ const BlogListNew = () => {
 
 	const { posts: blogData = [], total_pages: totalPages = 1, total_posts = 0 } = data?.data || {};
 
-	const handlePageChange = async (newPage: number) => {
-		await mutate();
-		const params = new URLSearchParams();
+	const handlePageChange = (newPage: number) => {
+		const params = new URLSearchParams(searchParams);
 		params.set("page", newPage.toString());
-		if (debouncedValue) {
-			params.set("search", debouncedValue);
-		}
 		router.push(`/blog?${params.toString()}`);
-		setPage(newPage);
 	};
 
 	const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const searchValue = event?.target?.value;
 		setSearchTerm(searchValue);
-		setPage(1);
 
 		const params = new URLSearchParams();
 		params.set("page", "1");
@@ -62,17 +59,8 @@ const BlogListNew = () => {
 
 	const handleClearSearch = () => {
 		setSearchTerm("");
-		setPage(1);
-
 		router.push("/blog?page=1");
 	};
-
-	useEffect(() => {
-		const queryPage = Number(searchParams.get("page"));
-		if (!Number.isNaN(queryPage) && queryPage !== page) {
-			setPage(queryPage);
-		}
-	}, [page]);
 
 	const renderEmptyState = () =>
 		!isValidating &&
