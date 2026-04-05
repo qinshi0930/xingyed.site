@@ -13,7 +13,8 @@ interface GetBlogsParams {
 }
 
 export const loadBlogFiles = (): BlogItemProps[] => {
-	const dirPath = path.join(process.cwd(), "src", "contents", "blog");
+	// 从 apps/web 读取博客内容
+	const dirPath = path.join(process.cwd(), "..", "..", "apps", "web", "src", "contents", "blog");
 
 	if (!fs.existsSync(dirPath)) {
 		return [];
