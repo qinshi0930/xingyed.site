@@ -1,12 +1,8 @@
 import matter from "gray-matter";
 import fs from "node:fs";
 import path from "node:path";
-import { remark } from "remark";
-import remarkGfm from "remark-gfm";
-import remarkMdx from "remark-mdx";
-import remarkParse from "remark-parse";
 
-import type { BlogItemProps } from "@/common/types/blog";
+import type { BlogItemProps } from "@repo/types";
 
 interface GetBlogsParams {
 	page?: number;
@@ -31,16 +27,12 @@ export const loadBlogFiles = (): BlogItemProps[] => {
 			const source = fs.readFileSync(filePath, "utf-8");
 			const { content, data } = matter(source);
 
-			// 处理 MDX 内容
-			const mdxCompiler = remark().use(remarkParse).use(remarkGfm).use(remarkMdx);
-			const mdxContent = mdxCompiler.processSync(content).toString();
-
 			return {
 				id: data.id,
 				slug: data.slug || file.replace(".mdx", ""),
 				title: { rendered: data.title },
 				content: {
-					rendered: mdxContent,
+					rendered: content,
 					markdown: content,
 					protected: false,
 				},
@@ -52,7 +44,6 @@ export const loadBlogFiles = (): BlogItemProps[] => {
 				tags: data.tags || [],
 				is_featured: data.is_featured || false,
 				total_views_count: data.total_views_count || 0,
-				// 添加其他必需字段的默认值
 				status: "publish",
 				link: `/blog/${data.slug}?id=${data.id}`,
 				author: 1,
@@ -112,7 +103,7 @@ export const getBlogs = ({
 			(blog) =>
 				blog.title.rendered.toLowerCase().includes(searchLower) ||
 				blog.excerpt.rendered.toLowerCase().includes(searchLower) ||
-				blog.tags.some((tag) => tag.toLowerCase().includes(searchLower)),
+				blog.tags.some((tag: string) => tag.toLowerCase().includes(searchLower)),
 		);
 	}
 

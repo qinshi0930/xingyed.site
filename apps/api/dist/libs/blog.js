@@ -7,10 +7,6 @@ exports.getBlogs = exports.getBlogById = exports.getBlogBySlug = exports.loadBlo
 const gray_matter_1 = __importDefault(require("gray-matter"));
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
-const remark_1 = require("remark");
-const remark_gfm_1 = __importDefault(require("remark-gfm"));
-const remark_mdx_1 = __importDefault(require("remark-mdx"));
-const remark_parse_1 = __importDefault(require("remark-parse"));
 const loadBlogFiles = () => {
     const dirPath = node_path_1.default.join(process.cwd(), "src", "contents", "blog");
     if (!node_fs_1.default.existsSync(dirPath)) {
@@ -22,15 +18,12 @@ const loadBlogFiles = () => {
             const filePath = node_path_1.default.join(dirPath, file);
             const source = node_fs_1.default.readFileSync(filePath, "utf-8");
             const { content, data } = (0, gray_matter_1.default)(source);
-            // 处理 MDX 内容
-            const mdxCompiler = (0, remark_1.remark)().use(remark_parse_1.default).use(remark_gfm_1.default).use(remark_mdx_1.default);
-            const mdxContent = mdxCompiler.processSync(content).toString();
             return {
                 id: data.id,
                 slug: data.slug || file.replace(".mdx", ""),
                 title: { rendered: data.title },
                 content: {
-                    rendered: mdxContent,
+                    rendered: content,
                     markdown: content,
                     protected: false,
                 },
@@ -42,7 +35,6 @@ const loadBlogFiles = () => {
                 tags: data.tags || [],
                 is_featured: data.is_featured || false,
                 total_views_count: data.total_views_count || 0,
-                // 添加其他必需字段的默认值
                 status: "publish",
                 link: `/blog/${data.slug}?id=${data.id}`,
                 author: 1,
