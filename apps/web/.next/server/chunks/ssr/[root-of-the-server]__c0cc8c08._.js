@@ -1,0 +1,3 @@
+module.exports=[93695,(a,b,c)=>{b.exports=a.x("next/dist/shared/lib/no-fallback-error.external.js",()=>require("next/dist/shared/lib/no-fallback-error.external.js"))},2294,a=>{a.n(a.i(34426))},73267,a=>{a.n(a.i(11213))},96845,(a,b,c)=>{},99072,a=>{"use strict";a.s(["default",()=>e,"metadata",()=>d]);var b=a.i(51658);let c="Cheatsheet",d={title:`${c} - Personal Site`,description:"Adam 的个人博客网站"};function e(){return(0,b.jsxs)("div",{className:"page-container",children:[(0,b.jsx)("h2",{children:c}),(0,b.jsx)("p",{className:"graph-primary pt-2",children:"精选的代码片段、命令和配置示例，提高开发效率的得力助手"}),(0,b.jsx)("div",{className:"border-b border-dashed border-neutral-600 mt-6"})]})}}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__c0cc8c08._.js.map

@@ -1,0 +1,27 @@
+{
+  "name": "@repo/api",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.19.12",
+    "axios": "^1.13.1",
+    "firebase": "^12.6.0",
+    "gray-matter": "^4.0.3",
+    "hono": "^4.10.4",
+    "ioredis": "^5.9.2",
+    "jsonwebtoken": "^9.0.3",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.17",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}
