@@ -46,3 +46,13 @@ next-env.d.ts
 # prisma
 #/src/prisma/
 #prisma.config.ts
+
+# github
+.github
+!./github/workflows
+
+# .opencode
+.opencode
+
+# worktrees
+.worktrees/
