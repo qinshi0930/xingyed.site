@@ -1,3 +1,0 @@
-module.exports=[93695,(a,b,c)=>{b.exports=a.x("next/dist/shared/lib/no-fallback-error.external.js",()=>require("next/dist/shared/lib/no-fallback-error.external.js"))},4751,a=>{a.n(a.i(4399))},25445,a=>{a.n(a.i(56451))},37982,(a,b,c)=>{},77287,a=>{"use strict";a.s(["default",()=>e,"metadata",()=>d]);var b=a.i(8645);let c="Weekly",d={title:`${c} - Personal Site`,description:"Adam 的个人博客网站"};function e(){return(0,b.jsxs)("div",{className:"page-container",children:[(0,b.jsx)("h2",{children:c}),(0,b.jsx)("p",{className:"graph-primary pt-2",children:"这里是「果酱前端周刊」，以后每周都会把看到的有趣的工具、开源项目、文章发布到周刊，欢迎关注。"}),(0,b.jsx)("div",{className:"border-b border-dashed border-neutral-600 mt-6"})]})}}];
-
-//# sourceMappingURL=%5Broot-of-the-server%5D__f83082fd._.js.map

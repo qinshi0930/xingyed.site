@@ -3,13 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter @repo/api dev\" \"pnpm --filter @repo/web dev\"",
-    "build": "pnpm --filter @repo/web build && pnpm --filter @repo/api build",
-    "start": "concurrently \"pnpm --filter @repo/api start\" \"pnpm --filter @repo/web start\"",
-    "lint": "pnpm --filter @repo/web lint"
+    "dev": "pnpm --filter @repo/app dev",
+    "build": "pnpm --filter @repo/app build",
+    "start": "pnpm --filter @repo/app start",
+    "lint": "pnpm --filter @repo/app lint"
   },
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
+  "devDependencies": {},
   "packageManager": "pnpm@10.21.0"
 }

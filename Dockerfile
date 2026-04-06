@@ -1,10 +1,10 @@
 FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
+# RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
+RUN npm install -g pnpm@10.21.0 --registry=https://registry.npmjs.org/ --proxy=false --https-proxy=false
 
 WORKDIR /app
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY apps/web/package.json ./apps/web/
-COPY apps/api/package.json ./apps/api/
+COPY apps/app/package.json ./apps/app/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 RUN pnpm install --frozen-lockfile
@@ -19,18 +19,16 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 WORKDIR /app
-COPY --from=base --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=base --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
-COPY --from=base --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
-COPY --from=base --chown=nextjs:nodejs /app/apps/web/src/contents ./apps/web/src/contents
-COPY --from=base --chown=nextjs:nodejs /app/apps/api/dist ./apps/api/dist
+COPY --from=base --chown=nextjs:nodejs /app/apps/app/.next/standalone ./
+COPY --from=base --chown=nextjs:nodejs /app/apps/app/.next/static ./apps/app/.next/static
+COPY --from=base --chown=nextjs:nodejs /app/apps/app/public ./apps/app/public
+COPY --from=base --chown=nextjs:nodejs /app/apps/app/src/contents ./apps/app/src/contents
 COPY --from=base --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=base --chown=nextjs:nodejs /app/packages ./packages
 
 USER nextjs
 
-EXPOSE 3000 3001
+EXPOSE 3000
 ENV PORT=3000
-ENV API_PORT=3001
 
-CMD ["pnpm", "start"]
+CMD ["node", "apps/app/server.js"]

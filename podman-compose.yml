@@ -18,9 +18,8 @@ services:
     ports:
       - "3000:3000"
     env_file:
-      - .env
+      - .env.production
     environment:
-      # Override specific variables for container environment
       - NODE_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6379
