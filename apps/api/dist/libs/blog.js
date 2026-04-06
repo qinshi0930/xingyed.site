@@ -8,7 +8,8 @@ const gray_matter_1 = __importDefault(require("gray-matter"));
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_path_1 = __importDefault(require("node:path"));
 const loadBlogFiles = () => {
-    const dirPath = node_path_1.default.join(process.cwd(), "src", "contents", "blog");
+    // 从 apps/web 读取博客内容
+    const dirPath = node_path_1.default.join(process.cwd(), "..", "..", "apps", "web", "src", "contents", "blog");
     if (!node_fs_1.default.existsSync(dirPath)) {
         return [];
     }
