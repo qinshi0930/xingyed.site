@@ -2,13 +2,13 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
     networks:
-      - app-network
+      app-network:
+        aliases:
+          - redis
 
   app:
     build:
