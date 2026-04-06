@@ -26,7 +26,7 @@ app.post("/", async (c) => {
 			status: true,
 			message: "Message sent successfully",
 		});
-	} catch (error) {
+	} catch {
 		return c.json(
 			{
 				status: false,

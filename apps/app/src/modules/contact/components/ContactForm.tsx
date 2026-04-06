@@ -53,7 +53,7 @@ const ContactForm = () => {
 				} else {
 					toast.error(response.data.error || "发送失败,请重试");
 				}
-			} catch (error) {
+			} catch {
 				toast.error("网络错误,请稍后重试");
 			}
 			setIsLoading(false);
