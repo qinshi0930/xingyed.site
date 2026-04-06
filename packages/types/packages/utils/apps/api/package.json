@@ -1,0 +1,21 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.21.0",
+  "dependencies": {
+    "@hono/node-server": "^1.19.12",
+    "hono": "^4.10.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.17",
+    "typescript": "^6.0.2"
+  }
+}
