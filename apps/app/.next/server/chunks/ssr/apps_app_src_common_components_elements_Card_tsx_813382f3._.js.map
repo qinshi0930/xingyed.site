@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/xingye/workspace/xingyed.site/apps/app/src/common/components/elements/Card.tsx"],"sourcesContent":["\"use client\";\nimport type { ReactNode } from \"react\";\n\nimport styled from \"@emotion/styled\";\n\ninterface CardProps {\n\tchildren: ReactNode;\n\tclassName?: string;\n\t[propName: string]: unknown;\n}\n\nconst Card = ({ children, className = \"\", ...others }: CardProps) => {\n\treturn (\n\t\t<StyledCard\n\t\t\tclassName={`rounded-xl bg-white shadow-sm transition-all duration-300 ${className} `}\n\t\t\t{...others}\n\t\t>\n\t\t\t{children}\n\t\t</StyledCard>\n\t);\n};\n\nexport default Card;\n\nconst StyledCard = styled.div`\n\tbackground-color: hsla(0, 0%, 100%, 0.05);\n\tbox-shadow: inset 0 0 0 1px hsla(0, 0%, 100%, 0.05);\n`;\n"],"names":[],"mappings":";;;;;AAGA;AAHA;;;AAWA,MAAM,OAAO,CAAC,EAAE,QAAQ,EAAE,YAAY,EAAE,EAAE,GAAG,QAAmB;IAC/D,qBACC,+YAAC;QACA,WAAW,CAAC,0DAA0D,EAAE,UAAU,CAAC,CAAC;QACnF,GAAG,MAAM;kBAET;;;;;;AAGJ;uCAEe;AAEf,MAAM,aAAa,+ZAAM,CAAC,GAAG,CAAC;;;AAG9B,CAAC","debugId":null}}]
-}

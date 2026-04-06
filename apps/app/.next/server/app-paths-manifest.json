@@ -1,9 +1,0 @@
-{
-  "/(page)/(home)/page": "app/(page)/(home)/page.js",
-  "/(page)/about/page": "app/(page)/about/page.js",
-  "/(page)/blog/page": "app/(page)/blog/page.js",
-  "/(page)/dashboard/page": "app/(page)/dashboard/page.js",
-  "/(page)/projects/page": "app/(page)/projects/page.js",
-  "/api/blog/route": "app/api/blog/route.js",
-  "/api/github/route": "app/api/github/route.js"
-}
