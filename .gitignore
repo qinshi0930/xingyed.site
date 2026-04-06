@@ -11,17 +11,15 @@ node_modules
 !.yarn/versions
 
 # testing
-/coverage
+coverage
 
 # next.js
 .next/
 out/
 
 # build
-dist/
-
-# production
-/build
+dist
+build
 
 # misc
 .DS_Store
@@ -52,7 +50,7 @@ next-env.d.ts
 
 # github
 .github
-!./github/workflows
+!.github/workflows
 
 # .opencode
 .opencode
