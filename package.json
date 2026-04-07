@@ -6,8 +6,11 @@
     "dev": "pnpm --filter @repo/app dev",
     "build": "pnpm --filter @repo/app build",
     "start": "pnpm --filter @repo/app start",
-    "lint": "pnpm --filter @repo/app lint"
+    "lint": "pnpm --filter @repo/app lint",
+    "clean": "pnpm -r clean && rimraf -rf node_modules apps/*/node_modules packages/*/node_modules"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  },
   "packageManager": "pnpm@10.21.0"
 }

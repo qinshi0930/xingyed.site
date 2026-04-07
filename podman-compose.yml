@@ -1,4 +1,5 @@
 services:
+  container_name: xingye-site-redis
   redis:
     image: redis:7-alpine
     restart: unless-stopped
@@ -11,6 +12,7 @@ services:
           - redis
 
   app:
+    container_name: xingye-site-app
     build:
       context: .
       dockerfile: Dockerfile

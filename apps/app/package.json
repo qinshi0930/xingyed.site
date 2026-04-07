@@ -12,7 +12,8 @@
 		"start": "next start",
 		"lint": "eslint",
 		"addsc": "pnpm dlx shadcn@latest add",
-		"seed": "pnpm ts-node -r tsconfig-paths/register --compilerOptions \"{\\\"module\\\":\\\"CommonJS\\\"}\" src/lib/seed/index.ts"
+		"seed": "pnpm ts-node -r tsconfig-paths/register --compilerOptions \"{\\\"module\\\":\\\"CommonJS\\\"}\" src/lib/seed/index.ts",
+		"clean": "rimraf -rf .next dist"
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.0.0",
