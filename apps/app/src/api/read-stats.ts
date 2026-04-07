@@ -1,8 +1,13 @@
-import { NextResponse } from "next/server";
+import { Hono } from "hono";
 
 import { getALLTimeSinceToday, getReadStats } from "@/services/wakatime";
 
-export async function GET() {
+import { cache } from "./middleware/cache";
+
+const app = new Hono();
+
+// GET /api/read-stats - 获取阅读统计（WakaTime）
+app.get("/", cache(), async (c) => {
 	try {
 		const readStatsResponse = await getReadStats();
 		const allTimeSinceTodayResponse = await getALLTimeSinceToday();
@@ -12,12 +17,16 @@ export async function GET() {
 			all_time_since_today: allTimeSinceTodayResponse.data,
 		};
 
-		const response = NextResponse.json(data);
-		response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=30");
-
-		return response;
+		return c.json(data);
 		// eslint-disable-next-line unused-imports/no-unused-vars
 	} catch (error) {
-		return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+		return c.json(
+			{
+				message: "Internal Server Error",
+			},
+			500,
+		);
 	}
-}
+});
+
+export default app;
