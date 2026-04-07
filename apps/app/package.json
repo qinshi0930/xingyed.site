@@ -7,8 +7,8 @@
 		"#globals.css": "./src/app/styles/globals.css"
 	},
 	"scripts": {
-		"dev": "rimraf -rf .next && next dev --turbopack",
-		"build": "rimraf -rf .next && next build --turbopack",
+		"dev": "next dev --turbopack",
+		"build": "next build --turbopack",
 		"start": "next start",
 		"lint": "eslint",
 		"addsc": "pnpm dlx shadcn@latest add",
