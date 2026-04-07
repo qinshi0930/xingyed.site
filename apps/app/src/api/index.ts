@@ -1,5 +1,8 @@
 import { Hono } from "hono";
 
+import blogRoute from "./blog";
+import contactRoute from "./contact";
+
 const app = new Hono().basePath("/api");
 
 // 全局错误处理中间件
@@ -22,5 +25,9 @@ app.get("/", (c) => {
 		version: "1.0.0",
 	});
 });
+
+// 挂载子路由
+app.route("/blog", blogRoute);
+app.route("/contact", contactRoute);
 
 export default app;
