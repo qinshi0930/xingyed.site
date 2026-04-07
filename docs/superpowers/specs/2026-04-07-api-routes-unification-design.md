@@ -7,18 +7,28 @@
 ## 当前问题
 
 ### 1. API路由分散
-- **位置1**: `apps/app/src/app/api/*/route.ts` - 11个Next.js Route Handler
-- **位置2**: `apps/app/src/modules/*/api.ts` - 2个Hono路由（blog, contact）
+- **位置1**: `apps/app/src/app/api/*/route.ts` - 11个Next.js Route Handler（**实际工作**）
+- **位置2**: `apps/app/src/modules/*/api.ts` - 2个Hono路由（**死代码，上次Monorepo迁移遗留**）
 
-### 2. 实现不一致
-- **Blog API**: 两套实现（`app/api/blog/route.ts` + `modules/blog/api.ts`）
-- **Contact API**: 两套实现（`app/api/contact/route.ts` + `modules/contact/api.ts`）
-- Hono统一入口 `[[...route]]/route.ts` 已挂载blog和contact，但其他路由未迁移
+### 2. 实现不一致与死代码
+
+**重要澄清**：
+- `app/api/[[...route]]/route.ts` 中挂载了 `modules/blog/api.ts` 和 `modules/contact/api.ts`
+- 但由于 Next.js 路由优先级，具体的 `/api/blog/route.ts` 和 `/api/contact/route.ts` 会优先匹配
+- **结果**：`modules/*/api.ts` 从未被执行，是上次 Monorepo 迁移时创建的遗留代码
+
+**实际工作状态**：
+- `/api/blog` → 由 `app/api/blog/route.ts` 处理（Next.js 原生，**工作中**）
+- `/api/contact` → 由 `app/api/contact/route.ts` 处理（Next.js 原生，**工作中**）
+- `modules/blog/api.ts` → 仅被 `[[...route]]/route.ts` 引用，**从未执行**
+- `modules/contact/api.ts` → 仅被 `[[...route]]/route.ts` 引用，**从未执行**
+- 其他9个路由 → 各自独立的 `route.ts` 文件（Next.js 原生，**工作中**）
 
 ### 3. 架构混乱
-- 部分使用 `NextResponse`（Next.js原生）
-- 部分使用 `Hono` 框架
-- 职责不清：modules目录混合了UI组件、业务逻辑和API路由
+- 部分使用 `NextResponse`（Next.js 原生）
+- 部分使用 `Hono` 框架（但未被使用）
+- 职责不清：modules目录混合了UI组件、业务逻辑和API路由（死代码）
+- 上次 Monorepo 迁移尝试未完成，遗留了死代码
 
 ## 目标架构
 
@@ -367,20 +377,22 @@ export default app;
 
 ### 风险2: Contact API请求体结构不一致
 
-**影响**: 两套Contact实现使用了不同的请求体结构
+**影响**: 需要确认正确的请求体结构
 
 **缓解**:
 - 已确认前端发送的是 `{ name, email, message }` 直接对象
-- 统一使用此结构，移除 `{ formData }` 解构
-- 添加类型定义确保一致性
+- `modules/contact/api.ts` 使用正确结构（虽然是死代码，但实现正确）
+- `app/api/contact/route.ts` 使用错误的 `{ formData }` 解构（工作中但有bug）
+- 统一使用正确结构，修复这个潜在的bug
 
 ### 风险3: Blog API逻辑差异
 
-**影响**: 两套Blog实现可能逻辑不完全一致
+**影响**: 需要确认使用哪个实现
 
 **缓解**:
-- 已确认两套实现完全相同
-- 使用 `@/common/libs/blog` 中的 `getBlogs` 函数
+- `app/api/blog/route.ts` 是工作中版本（Next.js 原生）
+- `modules/blog/api.ts` 是死代码（但实现相同）
+- 迁移时使用 `@/common/libs/blog` 中的 `getBlogs` 函数
 - 保持 `per_page` 默认值为 9（API层）
 
 ## 架构决策
@@ -463,9 +475,12 @@ src/api/
 ### 7. 模块API文件清理
 
 **直接删除** `modules/blog/api.ts` 和 `modules/contact/api.ts`：
-- 这两个文件只在 `app/api/[[...route]]/route.ts` 中被引用
+- 这两个文件是上次 Monorepo 迁移的遗留代码
+- 虽然被 `app/api/[[...route]]/route.ts` 引用，但从未实际执行
+- Next.js 路由优先级：具体路径 > 动态路由，所以 `/api/blog/route.ts` 优先于 `[[...route]]/route.ts`
 - `modules/*/index.ts` 只导出UI组件，不导出api.ts
 - 删除后不会影响模块的正常导出和使用
+- 这也是修复上次未完成迁移的清理工作
 
 ### 8. 迁移策略
 
