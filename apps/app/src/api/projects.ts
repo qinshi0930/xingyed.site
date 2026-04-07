@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { PROJECT_CONTENTS } from "@/common/constant/projects";
+
 import { cache } from "./middleware/cache";
 
 const app = new Hono();

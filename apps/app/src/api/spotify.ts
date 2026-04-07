@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { getAvailableDevices, getNowPlaying } from "@/services/spotify";
+
 import { cache } from "./middleware/cache";
 
 const app = new Hono();

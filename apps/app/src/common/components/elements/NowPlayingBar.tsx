@@ -19,7 +19,10 @@ const NowPlayingBar = () => {
 
 	const { data: playingData } = useSWR<NowPlayingProps>("/api/spotify/now-playing", fetcher);
 
-	const { data: devicesData = [] } = useSWR<DeviceProps[]>("/api/spotify/available-devices", fetcher);
+	const { data: devicesData = [] } = useSWR<DeviceProps[]>(
+		"/api/spotify/available-devices",
+		fetcher,
+	);
 
 	const activeDevice = devicesData?.find((device) => device.is_active);
 

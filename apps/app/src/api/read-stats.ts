@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 
 import { getALLTimeSinceToday, getReadStats } from "@/services/wakatime";
+
 import { cache } from "./middleware/cache";
 
 const app = new Hono();
@@ -17,6 +18,7 @@ app.get("/", cache(), async (c) => {
 		};
 
 		return c.json(data);
+		// eslint-disable-next-line unused-imports/no-unused-vars
 	} catch (error) {
 		return c.json(
 			{
