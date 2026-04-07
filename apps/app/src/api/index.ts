@@ -8,6 +8,7 @@ import githubRoute from "./github";
 import learnRoute from "./learn";
 import projectsRoute from "./projects";
 import readStatsRoute from "./read-stats";
+import spotifyRoute from "./spotify";
 import viewsRoute from "./views";
 
 const app = new Hono().basePath("/api");
@@ -42,6 +43,7 @@ app.route("/github", githubRoute);
 app.route("/learn", learnRoute);
 app.route("/projects", projectsRoute);
 app.route("/read-stats", readStatsRoute);
+app.route("/spotify", spotifyRoute);
 app.route("/views", viewsRoute);
 
 export default app;

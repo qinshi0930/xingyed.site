@@ -13,7 +13,7 @@ import { fetcher } from "@/services/fetcher";
 import AnimatedBars from "./AnimatedBars";
 
 const NowPlayingCard = ({ isExpand = false }: { isExpand?: boolean }) => {
-	const { data } = useSWR<NowPlayingProps>("/api/now-playing", fetcher);
+	const { data } = useSWR<NowPlayingProps>("/api/spotify/now-playing", fetcher);
 
 	const [expand, setExpand] = useState(isExpand);
 
