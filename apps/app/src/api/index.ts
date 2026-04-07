@@ -1,10 +1,14 @@
 import { Hono } from "hono";
 
 import blogRoute from "./blog";
+import commentsRoute from "./comments";
 import contactRoute from "./contact";
+import contentRoute from "./content";
 import githubRoute from "./github";
+import learnRoute from "./learn";
 import projectsRoute from "./projects";
 import readStatsRoute from "./read-stats";
+import viewsRoute from "./views";
 
 const app = new Hono().basePath("/api");
 
@@ -31,9 +35,13 @@ app.get("/", (c) => {
 
 // 挂载子路由
 app.route("/blog", blogRoute);
+app.route("/comments", commentsRoute);
 app.route("/contact", contactRoute);
+app.route("/content", contentRoute);
 app.route("/github", githubRoute);
+app.route("/learn", learnRoute);
 app.route("/projects", projectsRoute);
 app.route("/read-stats", readStatsRoute);
+app.route("/views", viewsRoute);
 
 export default app;
