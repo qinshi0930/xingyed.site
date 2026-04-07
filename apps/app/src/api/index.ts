@@ -2,6 +2,9 @@ import { Hono } from "hono";
 
 import blogRoute from "./blog";
 import contactRoute from "./contact";
+import githubRoute from "./github";
+import projectsRoute from "./projects";
+import readStatsRoute from "./read-stats";
 
 const app = new Hono().basePath("/api");
 
@@ -29,5 +32,8 @@ app.get("/", (c) => {
 // 挂载子路由
 app.route("/blog", blogRoute);
 app.route("/contact", contactRoute);
+app.route("/github", githubRoute);
+app.route("/projects", projectsRoute);
+app.route("/read-stats", readStatsRoute);
 
 export default app;
