@@ -370,8 +370,8 @@ export default app;
 **影响**: 两套Contact实现使用了不同的请求体结构
 
 **缓解**:
-- 审查前端调用代码，确认实际发送的结构
-- 统一使用 `{ formData: { name, email, message } }` 或直接 `{ name, email, message }`
+- 已确认前端发送的是 `{ name, email, message }` 直接对象
+- 统一使用此结构，移除 `{ formData }` 解构
 - 添加类型定义确保一致性
 
 ### 风险3: Blog API逻辑差异
@@ -379,9 +379,121 @@ export default app;
 **影响**: 两套Blog实现可能逻辑不完全一致
 
 **缓解**:
-- 对比两套实现的差异
-- 以 `modules/blog/api.ts` 为准（因为它是Hono实现）
-- 确保分页、搜索、分类功能完全一致
+- 已确认两套实现完全相同
+- 使用 `@/common/libs/blog` 中的 `getBlogs` 函数
+- 保持 `per_page` 默认值为 9（API层）
+
+## 架构决策
+
+### 1. 错误处理策略
+
+采用**混合方案**：
+- **全局错误中间件**: 在 `src/api/index.ts` 中配置 `app.onError()`，捕获未处理的异常
+- **路由级错误处理**: 允许特殊路由保留 try-catch 进行额外的错误处理逻辑
+- **默认行为**: 路由处理器可以不写 try-catch，由全局中间件兜底处理
+
+```typescript
+// src/api/index.ts
+app.onError((err, c) => {
+  console.error('API Error:', err);
+  return c.json({
+    status: false,
+    error: err.message || 'Internal Server Error'
+  }, 500);
+});
+```
+
+### 2. 缓存策略
+
+采用**通用缓存中间件**：
+- 创建 `src/api/middleware/cache.ts`
+- 默认缓存策略：60秒 s-maxage + 30秒 stale-while-revalidate
+- 按需使用：`app.get("/", cache(), async (c) => {...})`
+- POST路由（views, contact）不使用缓存
+
+```typescript
+// src/api/middleware/cache.ts
+export const cache = (maxAge = 60, staleWhileRevalidate = 30) => {
+  return async (c: Context, next: Next) => {
+    await next();
+    c.header("Cache-Control", 
+      `public, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`
+    );
+  };
+};
+```
+
+### 3. API响应格式
+
+统一使用**布尔值 status 字段**：
+- **成功响应**: `{ status: true, data?: any, message?: string }`
+- **错误响应**: `{ status: false, error: string }`
+- HTTP状态码通过 `c.json(data, statusCode)` 的第二个参数设置
+- 不使用 `{ status: 200 }` 这样的HTTP状态码作为status值
+
+### 4. 中间件目录结构
+
+采用 `src/api/middleware/` 目录：
+```
+src/api/
+├── index.ts
+├── middleware/
+│   ├── error.ts      # 全局错误处理（可选，也可以在index.ts中直接配置）
+│   └── cache.ts      # 缓存中间件
+├── blog.ts
+├── contact.ts
+└── ...
+```
+
+### 5. Blog分页默认值
+
+保持现状：
+- **API层**: `per_page = 9`
+- **业务逻辑层**: `per_page = 6`
+- 前端所有调用都明确指定 `per_page` 参数，不会使用默认值
+
+### 6. Spotify路由路径变更
+
+采用**直接变更 + 前端同步更新**：
+- `/api/now-playing` → `/api/spotify/now-playing`
+- `/api/available-devices` → `/api/spotify/available-devices`
+- 需要同步更新3处前端调用
+- 在同一个commit中同时完成API迁移和前端更新
+
+### 7. 模块API文件清理
+
+**直接删除** `modules/blog/api.ts` 和 `modules/contact/api.ts`：
+- 这两个文件只在 `app/api/[[...route]]/route.ts` 中被引用
+- `modules/*/index.ts` 只导出UI组件，不导出api.ts
+- 删除后不会影响模块的正常导出和使用
+
+### 8. 迁移策略
+
+采用**分批次渐进式迁移**：
+
+**第1批**: Blog + Contact（已有Hono实现，风险最低）
+- 创建基础架构（src/api/目录、中间件）
+- 迁移Blog和Contact路由
+- 验证功能正常
+
+**第2批**: 简单GET路由（GitHub, Projects, Read Stats）
+- 迁移无复杂逻辑的GET路由
+- 验证缓存中间件工作正常
+
+**第3批**: 复杂路由（Views, Learn, Content, Comments）
+- 迁移支持多HTTP方法的路由
+- 迁移有业务逻辑的路由
+
+**第4批**: Spotify路由（涉及路径变更）
+- 合并now-playing和available-devices
+- 更新前端调用路径
+- 端到端验证
+
+每批迁移后验证：
+- `pnpm dev` 成功启动
+- 对应API端点可访问
+- 前端页面正常渲染
+- 无TypeScript类型错误
 
 ## 验证清单
 
