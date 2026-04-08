@@ -1,0 +1,36 @@
+{
+  "id": "deploy-xingyed-site",
+  "execute-command": "/opt/webhook/scripts/deploy.sh",
+  "command-working-directory": "/home/youruser/xingyed.site",
+  "response-message": "Deployment started!",
+  "pass-arguments-to-command": [
+    {
+      "source": "payload",
+      "name": "head_commit.message"
+    }
+  ],
+  "trigger-rule": {
+    "and": [
+      {
+        "match": {
+          "type": "value",
+          "value": "refs/heads/main",
+          "parameter": {
+            "source": "payload",
+            "name": "ref"
+          }
+        }
+      },
+      {
+        "match": {
+          "type": "payload-hash-sha256",
+          "secret": "your-secret-key-change-this",
+          "parameter": {
+            "source": "header",
+            "name": "X-Hub-Signature-256"
+          }
+        }
+      }
+    ]
+  }
+}

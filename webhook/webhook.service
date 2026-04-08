@@ -1,0 +1,25 @@
+[Unit]
+Description=Adnanh Webhook Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/webhook \
+  -hooks /opt/webhook/hooks.json \
+  -hotreload \
+  -verbose \
+  -port 9000
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# 安全加固
+NoNewPrivileges=false
+ProtectSystem=false
+ProtectHome=false
+
+[Install]
+WantedBy=multi-user.target
