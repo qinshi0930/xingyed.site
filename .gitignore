@@ -50,8 +50,9 @@ next-env.d.ts
 #prisma.config.ts
 
 # github
-.github
 !.github/workflows
+.github/*
+!.github/workflows/
 
 # .opencode
 .opencode
