@@ -175,8 +175,46 @@ sudo lsof -i :9000
 | 文件 | 用途 | 位置 |
 |------|------|------|
 | `hooks.json` | Webhook 配置 | `/opt/webhook/` |
-| `deploy.sh` | 部署脚本 | `/opt/webhook/` |
+| `deploy.sh` | 部署脚本 | `/opt/webhook/scripts/` |
+| `cleanup-logs.sh` | 日志清理脚本 | `/opt/webhook/scripts/` |
+| `test-webhook.sh` | Webhook 测试脚本 | `/opt/webhook/scripts/` |
 | `webhook.service` | systemd 服务 | `/etc/systemd/system/` |
+
+---
+
+## 🧪 测试 Webhook
+
+### 快速测试
+
+```bash
+# 运行完整测试套件
+/opt/webhook/scripts/test-webhook.sh
+
+# 指定 webhook URL
+WEBHOOK_URL=http://your-server-ip:9000 /opt/webhook/scripts/test-webhook.sh
+
+# 测试 HMAC 签名验证
+WEBHOOK_SECRET='your-secret-key' /opt/webhook/scripts/test-webhook.sh
+```
+
+### 测试内容
+
+测试脚本会自动检查：
+- ✅ 服务连通性
+- ✅ 响应内容
+- ✅ 响应头信息
+- ✅ HTTP 请求详情
+- ✅ 响应时间
+- ✅ HMAC 签名验证（如果配置了 secret）
+- ✅ 模拟 GitHub Payload
+
+### 简单测试
+
+```bash
+# 最基础的测试
+curl http://localhost:9000/hooks/deploy-xingyed-site
+# 应输出: Deployment started!
+```
 
 ---
 

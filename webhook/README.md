@@ -608,6 +608,89 @@ du -sh /var/log/webhook/
 - ✅ 错误处理
 - ✅ 日志记录
 
+## 🧪 测试 Webhook
+
+### 使用测试脚本（推荐）
+
+项目提供了完整的测试脚本，可以自动验证 webhook 服务的各项功能：
+
+```bash
+# 运行完整测试套件
+/opt/webhook/scripts/test-webhook.sh
+
+# 指定服务器地址
+WEBHOOK_URL=http://your-server-ip:9000 /opt/webhook/scripts/test-webhook.sh
+
+# 测试 HMAC 签名验证
+WEBHOOK_SECRET='your-secret-key' /opt/webhook/scripts/test-webhook.sh
+```
+
+测试项目：
+- ✅ 服务连通性
+- ✅ 响应内容
+- ✅ 响应头信息
+- ✅ HTTP 请求详情
+- ✅ 响应时间
+- ✅ HMAC 签名验证（需要提供 secret）
+- ✅ 模拟 GitHub Payload
+
+### 手动测试
+
+#### 基础测试
+
+```bash
+# 测试服务是否运行
+curl http://localhost:9000/hooks/deploy-xingyed-site
+# 应输出: Deployment started!
+
+# 查看详细请求信息
+curl -v http://localhost:9000/hooks/deploy-xingyed-site
+```
+
+#### 模拟 GitHub 推送事件
+
+```bash
+# 创建测试 payload
+PAYLOAD='{"ref":"refs/heads/main","head_commit":{"message":"Test deployment"}}'
+
+# 生成 HMAC 签名（如果配置了 secret）
+SECRET='your-secret-key'
+SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print "sha256="$2}')
+
+# 发送请求
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "X-Hub-Signature-256: $SIGNATURE" \
+  -d "$PAYLOAD" \
+  http://localhost:9000/hooks/deploy-xingyed-site
+```
+
+#### 使用 httpie（可选）
+
+```bash
+# 安装 httpie
+sudo apt install httpie
+
+# 简单测试
+http GET http://localhost:9000/hooks/deploy-xingyed-site
+
+# 带 payload 的测试
+echo '{"ref":"refs/heads/main"}' | http POST http://localhost:9000/hooks/deploy-xingyed-site
+```
+
+### 查看测试日志
+
+```bash
+# 查看 webhook 服务日志
+journalctl -u webhook -f
+
+# 查看最近的部署日志
+ls -lh /var/log/webhook/ | tail
+
+# 查看最新的部署日志
+tail -f /var/log/webhook/deploy-$(ls -t /var/log/webhook/ | head -1)
+```
+
 ## 🎯 最佳实践
 
 1. **始终启用签名验证** - 防止恶意触发
@@ -625,6 +708,7 @@ du -sh /var/log/webhook/
 - `hooks.json` - Webhook 配置
 - `scripts/deploy.sh` - 部署脚本
 - `scripts/cleanup-logs.sh` - 日志清理脚本
+- `scripts/test-webhook.sh` - Webhook 测试脚本
 - `webhook.service` - systemd 服务配置
 - `webhook-ufw.conf` - UFW 防火墙配置
 - `webhook-nftables.conf` - nftables 防火墙配置
