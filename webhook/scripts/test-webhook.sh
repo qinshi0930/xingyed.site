@@ -100,6 +100,9 @@ RESPONSE=$(curl -s "$WEBHOOK_URL/hooks/$HOOK_ID" --max-time 5 2>&1)
 
 if echo "$RESPONSE" | grep -q "Deployment started!"; then
     print_success "响应内容正确: '$RESPONSE'"
+elif echo "$RESPONSE" | grep -q "Hook rules were not satisfied."; then
+    print_success "响应内容正确: '$RESPONSE'"
+    print_info "GET 请求未满足 trigger-rule 是正常的（需要 POST + 签名）"
 else
     print_failure "响应内容不符合预期" "实际响应: '$RESPONSE'"
 fi
@@ -226,18 +229,41 @@ GITHUB_PAYLOAD='{
 
 print_info "发送模拟的 GitHub push 事件..."
 
-POST_RESPONSE=$(curl -s -X POST \
-    -H "Content-Type: application/json" \
-    -d "$GITHUB_PAYLOAD" \
-    "$WEBHOOK_URL/hooks/$HOOK_ID" \
-    --max-time 5 2>&1)
-
-if [ "$POST_RESPONSE" = "Deployment started!" ]; then
-    print_success "POST 请求成功"
-    print_success "响应: '$POST_RESPONSE'"
+if [ -n "$SECRET" ]; then
+    # 如果配置了 secret，生成签名
+    SIGNATURE=$(echo -n "$GITHUB_PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" | awk '{print "sha256="$2}')
+    
+    POST_RESPONSE=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -H "X-Hub-Signature-256: $SIGNATURE" \
+        -d "$GITHUB_PAYLOAD" \
+        "$WEBHOOK_URL/hooks/$HOOK_ID" \
+        --max-time 5 2>&1)
+    
+    if [ "$POST_RESPONSE" = "Deployment started!" ]; then
+        print_success "POST 请求成功"
+        print_success "响应: '$POST_RESPONSE'"
+    else
+        print_failure "POST 请求失败" "响应: '$POST_RESPONSE'"
+    fi
 else
-    print_info "POST 请求响应: '$POST_RESPONSE'"
-    print_info "如果没有配置 trigger-rule，这是正常的"
+    # 没有 secret，发送无签名的请求
+    POST_RESPONSE=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -d "$GITHUB_PAYLOAD" \
+        "$WEBHOOK_URL/hooks/$HOOK_ID" \
+        --max-time 5 2>&1)
+    
+    if [ "$POST_RESPONSE" = "Deployment started!" ]; then
+        print_success "POST 请求成功"
+        print_success "响应: '$POST_RESPONSE'"
+    elif echo "$POST_RESPONSE" | grep -q "Hook rules were not satisfied."; then
+        print_info "POST 请求响应: '$POST_RESPONSE'"
+        print_info "这是正常的 - webhook 配置了 trigger-rule，需要签名验证"
+        print_info "设置 WEBHOOK_SECRET 环境变量可以进行完整的签名测试"
+    else
+        print_info "POST 请求响应: '$POST_RESPONSE'"
+    fi
 fi
 
 # -----------------------------------------
