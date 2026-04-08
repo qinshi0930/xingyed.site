@@ -8,7 +8,7 @@ Type=simple
 User=root
 WorkingDirectory=/opt/webhook
 Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/usr/local/bin/webhook -hooks /opt/webhook/hooks.json -hotreload -verbose -port 9000
+ExecStart=/usr/bin/webhook -hooks /opt/webhook/hooks.json -hotreload -verbose -port 9000
 Restart=always
 RestartSec=5
 StandardOutput=journal
