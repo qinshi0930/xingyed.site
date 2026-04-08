@@ -26,7 +26,7 @@ app.onError((err, c) => {
 });
 
 // 健康检查端点
-app.get("/", (c) => {
+app.get("/health", (c) => {
 	return c.json({
 		status: "ok",
 		timestamp: new Date().toISOString(),
