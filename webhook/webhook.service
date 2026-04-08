@@ -6,11 +6,9 @@ Wants=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/webhook \
-  -hooks /opt/webhook/hooks.json \
-  -hotreload \
-  -verbose \
-  -port 9000
+WorkingDirectory=/opt/webhook
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/usr/local/bin/webhook -hooks /opt/webhook/hooks.json -hotreload -verbose -port 9000
 Restart=always
 RestartSec=5
 StandardOutput=journal
