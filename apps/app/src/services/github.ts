@@ -68,9 +68,9 @@ export const getGithubUser = async (type: string) => {
 };
 
 const GITHUB_APP = {
-	appId: process.env.GITHUB_APP_ID as string,
-	privateKey: process.env.GITHUB_APP_PEM_KEY_BASE64 as string,
-	installationId: process.env.GITHUB_APP_INSTALLATION_ID as string,
+	appId: process.env.APP_ID as string,
+	privateKey: process.env.APP_PEM_KEY_BASE64 as string,
+	installationId: process.env.APP_INSTALLATION_ID as string,
 };
 
 function generateAppJwt(): string {
