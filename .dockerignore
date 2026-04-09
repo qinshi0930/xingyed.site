@@ -2,8 +2,10 @@
 node_modules
 .pnpm-store
 
-# Build outputs
+# Build outputs (但保留 standalone 产物)
 .next
+!.next/standalone
+!.next/static
 out
 dist
 

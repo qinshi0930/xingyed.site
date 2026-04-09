@@ -7,7 +7,10 @@
     "build": "pnpm --filter @repo/app build",
     "start": "pnpm --filter @repo/app start",
     "lint": "pnpm --filter @repo/app lint",
-    "clean": "pnpm -r clean && rimraf -rf node_modules apps/*/node_modules packages/*/node_modules"
+    "clean": "pnpm -r clean && rimraf -rf node_modules apps/*/node_modules packages/*/node_modules",
+    "docker:build": "pnpm build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build",
+    "docker:up": "podman-compose up -d",
+    "docker:deploy": "pnpm build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build && podman-compose up -d"
   },
   "devDependencies": {
     "rimraf": "^6.0.1"
