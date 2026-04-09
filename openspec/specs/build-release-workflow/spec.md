@@ -1,8 +1,5 @@
-# build-release-workflow Specification
+## ADDED Requirements
 
-## Purpose
-TBD - created by archiving change build-release-workflow. Update Purpose after archive.
-## Requirements
 ### Requirement: Workflow 触发条件
 
 Workflow MUST 仅在推送 Git Tag 时触发，Tag 名称格式必须为 `v*`（如 `v0.1.0`, `v1.0.0`）。
@@ -153,4 +150,3 @@ Workflow MUST 仅请求最小必要权限：`contents: write`。
 - **WHEN** Verify build output 步骤失败
 - **THEN** workflow 立即终止
 - **THEN** 不创建 Release
-

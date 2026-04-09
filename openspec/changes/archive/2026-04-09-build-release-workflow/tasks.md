@@ -43,14 +43,14 @@
 
 - [x] 7.1 本地验证 YAML 语法正确性
 - [x] 7.2 检查文件结构和权限配置
-- [ ] 7.3 创建测试 Tag（如 `v0.0.1-test`）
-- [ ] 7.4 推送测试 Tag 触发 workflow
-- [ ] 7.5 验证 GitHub Actions 执行成功
-- [ ] 7.6 验证 Release 创建成功且包含产物
-- [ ] 7.7 清理测试 Tag 和 Release
+- [x] 7.3 创建测试 Tag（v0.0.1-test, v0.0.2-test, v0.0.3-test）
+- [x] 7.4 推送测试 Tag 触发 workflow（三轮测试）
+- [x] 7.5 验证 GitHub Actions 执行成功
+- [x] 7.6 验证 Release 创建成功且包含产物
+- [x] 7.7 清理测试 Tag 和 Release
 
 ## 8. 文档与提交
 
 - [x] 8.1 提交所有更改到 Git
-- [ ] 8.2 更新 README 或文档（如需要）
-- [ ] 8.3 归档 OpenSpec 变更
+- [x] 8.2 创建设计文档和实施计划（docs/superpowers/）
+- [x] 8.3 归档 OpenSpec 变更（2026-04-09）
