@@ -67,14 +67,40 @@ jobs:
           ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
           echo "Compressing artifact for version: ${VERSION}"
           
-          # 使用绝对路径确保压缩到正确位置
-          cd apps/app/.next/standalone
+          # 创建临时目录构建完整的产物结构
+          RELEASE_DIR="${GITHUB_WORKSPACE}/release"
+          mkdir -p "${RELEASE_DIR}"
+          
+          # 1. 复制 standalone 核心文件
+          cp -r apps/app/.next/standalone/* "${RELEASE_DIR}/"
+          
+          # 2. 复制 packages（workspace 依赖）
+          cp -r packages "${RELEASE_DIR}/packages"
+          
+          # 3. 复制静态资源
+          mkdir -p "${RELEASE_DIR}/apps/app/.next"
+          cp -r apps/app/.next/static "${RELEASE_DIR}/apps/app/.next/static"
+          
+          # 4. 复制 public 和 contents
+          if [ -d "apps/app/public" ]; then
+            cp -r apps/app/public "${RELEASE_DIR}/apps/app/public"
+          fi
+          if [ -d "apps/app/src/contents" ]; then
+            cp -r apps/app/src/contents "${RELEASE_DIR}/apps/app/src/contents"
+          fi
+          
+          # 5. 压缩
+          cd "${RELEASE_DIR}"
           zip -r "${GITHUB_WORKSPACE}/${ARTIFACT_NAME}" .
           
-          # 返回工作区根目录验证
+          # 验证
           cd "${GITHUB_WORKSPACE}"
           echo "✓ Artifact compressed: ${ARTIFACT_NAME}"
           ls -lh "${ARTIFACT_NAME}"
+          
+          # 显示产物内容
+          echo "📦 Artifact structure:"
+          unzip -l "${ARTIFACT_NAME}" | head -40
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
