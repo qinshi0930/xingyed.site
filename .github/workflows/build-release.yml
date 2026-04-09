@@ -64,12 +64,17 @@ jobs:
       - name: 📦 Compress artifact
         run: |
           VERSION=${GITHUB_REF_NAME}
+          ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
           echo "Compressing artifact for version: ${VERSION}"
+          
+          # 使用绝对路径确保压缩到正确位置
           cd apps/app/.next/standalone
-          zip -r ../../../xingyed-site-${VERSION}.zip .
-          cd ../../..
-          echo "✓ Artifact compressed: xingyed-site-${VERSION}.zip"
-          ls -lh xingyed-site-${VERSION}.zip
+          zip -r "${GITHUB_WORKSPACE}/${ARTIFACT_NAME}" .
+          
+          # 返回工作区根目录验证
+          cd "${GITHUB_WORKSPACE}"
+          echo "✓ Artifact compressed: ${ARTIFACT_NAME}"
+          ls -lh "${ARTIFACT_NAME}"
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
