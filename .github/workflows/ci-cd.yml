@@ -1,0 +1,24 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PNPM_VERSION: '10'
+  NODE_VERSION: '22'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build-and-deploy:
+    name: Build, Release & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # 步骤将在后续 task 中添加
