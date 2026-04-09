@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
 	output: "standalone",
 	pageExtensions: ["js", "jsx", "ts", "tsx"],
 	transpilePackages: ["next-mdx-remote", "@repo/types", "@repo/utils"],
+	outputFileTracingIncludes: {
+		"**": [
+			"./node_modules/styled-jsx/**/*",
+			"./node_modules/@repo/**/*",
+		],
+	},
 	// serverExternalPackages: [""],
 	images: {
 		remotePatterns: [
