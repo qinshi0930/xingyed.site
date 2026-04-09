@@ -31,4 +31,4 @@ Podman Compose SHALL 通过 `env_file` 指令加载 `.env.production` 文件。
 
 #### Scenario: 第三方 API Keys
 - **WHEN** 调用外部服务
-- **THEN** 使用 `GITHUB_APP_*`, `SPOTIFY_*`, `WAKATIME_API_KEY`, `DEVTO_KEY`
+- **THEN** 使用 `APP_*`, `SPOTIFY_*`, `WAKATIME_API_KEY`, `DEVTO_KEY`
