@@ -35,22 +35,44 @@ jobs:
           ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
           echo "Compressing artifact for version: ${VERSION}"
           
+          # 调试：显示下载后的目录结构
+          echo "📁 Downloaded artifact structure:"
+          find . -maxdepth 4 -type d | head -50
+          
           # 创建临时目录构建完整的产物结构
           RELEASE_DIR="${GITHUB_WORKSPACE}/release"
           mkdir -p "${RELEASE_DIR}"
           
-          # 1. 复制 standalone 核心文件（artifact 下载后保留完整路径）
-          cp -r apps/app/.next/standalone/* "${RELEASE_DIR}/"
+          # 1. 复制 standalone 核心文件
+          if [ -d "standalone" ]; then
+            # 扁平化结构：standalone 直接在根目录
+            cp -r standalone/* "${RELEASE_DIR}/"
+          elif [ -d "apps/app/.next/standalone" ]; then
+            # 完整路径结构
+            cp -r apps/app/.next/standalone/* "${RELEASE_DIR}/"
+          else
+            echo "✗ standalone directory not found"
+            exit 1
+          fi
           
           # 2. 复制静态资源
           mkdir -p "${RELEASE_DIR}/apps/app/.next"
-          cp -r apps/app/.next/static "${RELEASE_DIR}/apps/app/.next/static"
+          if [ -d "static" ]; then
+            cp -r static "${RELEASE_DIR}/apps/app/.next/static"
+          elif [ -d "apps/app/.next/static" ]; then
+            cp -r apps/app/.next/static "${RELEASE_DIR}/apps/app/.next/static"
+          fi
           
           # 3. 复制 public 和 contents
-          if [ -d "apps/app/public" ]; then
+          if [ -d "public" ]; then
+            cp -r public "${RELEASE_DIR}/apps/app/public"
+          elif [ -d "apps/app/public" ]; then
             cp -r apps/app/public "${RELEASE_DIR}/apps/app/public"
           fi
-          if [ -d "apps/app/src/contents" ]; then
+          
+          if [ -d "contents" ]; then
+            cp -r contents "${RELEASE_DIR}/apps/app/src/contents"
+          elif [ -d "apps/app/src/contents" ]; then
             cp -r apps/app/src/contents "${RELEASE_DIR}/apps/app/src/contents"
           fi
           
