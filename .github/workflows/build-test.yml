@@ -77,7 +77,6 @@ jobs:
           echo "Build verification passed!"
 
       - name: 📦 Upload build artifact
-        if: github.event_name != 'push'
         uses: actions/upload-artifact@v4
         with:
           name: build-output
