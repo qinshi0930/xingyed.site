@@ -24,8 +24,10 @@ jobs:
     needs: build
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
+      - name: 📥 Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
 
       - name: 📦 Compress artifact
         run: |
@@ -37,19 +39,19 @@ jobs:
           RELEASE_DIR="${GITHUB_WORKSPACE}/release"
           mkdir -p "${RELEASE_DIR}"
           
-          # 1. 复制 standalone 核心文件（已包含 @repo 包和 styled-jsx）
-          cp -r apps/app/.next/standalone/* "${RELEASE_DIR}/"
+          # 1. 复制 standalone 核心文件（artifact 下载后在当前目录）
+          cp -r standalone/* "${RELEASE_DIR}/"
           
           # 2. 复制静态资源
           mkdir -p "${RELEASE_DIR}/apps/app/.next"
-          cp -r apps/app/.next/static "${RELEASE_DIR}/apps/app/.next/static"
+          cp -r static "${RELEASE_DIR}/apps/app/.next/static"
           
           # 3. 复制 public 和 contents
-          if [ -d "apps/app/public" ]; then
-            cp -r apps/app/public "${RELEASE_DIR}/apps/app/public"
+          if [ -d "public" ]; then
+            cp -r public "${RELEASE_DIR}/apps/app/public"
           fi
-          if [ -d "apps/app/src/contents" ]; then
-            cp -r apps/app/src/contents "${RELEASE_DIR}/apps/app/src/contents"
+          if [ -d "contents" ]; then
+            cp -r contents "${RELEASE_DIR}/apps/app/src/contents"
           fi
           
           # 4. 压缩
