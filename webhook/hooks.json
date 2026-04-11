@@ -7,7 +7,7 @@
     "pass-arguments-to-command": [
       {
         "source": "payload",
-        "name": "head_commit.message"
+        "name": "tag"
       }
     ],
     "trigger-rule": {
