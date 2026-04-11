@@ -3,7 +3,7 @@ import Redis from "ioredis";
 // 支持两种配置方式：
 // 1. REDIS_URL (推荐): redis://[:password@]host:port[/db]
 // 2. 独立变量: REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_DB (向后兼容)
-const getRedisConfig = () => {
+const getRedisConfig = (): string | Redis.RedisOptions => {
 	const redisUrl = process.env.REDIS_URL;
 	
 	if (redisUrl) {
@@ -20,13 +20,25 @@ const getRedisConfig = () => {
 	};
 };
 
-const redis = new Redis(getRedisConfig(), {
-	retryStrategy(times) {
-		const delay = Math.min(times * 50, 2000);
-		return delay;
-	},
-	maxRetriesPerRequest: 3,
-});
+const config = getRedisConfig();
+
+// 根据配置类型创建 Redis 实例
+const redis = typeof config === "string" 
+	? new Redis(config, {
+		retryStrategy(times) {
+			const delay = Math.min(times * 50, 2000);
+			return delay;
+		},
+		maxRetriesPerRequest: 3,
+	})
+	: new Redis({
+		...config,
+		retryStrategy(times) {
+			const delay = Math.min(times * 50, 2000);
+			return delay;
+		},
+		maxRetriesPerRequest: 3,
+	});
 
 redis.on("error", (err) => {
 	console.error("Redis Client Error:", err);
