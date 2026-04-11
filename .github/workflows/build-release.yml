@@ -53,9 +53,9 @@ jobs:
           fi
           
           # 2. 复制静态资源
-          mkdir -p "${RELEASE_DIR}/.next"
+          mkdir -p "${RELEASE_DIR}/apps/app/.next"
           if [ -d ".next/static" ]; then
-            cp -r .next/static "${RELEASE_DIR}/.next/static"
+            cp -r .next/static "${RELEASE_DIR}/apps/app/.next/static"
           fi
           
           # 3. 复制 public 和 contents
