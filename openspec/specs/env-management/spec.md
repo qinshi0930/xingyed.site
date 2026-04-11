@@ -27,7 +27,8 @@ Podman Compose SHALL 通过 `env_file` 指令加载 `.env.production` 文件。
 
 #### Scenario: Redis 配置
 - **WHEN** 应用连接 Redis
-- **THEN** 使用 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`(可选), `REDIS_DB`
+- **THEN** 优先使用 `REDIS_URL` (URL 格式: redis://[:password@]host:port[/db])
+- **AND** 向后兼容 `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`(可选), `REDIS_DB`
 
 #### Scenario: 第三方 API Keys
 - **WHEN** 调用外部服务

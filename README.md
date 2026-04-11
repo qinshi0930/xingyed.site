@@ -68,9 +68,13 @@ SMTP_PASS=your_password
 SMTP_FROM=your_email@163.com
 SMTP_TO=recipient@example.com
 
-# Redis 配置
-REDIS_HOST=localhost
-REDIS_PORT=6379
+# Redis 配置 (推荐使用 URL)
+REDIS_URL=redis://localhost:6379/0
+# 或者使用独立变量 (向后兼容)
+# REDIS_HOST=localhost
+# REDIS_PORT=6379
+# REDIS_PASSWORD=
+# REDIS_DB=0
 
 # 其他 API Keys...
 ```

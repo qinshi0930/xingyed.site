@@ -13,11 +13,11 @@ services:
 
   app:
     container_name: xingye-site-app
-    image: ${APP_IMAGE:-ghcr.io/qinshi0930/xingyed.site:latest}
+    # image: ${APP_IMAGE:-ghcr.io/qinshi0930/xingyed.site:latest}
     # 本地开发时使用 build，生产环境使用 image
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -25,8 +25,7 @@ services:
       - .env.production
     environment:
       - NODE_ENV=production
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379/0
     depends_on:
       - redis
     networks:
