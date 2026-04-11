@@ -13,7 +13,8 @@
     "docker:deploy": "pnpm build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build && podman-compose up -d"
   },
   "devDependencies": {
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "tsx": "^4.21.0"
   },
   "packageManager": "pnpm@10.21.0"
 }

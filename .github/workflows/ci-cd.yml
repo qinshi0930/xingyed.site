@@ -141,14 +141,24 @@ jobs:
       - name: 🚀 Trigger deployment webhook
         run: |
           echo "Triggering deployment webhook..."
-          curl -X POST ${{ secrets.DEPLOY_WEBHOOK_URL }} \
+          
+          # 构建 payload
+          PAYLOAD=$(jq -n \
+            --arg tag "${{ github.ref_name }}" \
+            --arg image "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}" \
+            --arg repository "${{ github.repository }}" \
+            --arg triggered_by "${{ github.actor }}" \
+            --arg ref "refs/heads/main" \
+            '{tag: $tag, image: $image, repository: $repository, triggered_by: $triggered_by, ref: $ref}')
+          
+          # 生成 HMAC-SHA256 签名
+          SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "${{ secrets.WEBHOOK_SECRET }}" | awk '{print "sha256=" $2}')
+          
+          # 发送带签名的 webhook
+          curl -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{
-              "tag": "${{ github.ref_name }}",
-              "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}",
-              "repository": "${{ github.repository }}",
-              "triggered_by": "${{ github.actor }}"
-            }' || echo "⚠️ Webhook trigger failed (non-blocking)"
+            -H "X-Hub-Signature-256: $SIGNATURE" \
+            -d "$PAYLOAD" || echo "⚠️ Webhook trigger failed (non-blocking)"
         continue-on-error: true
 
       - name: ✅ Deployment triggered
