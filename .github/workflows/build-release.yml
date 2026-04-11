@@ -13,53 +13,19 @@ permissions:
   contents: write
 
 jobs:
+  build:
+    name: Build & Test
+    uses: ./.github/workflows/build-test.yml
+    secrets: inherit
+
   build-and-release:
     name: Build and Release
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
-
-      - name: 🐿️ Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: ⎔ Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: 💾 Cache pnpm dependencies
-        uses: actions/cache@v4
-        id: pnpm-cache
-        with:
-          path: |
-            ~/.pnpm-store
-            node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: 🔍 Type check
-        run: pnpm --filter @repo/app exec tsc --noEmit
-
-      - name: 🏗️ Build Next.js app
-        run: pnpm build
-
-      - name: ✅ Verify build output
-        run: |
-          echo "Checking build artifacts..."
-          test -d apps/app/.next && echo "✓ .next directory exists" || (echo "✗ .next directory missing" && exit 1)
-          test -f apps/app/.next/BUILD_ID && echo "✓ BUILD_ID exists" || (echo "✗ BUILD_ID missing" && exit 1)
-          test -d apps/app/.next/standalone && echo "✓ standalone output exists" || (echo "✗ standalone output missing" && exit 1)
-          test -f apps/app/.next/standalone/apps/app/server.js && echo "✓ server.js exists" || (echo "✗ server.js missing" && exit 1)
-          echo "Build verification passed!"
 
       - name: 📦 Compress artifact
         run: |

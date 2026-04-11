@@ -11,28 +11,14 @@
       }
     ],
     "trigger-rule": {
-      "and": [
-        {
-          "match": {
-            "type": "value",
-            "value": "refs/heads/main",
-            "parameter": {
-              "source": "payload",
-              "name": "ref"
-            }
-          }
-        },
-        {
-          "match": {
-            "type": "payload-hash-sha256",
-            "secret": "your-secret-key-change-this",
-            "parameter": {
-              "source": "header",
-              "name": "X-Hub-Signature-256"
-            }
-          }
+      "match": {
+        "type": "payload-hash-sha256",
+        "secret": "your-secret-key-change-this",
+        "parameter": {
+          "source": "header",
+          "name": "X-Hub-Signature-256"
         }
-      ]
+      }
     }
   }
 ]

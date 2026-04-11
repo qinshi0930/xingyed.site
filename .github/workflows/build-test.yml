@@ -8,6 +8,11 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
+  workflow_call:
+    outputs:
+      status:
+        description: 'Build status'
+        value: ${{ jobs.build-test.outputs.status }}
 
 env:
   PNPM_VERSION: '10'
@@ -17,6 +22,8 @@ jobs:
   build-test:
     name: Build & Type Check
     runs-on: ubuntu-latest
+    outputs:
+      status: ${{ job.status }}
 
     steps:
       - name: Checkout code
