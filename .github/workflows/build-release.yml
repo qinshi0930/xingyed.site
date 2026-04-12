@@ -44,8 +44,11 @@ jobs:
           mkdir -p "${RELEASE_DIR}"
           
           # 1. 复制 standalone 核心文件
-          if [ -d ".next/standalone" ]; then
-            # 实际结构：.next/standalone/apps/app/...
+          if [ -d "apps/app/.next/standalone" ]; then
+            # 完整路径结构
+            cp -r apps/app/.next/standalone/* "${RELEASE_DIR}/"
+          elif [ -d ".next/standalone" ]; then
+            # 扁平化结构
             cp -r .next/standalone/* "${RELEASE_DIR}/"
           else
             echo "✗ .next/standalone directory not found"
@@ -54,16 +57,22 @@ jobs:
           
           # 2. 复制静态资源
           mkdir -p "${RELEASE_DIR}/apps/app/.next"
-          if [ -d ".next/static" ]; then
+          if [ -d "apps/app/.next/static" ]; then
+            cp -r apps/app/.next/static "${RELEASE_DIR}/apps/app/.next/static"
+          elif [ -d ".next/static" ]; then
             cp -r .next/static "${RELEASE_DIR}/apps/app/.next/static"
           fi
           
           # 3. 复制 public 和 contents
-          if [ -d "public" ]; then
+          if [ -d "apps/app/public" ]; then
+            cp -r apps/app/public "${RELEASE_DIR}/apps/app/public"
+          elif [ -d "public" ]; then
             cp -r public "${RELEASE_DIR}/apps/app/public"
           fi
           
-          if [ -d "src/contents" ]; then
+          if [ -d "apps/app/src/contents" ]; then
+            cp -r apps/app/src/contents "${RELEASE_DIR}/apps/app/src/contents"
+          elif [ -d "src/contents" ]; then
             cp -r src/contents "${RELEASE_DIR}/apps/app/src/contents"
           fi
           
