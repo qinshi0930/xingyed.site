@@ -67,7 +67,12 @@ jobs:
             cp -r src/contents "${RELEASE_DIR}/apps/app/src/contents"
           fi
           
-          # 4. 压缩
+          # 4. 复制 packages（monorepo 共享包）
+          if [ -d "packages" ]; then
+            cp -r packages "${RELEASE_DIR}/packages"
+          fi
+          
+          # 5. 压缩
           cd "${RELEASE_DIR}"
           zip -r "${GITHUB_WORKSPACE}/${ARTIFACT_NAME}" .
           

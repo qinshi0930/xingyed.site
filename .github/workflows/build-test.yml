@@ -85,4 +85,5 @@ jobs:
             apps/app/.next/static
             apps/app/public
             apps/app/src/contents
+            packages
           retention-days: 1
