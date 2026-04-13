@@ -5,9 +5,9 @@ import { notFound, redirect } from "next/navigation";
 
 import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
+import TrackView from "@/common/components/elements/TrackView";
 import { formatExcerpt } from "@/common/helpers";
 import { getBlogById, loadBlogFiles } from "@/common/libs/blog";
-import redis from "@/common/libs/redis";
 import BlogDetail from "@/modules/blog/components/BlogDetail";
 
 // const GiscusComment = dynamic(() => import("@/modules/blog/components/GiscusComment"));
@@ -15,17 +15,6 @@ import BlogDetail from "@/modules/blog/components/BlogDetail";
 interface BlogDetailPageProps {
 	params: Promise<{ slug: string }>;
 	searchParams: Promise<{ [key: string]: string }>;
-}
-
-async function incrementViews(slug: string) {
-	if (process.env.NODE_ENV === "production") {
-		try {
-			// 直接调用 Redis，避免 SSR 期间的 HTTP 自我调用
-			await redis.incr(`views:${slug}`);
-		} catch (error) {
-			console.error("Failed to increment views:", error);
-		}
-	}
 }
 
 export async function generateStaticParams() {
@@ -93,12 +82,12 @@ export default async function BlogDetailPage({ searchParams }: BlogDetailPagePro
 		notFound();
 	}
 
-	await incrementViews(blogData?.slug);
-
 	return (
 		<Container data-aos="fade-up">
 			<BackButton url="/blog" />
 			<BlogDetail {...blogData} />
+			{/* 客户端组件：页面加载后发送浏览量统计请求 */}
+			<TrackView slug={blogData.slug} />
 			<section id="comments">{/* <GiscusComment isEnableReaction={false} /> */}</section>
 		</Container>
 	);
