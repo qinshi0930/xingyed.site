@@ -5,10 +5,6 @@ const nextConfig: NextConfig = {
 	output: "standalone",
 	pageExtensions: ["js", "jsx", "ts", "tsx"],
 	transpilePackages: ["next-mdx-remote", "@repo/types", "@repo/utils"],
-	// 显式配置 Turbopack 根目录，消除多 lockfile 警告
-	turbopack: {
-		root: "/home/xingye/workspace/xingyed.site",
-	},
 	// serverExternalPackages: [""],
 	images: {
 		remotePatterns: [
