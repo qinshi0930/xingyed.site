@@ -5,12 +5,9 @@ const nextConfig: NextConfig = {
 	output: "standalone",
 	pageExtensions: ["js", "jsx", "ts", "tsx"],
 	transpilePackages: ["next-mdx-remote", "@repo/types", "@repo/utils"],
-	outputFileTracingIncludes: {
-		"**": [
-			"./node_modules/styled-jsx/**/*",
-			"./node_modules/@repo/**/*",
-			"./node_modules/@swc/**/*",
-		],
+	// 显式配置 Turbopack 根目录，消除多 lockfile 警告
+	turbopack: {
+		root: "/home/xingye/workspace/xingyed.site",
 	},
 	// serverExternalPackages: [""],
 	images: {
