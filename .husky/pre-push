@@ -44,9 +44,10 @@ echo -e "   • 功能已在本地的测试"
 echo -e "   • 提交信息清晰准确"
 echo ""
 
-read -p "是否继续推送？(y/N) " -n 1 -r
-echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+# 兼容 /bin/sh 的读取方式
+printf "是否继续推送？(y/N) "
+read -r REPLY
+if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
     echo -e "${RED}❌ 推送已取消${NC}"
     exit 1
 fi
