@@ -1,16 +1,11 @@
 import antfu from "@antfu/eslint-config";
+import nextPlugin from "@next/eslint-plugin-next";
 import eslintConfigPrettier from "eslint-config-prettier";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import perfectionist from "eslint-plugin-perfectionist";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 // import tailwind from 'eslint-plugin-tailwindcss';
 import unusedImports from "eslint-plugin-unused-imports";
-import eslintConfigNext from "eslint-config-next";
-
-// 创建 Next.js ESLint 配置
-const nextConfig = eslintConfigNext({
-	directional: false,
-});
 
 export default antfu(
 	{
@@ -63,8 +58,17 @@ export default antfu(
 	},
 	// ...tailwind.configs['flat/recommended'],
 	jsxA11y.flatConfigs.recommended,
-	// 使用 Next.js 官方推荐配置
-	nextConfig,
+	// Next.js 推荐规则
+	{
+		files: ["**/*.{js,jsx,ts,tsx}"],
+		plugins: {
+			"@next/next": nextPlugin,
+		},
+		rules: {
+			...nextPlugin.configs.recommended.rules,
+			...nextPlugin.configs["core-web-vitals"].rules,
+		},
+	},
 	{
 		name: "perfectionist",
 		rules: {

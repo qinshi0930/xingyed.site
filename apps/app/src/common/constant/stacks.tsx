@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 
 import {
-	SiCss3,
+	SiCss,
 	SiDrizzle,
 	SiExpress,
 	SiGatsby,
@@ -61,7 +61,7 @@ export const STACKS: stacksProps = {
 	Nginx: <SiNginx size={iconSize} className="text-green-500" />,
 	Jest: <SiJest size={iconSize} className="text-red-600" />,
 	// Storybook: <SiStorybook size={iconSize} className="text-amber-500" />,
-	CSS: <SiCss3 size={iconSize} className="text-blue-300" />,
+	CSS: <SiCss size={iconSize} className="text-blue-300" />,
 	Socket: <SiSocketdotio size={iconSize} />,
 	Express: <SiExpress size={iconSize} />,
 	// Jquery: <SiJquery size={iconSize} />,
