@@ -10,9 +10,11 @@
     "clean": "pnpm -r clean && rimraf -rf node_modules apps/*/node_modules packages/*/node_modules",
     "docker:build": "pnpm build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build",
     "docker:up": "podman-compose up -d",
-    "docker:deploy": "pnpm build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build && podman-compose up -d"
+    "docker:deploy": "pnpm build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build && podman-compose up -d",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.0.0",
     "rimraf": "^6.0.1",
     "tsx": "^4.21.0"
   },

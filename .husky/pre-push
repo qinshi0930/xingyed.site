@@ -1,0 +1,94 @@
+#!/bin/bash
+# ============================================
+# Git Pre-Push Hook
+# ============================================
+# 功能：推送前执行代码质量检查，确保代码质量
+# 规则：
+#   1. 禁止自动推送，需要人工审查确认
+#   2. 推送前必须通过：lint → type check → test(如有) → build
+# ============================================
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}${BOLD}"
+echo "========================================="
+echo "  Git Pre-Push Hook - 代码质量检查"
+echo "========================================="
+echo -e "${NC}"
+
+# 获取推送信息
+read -r local_ref local_sha remote_ref remote_sha
+
+# 判断是否为删除操作
+if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+    echo -e "${YELLOW}⚠️  删除分支操作，跳过检查${NC}"
+    exit 0
+fi
+
+echo -e "${BLUE}📍 推送信息:${NC}"
+echo "   本地分支: $local_ref"
+echo "   远程分支: $remote_ref"
+echo ""
+
+# 规则 1: 人工确认
+echo -e "${YELLOW}${BOLD}⚠️  即将推送到远程仓库，请确认:${NC}"
+echo -e "   • 代码已经过人工审查"
+echo -e "   • 功能已在本地的测试"
+echo -e "   • 提交信息清晰准确"
+echo ""
+
+read -p "是否继续推送？(y/N) " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${RED}❌ 推送已取消${NC}"
+    exit 1
+fi
+
+echo ""
+echo -e "${BLUE}${BOLD}🔍 开始代码质量检查...${NC}"
+echo ""
+
+# 规则 2: 执行代码质量检查
+
+# 步骤 1: Lint 检查
+echo -e "${BLUE}[1/3] 代码风格检查 (pnpm lint)...${NC}"
+if pnpm lint; then
+    echo -e "${GREEN}✅ Lint 检查通过${NC}"
+else
+    echo -e "${RED}❌ Lint 检查失败，请修复后再推送${NC}"
+    exit 1
+fi
+echo ""
+
+# 步骤 2: TypeScript 类型检查
+echo -e "${BLUE}[2/3] TypeScript 类型检查 (tsc --noEmit)...${NC}"
+if pnpm --filter @repo/app exec tsc --noEmit; then
+    echo -e "${GREEN}✅ 类型检查通过${NC}"
+else
+    echo -e "${RED}❌ 类型检查失败，请修复后再推送${NC}"
+    exit 1
+fi
+echo ""
+
+# 步骤 3: 构建检查（验证能否成功编译）
+echo -e "${BLUE}[3/3] 构建检查 (pnpm build)...${NC}"
+if pnpm build; then
+    echo -e "${GREEN}✅ 构建成功${NC}"
+else
+    echo -e "${RED}❌ 构建失败，请修复后再推送${NC}"
+    exit 1
+fi
+echo ""
+
+# 所有检查通过
+echo -e "${GREEN}${BOLD}=========================================${NC}"
+echo -e "${GREEN}${BOLD}  ✅ 所有检查通过，允许推送！${NC}"
+echo -e "${GREEN}${BOLD}=========================================${NC}"
+echo ""
