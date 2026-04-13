@@ -1,34 +1,9 @@
 # ============================================================
-# 阶段 1: Builder - 构建应用
-# 职责：安装依赖并执行 Next.js 构建
+# 单阶段构建 - 使用预编译产物
+# 职责：仅打包已构建的 standalone 产物和运行时依赖
+# 注意：需要先执行 pnpm build 生成产物
 # ============================================================
-FROM node:22-alpine AS builder
-
-# 安装 pnpm 包管理器
-RUN npm install -g pnpm@10.21.0 --registry=https://registry.npmjs.org/ --proxy=false --https-proxy=false
-
-WORKDIR /app
-
-# 复制依赖配置文件
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY apps/app/package.json ./apps/app/
-COPY packages/types/package.json ./packages/types/
-COPY packages/utils/package.json ./packages/utils/
-
-# 安装所有依赖（包括 devDependencies，用于构建）
-RUN pnpm install --frozen-lockfile
-
-# 复制完整源代码
-COPY . .
-
-# 执行构建
-RUN pnpm build
-
-# ============================================================
-# 阶段 2: Runner - 生产运行环境
-# 职责：仅包含运行时环境和构建产物
-# ============================================================
-FROM node:22-alpine AS runner
+FROM node:22-alpine
 ENV NODE_ENV=production
 
 # 创建非 root 用户
@@ -37,12 +12,19 @@ RUN adduser --system --uid 1001 nextjs
 
 WORKDIR /app
 
-# 从 builder 阶段复制构建产物
-COPY --from=builder --chown=nextjs:nodejs /app/apps/app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/app/.next/static ./apps/app/.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/apps/app/public ./apps/app/public
-COPY --from=builder --chown=nextjs:nodejs /app/apps/app/src/contents ./apps/app/src/contents
-COPY --from=builder --chown=nextjs:nodejs /app/packages ./packages
+# 复制预编译的 standalone 产物
+# 这些文件由 CI/CD 流程中的 pnpm build 生成
+# 目录结构（从 monorepo 根目录执行构建后）：
+# .next/standalone/    - Next.js standalone 输出（包含 server.js 和 node_modules）
+# .next/static/        - 静态资源（CSS、JS chunks）
+# public/              - 公共静态文件
+# src/contents/        - MDX 内容
+# packages/            - Monorepo 共享包（@repo/types, @repo/utils）
+COPY .next/standalone/ ./
+COPY .next/static ./apps/app/.next/static
+COPY public/ ./apps/app/public
+COPY src/contents ./apps/app/src/contents
+COPY packages ./packages
 
 USER nextjs
 
