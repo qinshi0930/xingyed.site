@@ -1,11 +1,6 @@
 # Dependencies
-# 注意：不能忽略根目录的 node_modules，否则 standalone 产物中的依赖会被排除
-# node_modules  ← 移除此行，改为更精确的模式
+node_modules
 .pnpm-store
-
-# 排除源码目录中的 node_modules（但保留 standalone 产物中的）
-apps/*/node_modules
-packages/*/node_modules
 
 # Build outputs (但保留 standalone 产物)
 .next
