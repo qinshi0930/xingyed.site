@@ -2,10 +2,10 @@
 # ============================================
 # Git Pre-Push Hook
 # ============================================
-# 功能：推送前执行代码质量检查，确保代码质量
+# 功能：推送前自动执行完整代码质量检查
 # 规则：
-#   1. 禁止自动推送，需要人工审查确认
-#   2. 推送前必须通过：lint → type check → test(如有) → build
+#   每次 push 前必须通过：lint → type check → build
+#   任何一项检查失败都将阻止推送
 # ============================================
 
 set -e
@@ -37,22 +37,6 @@ echo "   本地分支: $local_ref"
 echo "   远程分支: $remote_ref"
 echo ""
 
-# 规则 1: 人工确认
-echo -e "${YELLOW}${BOLD}⚠️  即将推送到远程仓库，请确认:${NC}"
-echo -e "   • 代码已经过人工审查"
-echo -e "   • 功能已在本地的测试"
-echo -e "   • 提交信息清晰准确"
-echo ""
-
-# 兼容 /bin/sh 的读取方式
-printf "是否继续推送？(y/N) "
-read -r REPLY
-if [ "$REPLY" != "y" ] && [ "$REPLY" != "Y" ]; then
-    echo -e "${RED}❌ 推送已取消${NC}"
-    exit 1
-fi
-
-echo ""
 echo -e "${BLUE}${BOLD}🔍 开始代码质量检查...${NC}"
 echo ""
 
