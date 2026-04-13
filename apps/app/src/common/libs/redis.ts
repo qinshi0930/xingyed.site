@@ -31,40 +31,68 @@ const getClientOptions = (): RedisOptions => ({
 	maxRetriesPerRequest: 3,
 });
 
-// 创建 Redis 实例
-const connectionUrl = getConnectionConfig();
-const clientOptions = getClientOptions();
+// 单例模式：延迟初始化 Redis 实例
+let redisInstance: Redis | null = null;
 
-const redis = new Redis(connectionUrl, clientOptions);
+/**
+ * 获取 Redis 实例（延迟初始化）
+ * 只有在调用此函数时才会创建 Redis 连接
+ * 避免了模块级导入时的副作用
+ */
+export const getRedis = (): Redis => {
+	if (!redisInstance) {
+		const connectionUrl = getConnectionConfig();
+		const clientOptions = getClientOptions();
 
-redis.on("error", (err) => {
-	console.error("Redis Client Error:", err);
-});
+		redisInstance = new Redis(connectionUrl, clientOptions);
 
-redis.on("connect", () => {
-	console.log("Redis Client Connected");
-});
+		redisInstance.on("error", (err) => {
+			console.error("Redis Client Error:", err);
+		});
 
-// 优雅关闭：监听进程退出信号
-const gracefulShutdown = async (signal: string) => {
-	console.log(`\n${signal} received. Closing Redis connection...`);
-	try {
-		await redis.quit();
-		console.log("Redis connection closed gracefully.");
-	} catch (error) {
-		console.error("Error closing Redis connection:", error);
-		// 强制关闭
-		redis.disconnect();
+		redisInstance.on("connect", () => {
+			console.log("Redis Client Connected");
+		});
+
+		// 优雅关闭：监听进程退出信号
+		const gracefulShutdown = async (signal: string) => {
+			console.log(`\n${signal} received. Closing Redis connection...`);
+			try {
+				if (redisInstance) {
+					await redisInstance.quit();
+					console.log("Redis connection closed gracefully.");
+					redisInstance = null;
+				}
+			} catch (error) {
+				console.error("Error closing Redis connection:", error);
+				// 强制关闭
+				if (redisInstance) {
+					redisInstance.disconnect();
+					redisInstance = null;
+				}
+			}
+		};
+
+		// 监听进程退出信号
+		process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+		process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+	}
+
+	return redisInstance;
+};
+
+/**
+ * 关闭 Redis 连接
+ */
+export const closeRedis = async (): Promise<void> => {
+	if (redisInstance) {
+		try {
+			await redisInstance.quit();
+			console.log("Redis connection closed gracefully.");
+		} catch (error) {
+			console.error("Error closing Redis connection:", error);
+			redisInstance.disconnect();
+		}
+		redisInstance = null;
 	}
 };
-
-// 监听进程退出信号
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-// 暴露关闭方法（供测试或手动调用）
-export const closeRedis = async () => {
-	await gracefulShutdown("Manual");
-};
-
-export default redis;

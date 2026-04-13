@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import redis from "@/common/libs/redis";
+import { getRedis } from "@/common/libs/redis";
 
 const app = new Hono();
 
@@ -14,6 +14,7 @@ app.get("/", async (c) => {
 	}
 
 	try {
+		const redis = getRedis();
 		const views = await redis.get(`views:${slug}`);
 		const viewsCount = views ? Number.parseInt(views, 10) : 0;
 
@@ -34,6 +35,7 @@ app.post("/", async (c) => {
 	}
 
 	try {
+		const redis = getRedis();
 		const views = await redis.incr(`views:${slug}`);
 		return c.json({ views });
 	} catch (error) {
