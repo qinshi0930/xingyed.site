@@ -4,7 +4,9 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    branches: [ main, feature/workflow-artifact-deploy ]
+    branches: [ main ]
+    tags:
+      - 'v*'  # 添加 tag 触发，以便发布时构建
     paths-ignore:
       - '**.md'
       - 'docs/**'
