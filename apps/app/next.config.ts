@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 	pageExtensions: ["js", "jsx", "ts", "tsx"],
 	transpilePackages: ["next-mdx-remote", "@repo/types", "@repo/utils"],
 	outputFileTracingIncludes: {
-		"**": ["./node_modules/styled-jsx/**/*", "./node_modules/@repo/**/*", "./node_modules/@swc/**/*"],
+		"**": ["./node_modules/styled-jsx/**/*", "./node_modules/@repo/**/*"],
 	},
 	// serverExternalPackages: [""],
 	images: {
