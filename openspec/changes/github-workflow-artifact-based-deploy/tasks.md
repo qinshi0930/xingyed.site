@@ -1,64 +1,64 @@
 ## 1. 修正 Dockerfile 路径
 
-- [ ] 1.1 修改 `COPY .next/standalone/` 为 `COPY apps/app/.next/standalone/`
-- [ ] 1.2 修改 `COPY .next/static` 为 `COPY apps/app/.next/static/`
-- [ ] 1.3 修改 `COPY public/` 为 `COPY apps/app/public/`
-- [ ] 1.4 修改 `COPY src/contents` 为 `COPY apps/app/src/contents/`
-- [ ] 1.5 验证 `COPY packages/` 路径正确（无需修改）
-- [ ] 1.6 更新 Dockerfile 注释说明目录结构
-- [ ] 1.7 本地验证 Dockerfile 路径正确性
+- [x] 1.1 修改 `COPY .next/standalone/` 为 `COPY apps/app/.next/standalone/`
+- [x] 1.2 修改 `COPY .next/static` 为 `COPY apps/app/.next/static/`
+- [x] 1.3 修改 `COPY public/` 为 `COPY apps/app/public/`
+- [x] 1.4 修改 `COPY src/contents` 为 `COPY apps/app/src/contents/`
+- [x] 1.5 验证 `COPY packages/` 路径正确（无需修改）
+- [x] 1.6 更新 Dockerfile 注释说明目录结构
+- [x] 1.7 本地验证 Dockerfile 路径正确性
 
 ## 2. 改造 build-test.yml 增加代码质量检查
 
-- [ ] 2.1 创建独立的 `code-quality` job
-- [ ] 2.2 添加 checkout 步骤
-- [ ] 2.3 添加 pnpm 和 Node.js  setup 步骤
-- [ ] 2.4 添加依赖安装步骤
-- [ ] 2.5 添加 Lint 步骤（`pnpm lint`）
-- [ ] 2.6 添加 Type Check 步骤（`tsc --noEmit`）
-- [ ] 2.7 配置必要的环境变量（GITHUB_APP_ID 等）
-- [ ] 2.8 验证 code-quality job 可以独立运行
+- [x] 2.1 创建独立的 `code-quality` job
+- [x] 2.2 添加 checkout 步骤
+- [x] 2.3 添加 pnpm 和 Node.js  setup 步骤
+- [x] 2.4 添加依赖安装步骤
+- [x] 2.5 添加 Lint 步骤（`pnpm lint`）
+- [x] 2.6 添加 Type Check 步骤（`tsc --noEmit`）
+- [x] 2.7 配置必要的环境变量（GITHUB_APP_ID 等）
+- [x] 2.8 验证 code-quality job 可以独立运行
 
 ## 3. 调整 build-test.yml 的 artifact 上传
 
-- [ ] 3.1 在 artifact path 中增加 `Dockerfile`
-- [ ] 3.2 在 artifact path 中增加 `podman-compose.yml`
-- [ ] 3.3 确认 artifact 路径保持 `apps/app/` 前缀
-- [ ] 3.4 确认 `retention-days: 1` 设置
-- [ ] 3.5 验证 artifact 包含所有必要文件
+- [x] 3.1 在 artifact path 中增加 `Dockerfile`
+- [x] 3.2 在 artifact path 中增加 `podman-compose.yml`
+- [x] 3.3 确认 artifact 路径保持 `apps/app/` 前缀
+- [x] 3.4 确认 `retention-days: 1` 设置
+- [x] 3.5 验证 artifact 包含所有必要文件
 
 ## 4. 修改 build-release.yml 移除 workflow_call
 
-- [ ] 4.1 移除 `build` job（不再调用 build-test.yml）
-- [ ] 4.2 移除 `needs: build` 依赖
-- [ ] 4.3 修改 `release` job 直接下载 artifact
-- [ ] 4.4 添加 artifact 下载步骤（continue-on-error: true）
-- [ ] 4.5 添加 artifact 可用性检查步骤
-- [ ] 4.6 添加 artifact 结构验证步骤
-- [ ] 4.7 保留压缩 artifact 逻辑（调整路径匹配新结构）
-- [ ] 4.8 保留创建 GitHub Release 步骤
-- [ ] 4.9 验证 YAML 语法正确
+- [x] 4.1 移除 `build` job（不再调用 build-test.yml）
+- [x] 4.2 移除 `needs: build` 依赖
+- [x] 4.3 修改 `release` job 直接下载 artifact
+- [x] 4.4 添加 artifact 下载步骤（continue-on-error: true）
+- [x] 4.5 添加 artifact 可用性检查步骤
+- [x] 4.6 添加 artifact 结构验证步骤
+- [x] 4.7 保留压缩 artifact 逻辑（调整路径匹配新结构）
+- [x] 4.8 保留创建 GitHub Release 步骤
+- [x] 4.9 验证 YAML 语法正确
 
 ## 5. 修改 docker-publish.yml 移除 workflow_call 和 checkout
 
-- [ ] 5.1 移除 `build` job（不再调用 build-test.yml）
-- [ ] 5.2 移除 `needs: build` 依赖
-- [ ] 5.3 移除 checkout code 步骤
-- [ ] 5.4 修改 `docker-publish` job 直接下载 artifact
-- [ ] 5.5 添加 artifact 下载步骤（continue-on-error: true）
-- [ ] 5.6 添加 artifact 可用性检查步骤
-- [ ] 5.7 添加 artifact 结构验证步骤
-- [ ] 5.8 保留 Docker login 步骤
-- [ ] 5.9 保留 Docker buildx setup 步骤
-- [ ] 5.10 保留 Docker metadata 提取步骤
-- [ ] 5.11 保留 Docker build and push 步骤（context 改为 artifact root）
-- [ ] 5.12 验证 YAML 语法正确
+- [x] 5.1 移除 `build` job（不再调用 build-test.yml）
+- [x] 5.2 移除 `needs: build` 依赖
+- [x] 5.3 移除 checkout code 步骤
+- [x] 5.4 修改 `docker-publish` job 直接下载 artifact
+- [x] 5.5 添加 artifact 下载步骤（continue-on-error: true）
+- [x] 5.6 添加 artifact 可用性检查步骤
+- [x] 5.7 添加 artifact 结构验证步骤
+- [x] 5.8 保留 Docker login 步骤
+- [x] 5.9 保留 Docker buildx setup 步骤
+- [x] 5.10 保留 Docker metadata 提取步骤
+- [x] 5.11 保留 Docker build and push 步骤（context 改为 artifact root）
+- [x] 5.12 验证 YAML 语法正确
 
 ## 6. 本地验证
 
-- [ ] 6.1 验证 Dockerfile 路径修正后可以在本地构建
-- [ ] 6.2 验证所有 workflow 文件 YAML 语法正确
-- [ ] 6.3 验证 artifact 路径结构符合预期
+- [x] 6.1 验证 Dockerfile 路径修正后可以在本地构建
+- [x] 6.2 验证所有 workflow 文件 YAML 语法正确
+- [x] 6.3 验证 artifact 路径结构符合预期
 
 ## 7. 端到端验证
 
