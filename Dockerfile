@@ -14,17 +14,17 @@ WORKDIR /app
 
 # 复制预编译的 standalone 产物
 # 这些文件由 CI/CD 流程中的 pnpm build 生成
-# 目录结构（从 monorepo 根目录执行构建后）：
-# .next/standalone/    - Next.js standalone 输出（包含 server.js 和 node_modules）
-# .next/static/        - 静态资源（CSS、JS chunks）
-# public/              - 公共静态文件
-# src/contents/        - MDX 内容
-# packages/            - Monorepo 共享包（@repo/types, @repo/utils）
-COPY .next/standalone/ ./
-COPY .next/static ./apps/app/.next/static
-COPY public/ ./apps/app/public
-COPY src/contents ./apps/app/src/contents
-COPY packages ./packages
+# 目录结构（artifact 解压后的 monorepo 结构）：
+# apps/app/.next/standalone/ - Next.js standalone 输出（包含 server.js 和 node_modules）
+# apps/app/.next/static/     - 静态资源（CSS、JS chunks）
+# apps/app/public/           - 公共静态文件
+# apps/app/src/contents/     - MDX 内容
+# packages/                  - Monorepo 共享包（@repo/types, @repo/utils）
+COPY apps/app/.next/standalone/ ./
+COPY apps/app/.next/static/ ./apps/app/.next/static/
+COPY apps/app/public/ ./apps/app/public/
+COPY apps/app/src/contents/ ./apps/app/src/contents/
+COPY packages/ ./packages/
 
 USER nextjs
 
