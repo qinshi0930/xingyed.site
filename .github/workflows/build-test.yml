@@ -4,26 +4,20 @@ on:
   pull_request:
     branches: [ main ]
   push:
-    branches: [ main ]
+    branches: [ main, feature/workflow-artifact-deploy ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
-  workflow_call:
-    outputs:
-      status:
-        description: 'Build status'
-        value: ${{ jobs.build-test.outputs.status }}
+  workflow_dispatch:
 
 env:
   PNPM_VERSION: '10'
   NODE_VERSION: '22'
 
 jobs:
-  build-test:
-    name: Build & Type Check
+  code-quality:
+    name: Code Quality Check
     runs-on: ubuntu-latest
-    outputs:
-      status: ${{ job.status }}
 
     steps:
       - name: Checkout code
@@ -54,12 +48,48 @@ jobs:
       - name: 📦 Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: 🔍 Lint
+        run: pnpm lint
+
       - name: 🔍 Type check
         run: pnpm --filter @repo/app exec tsc --noEmit
         env:
           GITHUB_APP_ID: ${{ secrets.APP_ID }}
           GITHUB_PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}
           GITHUB_INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
+
+  build:
+    name: Build & Upload Artifact
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐿️ Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: ⎔ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: 💾 Cache pnpm dependencies
+        uses: actions/cache@v4
+        id: pnpm-cache
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: 🏗️ Build Next.js app
         run: pnpm build
@@ -86,4 +116,6 @@ jobs:
             apps/app/public
             apps/app/src/contents
             packages
+            Dockerfile
+            podman-compose.yml
           retention-days: 1
