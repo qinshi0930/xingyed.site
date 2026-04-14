@@ -203,8 +203,11 @@ jobs:
           echo "📦 包大小: $(du -sh /tmp/build-output.zip | cut -f1)"
           echo "📁 包内文件数: $(unzip -l /tmp/build-output.zip | tail -1 | awk '{print $1}')"
           
-          # 移动回工作目录
+          # 移动回工作目录（需要回到原目录）
+          cd $GITHUB_WORKSPACE
           mv /tmp/build-output.zip ./build-output.zip
+          echo "✓ zip 文件已移动到工作目录"
+          ls -lh ./build-output.zip
 
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
