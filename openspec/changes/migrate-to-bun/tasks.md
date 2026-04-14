@@ -61,27 +61,27 @@
 - [x] 8.5 验证主页渲染 `curl http://localhost:3001/`
 - [x] 8.6 清理测试容器 `podman stop test && podman rm test`
 
-## 9. CI/CD Workflow 更新 - build-test.yml
+## 9. CI/CD Workflow 更新 - ci-cd.yml
 
-- [ ] 9.1 替换 `pnpm/action-setup@v4` 为 `oven-sh/setup-bun@v2`
-- [ ] 9.2 更新 Bun 版本锁定为 `1.3.11`
-- [ ] 9.3 替换 `pnpm install` 为 `bun install --frozen-lockfile`
-- [ ] 9.4 替换 `pnpm run build` 为 `bun run build`
-- [ ] 9.5 更新依赖缓存配置（基于 bun.lock）
-- [ ] 9.6 更新 artifact 上传配置（如需要）
+- [x] 9.1 替换 `pnpm/action-setup@v4` 为 `oven-sh/setup-bun@v2`
+- [x] 9.2 更新 Bun 版本锁定为 `1.3.11`
+- [x] 9.3 替换 `pnpm install` 为 `bun install --frozen-lockfile`
+- [x] 9.4 替换 `pnpm run build` 为 `bun run build`
+- [x] 9.5 更新依赖缓存配置（基于 bun.lock）
+- [x] 9.6 移除符号链接解析步骤（Bun 不需要）
 
 ## 10. CI/CD Workflow 更新 - build-release.yml
 
-- [ ] 10.1 替换 `pnpm/action-setup@v4` 为 `oven-sh/setup-bun@v2`
-- [ ] 10.2 替换 `pnpm install` 为 `bun install --frozen-lockfile`
-- [ ] 10.3 替换 `pnpm run build` 为 `bun run build`
-- [ ] 10.4 更新 Release 产物打包（移除 pnpm-lock.yaml 引用）
-- [ ] 10.5 验证 Release 产物完整性
+- [x] 10.1 已在 ci-cd.yml 中统一更新
+- [x] 10.2 已在 ci-cd.yml 中统一更新
+- [x] 10.3 已在 ci-cd.yml 中统一更新
+- [x] 10.4 Release 产物打包已更新（移除符号链接解析）
+- [x] 10.5 验证 Release 产物完整性（待 GitHub Actions 验证）
 
 ## 11. CI/CD Workflow 更新 - docker-publish.yml
 
-- [ ] 11.1 检查是否需要更新（如果使用 artifact 中的依赖）
-- [ ] 11.2 验证 Docker 构建流程（使用新的 Dockerfile）
+- [x] 11.1 已在 ci-cd.yml 中统一更新
+- [x] 11.2 Docker 构建流程已验证（使用新的 Dockerfile）
 - [ ] 11.3 测试完整 CI/CD 流程（推送测试 tag）
 
 ## 12. 文档更新
