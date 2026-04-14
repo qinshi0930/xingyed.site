@@ -172,8 +172,6 @@ jobs:
       - name: 📁 Verify artifact structure
         run: |
           echo "验证产物结构..."
-          echo "📁 Artifact structure:"
-          find . -maxdepth 4 -type d | head -50
           test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
           test -d "apps/app/.next/static" || (echo "✗ static 缺失" && exit 1)
           test -d "apps/app/public" || (echo "✗ public 缺失" && exit 1)
@@ -183,22 +181,18 @@ jobs:
           test -f "podman-compose.yml" || (echo "✗ podman-compose.yml 缺失" && exit 1)
           echo "✓ 产物结构验证通过"
 
-      - name: 📦 Compress artifact for Release
+      - name: 📦 Create Release zip
         run: |
           VERSION=${GITHUB_REF_NAME}
-          ARTIFACT_NAME="xingyed-site-${VERSION}.tar.gz"
-          echo "Compressing artifact for version: ${VERSION}"
+          ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
+          echo "Creating Release zip for version: ${VERSION}"
           
-          # 创建 tar.gz 压缩文件
-          tar -czf "${ARTIFACT_NAME}" .
+          # 直接压缩整个目录
+          zip -r "${ARTIFACT_NAME}" .
           
           # 验证
-          echo "✓ Artifact compressed: ${ARTIFACT_NAME}"
+          echo "✓ Release artifact created: ${ARTIFACT_NAME}"
           ls -lh "${ARTIFACT_NAME}"
-          
-          # 显示产物内容
-          echo "📦 Artifact structure:"
-          tar -tzf "${ARTIFACT_NAME}" | head -40
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -206,7 +200,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: xingyed-site-${{ github.ref_name }}.tar.gz
+          files: xingyed-site-${{ github.ref_name }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
