@@ -14,7 +14,7 @@ permissions:
   packages: write    # docker-publish job 推送镜像需要
 
 env:
-  PNPM_VERSION: '10'
+  BUN_VERSION: '1.3.11'
   NODE_VERSION: '22'
 
 jobs:
@@ -29,36 +29,35 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐿️ Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: 🐿️ Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: ${{ env.PNPM_VERSION }}
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: ⎔ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
-      - name: 💾 Cache pnpm dependencies
+      - name: 💾 Cache bun dependencies
         uses: actions/cache@v4
-        id: pnpm-cache
+        id: bun-cache
         with:
           path: |
-            ~/.pnpm-store
+            ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            ${{ runner.os }}-bun-
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: 🔍 Lint
-        run: pnpm lint
+        run: bun run lint
 
       - name: 🔍 Type check
-        run: pnpm --filter @repo/app exec tsc --noEmit
+        run: cd apps/app && bunx tsc --noEmit
         # 注意：不传递 GITHUB_APP_* secrets
         # Type check 不需要实际调用 API
         # 且 Fork PR 无法访问 secrets
@@ -76,33 +75,32 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐿️ Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: 🐿️ Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: ${{ env.PNPM_VERSION }}
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: ⎔ Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
-      - name: 💾 Cache pnpm dependencies
+      - name: 💾 Cache bun dependencies
         uses: actions/cache@v4
-        id: pnpm-cache
+        id: bun-cache
         with:
           path: |
-            ~/.pnpm-store
+            ~/.bun/install/cache
             node_modules
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            ${{ runner.os }}-bun-
 
       - name: 📦 Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: 🏗️ Build Next.js app
-        run: pnpm build
+        run: bun run build
         env:
           GITHUB_APP_ID: ${{ secrets.APP_ID }}
           GITHUB_PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}
@@ -115,27 +113,6 @@ jobs:
           test -f apps/app/.next/BUILD_ID && echo "✓ BUILD_ID exists" || (echo "✗ BUILD_ID missing" && exit 1)
           test -d apps/app/.next/standalone && echo "✓ standalone output exists" || (echo "✗ standalone output missing" && exit 1)
           echo "Build verification passed!"
-
-      - name: 🔗 Resolve symlinks for pnpm
-        run: |
-          echo "解析 pnpm 符号链接，确保依赖完整..."
-          # 备份原始目录
-          mv apps/app/.next/standalone apps/app/.next/standalone-original
-          
-          # 移除断裂的符号链接（Next.js standalone 输出的已知问题）
-          BROKEN_LINKS=$(find apps/app/.next/standalone-original -xtype l 2>/dev/null | wc -l)
-          if [ "$BROKEN_LINKS" -gt 0 ]; then
-            echo "⚠️  发现 $BROKEN_LINKS 个断裂的符号链接，正在移除..."
-            find apps/app/.next/standalone-original -xtype l -delete 2>/dev/null
-          fi
-          
-          # 复制并解析所有符号链接（-L 参数）
-          cp -aL apps/app/.next/standalone-original apps/app/.next/standalone
-          rm -rf apps/app/.next/standalone-original
-          
-          echo "✓ 符号链接已解析"
-          echo "📊 产物大小: $(du -sh apps/app/.next/standalone | cut -f1)"
-          echo "📁 文件数量: $(find apps/app/.next/standalone -type f | wc -l)"
 
       - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v4
@@ -150,7 +127,7 @@ jobs:
             Dockerfile
             podman-compose.yml
           retention-days: 7
-          # 包含隐藏文件（如 .pnpm 目录）
+          # 包含隐藏文件（如 .bun 目录）
           include-hidden-files: true
           compression-level: 6
 

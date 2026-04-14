@@ -15,19 +15,29 @@
 - **框架**: Next.js 15 + React 19
 - **API**: Hono + hono/vercel 适配器
 - **样式**: Tailwind CSS + shadcn/ui
-- **构建**: Turbopack
+- **包管理器**: Bun 1.3.11+
+- **构建**: Bun + Next.js (传统模式)
 - **部署**: Docker + Podman
+
+## 环境要求
+
+- **Node.js**: 22.x
+- **Bun**: 1.3.11+ （安装：`curl -fsSL https://bun.sh/install | bash`）
+- **Podman**: 4.0+ 或 Docker
 
 ## 快速开始
 
 ### 开发环境
 
 ```bash
+# 安装 Bun (如果未安装)
+curl -fsSL https://bun.sh/install | bash
+
 # 安装依赖
-pnpm install
+bun install
 
 # 启动开发服务器
-pnpm dev
+bun run dev
 ```
 
 访问 http://localhost:3000
@@ -36,10 +46,10 @@ pnpm dev
 
 ```bash
 # 构建应用
-pnpm build
+bun run build
 
 # 启动生产服务器
-pnpm start
+bun run start
 ```
 
 ### Docker 部署
