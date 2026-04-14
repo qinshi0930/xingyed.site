@@ -137,41 +137,18 @@ jobs:
           echo "📊 产物大小: $(du -sh apps/app/.next/standalone | cut -f1)"
           echo "📁 文件数量: $(find apps/app/.next/standalone -type f | wc -l)"
 
-      - name: 📦 Prepare build artifact
-        run: |
-          echo "准备构建产物..."
-          # standalone 目录已经包含完整的 monorepo 结构
-          # 直接使用 standalone 作为根目录，然后添加其他文件
-          
-          # 复制 standalone 到临时目录（这包含了 apps/app/.next, apps/app/node_modules 等）
-          cp -r apps/app/.next/standalone /tmp/artifact-build
-          
-          # 添加其他需要的文件到 standalone 结构中
-          # static 目录应该放在 apps/app/.next/ 下
-          cp -r apps/app/.next/static /tmp/artifact-build/apps/app/.next/
-          
-          # public 目录应该放在 apps/app/ 下
-          cp -r apps/app/public /tmp/artifact-build/apps/app/
-          
-          # contents 目录应该放在 apps/app/src/ 下
-          cp -r apps/app/src/contents /tmp/artifact-build/apps/app/src/
-          
-          # packages 目录放在根目录
-          cp -r packages /tmp/artifact-build/
-          
-          # Docker 相关文件放在根目录
-          cp Dockerfile /tmp/artifact-build/
-          cp podman-compose.yml /tmp/artifact-build/
-          
-          echo "✓ 产物准备完成"
-          echo "📊 产物大小: $(du -sh /tmp/artifact-build | cut -f1)"
-          echo "📁 文件数量: $(find /tmp/artifact-build -type f | wc -l)"
-
-      - name: 📤 Upload artifact
+      - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: /tmp/artifact-build
+          path: |
+            apps/app/.next/standalone
+            apps/app/.next/static
+            apps/app/public
+            apps/app/src/contents
+            packages
+            Dockerfile
+            podman-compose.yml
           retention-days: 7
           # 包含隐藏文件（如 .pnpm 目录）
           include-hidden-files: true
