@@ -116,6 +116,26 @@ jobs:
           test -d apps/app/.next/standalone && echo "✓ standalone output exists" || (echo "✗ standalone output missing" && exit 1)
           echo "Build verification passed!"
 
+      - name: 🔗 Resolve symlinks for pnpm
+        run: |
+          echo "解析 pnpm 符号链接，确保依赖完整..."
+          # 备份原始目录
+          mv apps/app/.next/standalone apps/app/.next/standalone-original
+          
+          # 移除断裂的符号链接（Next.js standalone 输出的已知问题）
+          BROKEN_LINKS=$(find apps/app/.next/standalone-original -xtype l 2>/dev/null | wc -l)
+          if [ "$BROKEN_LINKS" -gt 0 ]; then
+            echo "⚠️  发现 $BROKEN_LINKS 个断裂的符号链接，正在移除..."
+            find apps/app/.next/standalone-original -xtype l -delete 2>/dev/null
+          fi
+          
+          # 复制并解析所有符号链接（-L 参数）
+          cp -aL apps/app/.next/standalone-original apps/app/.next/standalone
+          rm -rf apps/app/.next/standalone-original
+          
+          echo "✓ 符号链接已解析"
+          echo "📊 产物大小: $(du -sh apps/app/.next/standalone | cut -f1)"
+
       - name: 📦 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -129,9 +149,6 @@ jobs:
             Dockerfile
             podman-compose.yml
           retention-days: 7
-          # 重要：pnpm 使用符号链接管理依赖，必须跟随符号链接
-          # 否则 standalone/node_modules 中的依赖会丢失
-          follow-symlinks: true
 
   # ============================================================
   # Job 3: 创建 Release (仅 Tag)
