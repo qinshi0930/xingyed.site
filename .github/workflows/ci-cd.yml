@@ -133,94 +133,59 @@ jobs:
           cp -aL apps/app/.next/standalone-original apps/app/.next/standalone
           rm -rf apps/app/.next/standalone-original
           
-          # 重要：临时重命名 .gitignore
-          # upload-artifact@v4 会读取 .gitignore 并跳过 node_modules
-          # 这导致 standalone/node_modules 中的依赖没有被上传
-          mv .gitignore .gitignore.backup 2>/dev/null || true
-          
           echo "✓ 符号链接已解析"
           echo "📊 产物大小: $(du -sh apps/app/.next/standalone | cut -f1)"
           echo "📁 文件数量: $(find apps/app/.next/standalone -type f | wc -l)"
-          echo ""
-          echo "🔍 调试信息:"
-          echo "  - .gitignore 状态: $(test -f .gitignore && echo '存在' || echo '已重命名')"
-          echo "  - .gitignore.backup 状态: $(test -f .gitignore.backup && echo '存在' || echo '不存在')"
-          echo "  - standalone/node_modules 状态: $(test -d apps/app/.next/standalone/node_modules && echo '存在' || echo '不存在')"
-          if [ -d apps/app/.next/standalone/node_modules ]; then
-            echo "  - standalone/node_modules 大小: $(du -sh apps/app/.next/standalone/node_modules | cut -f1)"
-            echo "  - standalone/node_modules 文件数: $(find apps/app/.next/standalone/node_modules -type f | wc -l)"
-          fi
-
-      - name: 🔍 Debug .gitignore status
-        run: |
-          echo "=== Upload-Artifact 前检查 ==="
-          echo "当前目录: $(pwd)"
-          echo "工作目录内容:"
-          ls -la | grep -E "(gitignore|\.next)" || true
-          echo ""
-          echo ".gitignore 文件状态:"
-          if [ -f .gitignore ]; then
-            echo "  ❌ .gitignore 仍然存在！"
-            echo "  文件大小: $(wc -c < .gitignore) bytes"
-            echo "  前5行内容:"
-            head -5 .gitignore
-          else
-            echo "  ✅ .gitignore 已重命名"
-          fi
-          echo ""
-          if [ -f .gitignore.backup ]; then
-            echo ".gitignore.backup 存在"
-          fi
-          echo ""
-          echo "standalone/node_modules 状态:"
-          if [ -d apps/app/.next/standalone/node_modules ]; then
-            echo "  ✅ 存在"
-            echo "  大小: $(du -sh apps/app/.next/standalone/node_modules | cut -f1)"
-          else
-            echo "  ❌ 不存在"
-          fi
 
       - name: 📦 Upload build artifact
         run: |
           echo "手动打包 artifact..."
-          # 创建临时目录
-          mkdir -p /tmp/artifact-build
+          # standalone 目录已经包含完整的 monorepo 结构
+          # 直接使用 standalone 作为根目录，然后添加其他文件
           
-          # 复制所有需要的文件
-          cp -r apps/app/.next/standalone /tmp/artifact-build/
-          cp -r apps/app/.next/static /tmp/artifact-build/
-          cp -r apps/app/public /tmp/artifact-build/
-          cp -r apps/app/src/contents /tmp/artifact-build/
+          # 复制 standalone 到临时目录（这包含了 apps/app/.next, apps/app/node_modules 等）
+          cp -r apps/app/.next/standalone /tmp/artifact-build
+          
+          # 添加其他需要的文件到 standalone 结构中
+          # static 目录应该放在 apps/app/.next/ 下
+          cp -r apps/app/.next/static /tmp/artifact-build/apps/app/.next/
+          
+          # public 目录应该放在 apps/app/ 下
+          cp -r apps/app/public /tmp/artifact-build/apps/app/
+          
+          # contents 目录应该放在 apps/app/src/ 下
+          cp -r apps/app/src/contents /tmp/artifact-build/apps/app/src/
+          
+          # packages 目录放在根目录
           cp -r packages /tmp/artifact-build/
+          
+          # Docker 相关文件放在根目录
           cp Dockerfile /tmp/artifact-build/
           cp podman-compose.yml /tmp/artifact-build/
           
-          # 创建 zip 文件
+          # 创建 tar.gz 文件（保持目录结构）
           cd /tmp/artifact-build
-          zip -r /tmp/build-output.zip .
+          tar -czf /tmp/build-output.tar.gz .
           
           echo "✓ 打包完成"
-          echo "📦 包大小: $(du -sh /tmp/build-output.zip | cut -f1)"
-          echo "📁 包内文件数: $(unzip -l /tmp/build-output.zip | tail -1 | awk '{print $1}')"
+          echo "📦 包大小: $(du -sh /tmp/build-output.tar.gz | cut -f1)"
+          echo "📁 包内目录结构:"
+          tar -tzf /tmp/build-output.tar.gz | head -30
           
-          # 移动回工作目录（需要回到原目录）
+          # 移动回工作目录
           cd $GITHUB_WORKSPACE
-          mv /tmp/build-output.zip ./build-output.zip
-          echo "✓ zip 文件已移动到工作目录"
-          ls -lh ./build-output.zip
+          mv /tmp/build-output.tar.gz ./build-output.tar.gz
+          echo "✓ tar.gz 文件已移动到工作目录"
+          ls -lh ./build-output.tar.gz
 
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: build-output.zip
+          path: build-output.tar.gz
           retention-days: 7
-
-      - name: 🔄 Restore .gitignore
-        run: |
-          echo "恢复 .gitignore 文件..."
-          mv .gitignore.backup .gitignore 2>/dev/null || true
-          echo "✓ .gitignore 已恢复"
+          # 不压缩，避免双重压缩
+          archive: false
 
   # ============================================================
   # Job 3: 创建 Release (仅 Tag)
@@ -237,10 +202,15 @@ jobs:
         with:
           name: build-output
 
-      - name: 📁 Verify artifact structure
+      - name: 📁 Extract and verify artifact structure
         run: |
+          echo "解压 artifact..."
+          tar -xzf build-output.tar.gz
+          rm build-output.tar.gz
+          echo "✓ 解压完成"
+          echo ""
           echo "验证产物结构..."
-          echo "📁 Downloaded artifact structure:"
+          echo "📁 Artifact structure:"
           find . -maxdepth 4 -type d | head -50
           test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
           test -d "apps/app/.next/static" || (echo "✗ static 缺失" && exit 1)
@@ -251,7 +221,7 @@ jobs:
           test -f "podman-compose.yml" || (echo "✗ podman-compose.yml 缺失" && exit 1)
           echo "✓ 产物结构验证通过"
 
-      - name: 📦 Compress artifact
+      - name: 📦 Compress artifact for Release
         run: |
           VERSION=${GITHUB_REF_NAME}
           ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
@@ -293,8 +263,13 @@ jobs:
         with:
           name: build-output
 
-      - name: 📁 Verify artifact structure
+      - name: 📁 Extract and verify artifact structure
         run: |
+          echo "解压 artifact..."
+          tar -xzf build-output.tar.gz
+          rm build-output.tar.gz
+          echo "✓ 解压完成"
+          echo ""
           echo "验证产物结构..."
           test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
