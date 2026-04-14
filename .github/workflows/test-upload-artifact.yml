@@ -1,0 +1,100 @@
+name: Test Upload Artifact Behavior
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: '10'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm --filter @repo/app build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}
+
+      - name: Resolve symlinks for pnpm
+        run: |
+          echo "Resolving pnpm symlinks..."
+          mv apps/app/.next/standalone apps/app/.next/standalone-original
+          BROKEN_LINKS=$(find apps/app/.next/standalone-original -xtype l 2>/dev/null | wc -l)
+          if [ "$BROKEN_LINKS" -gt 0 ]; then
+            echo "Found $BROKEN_LINKS broken symlinks, removing..."
+            find apps/app/.next/standalone-original -xtype l -delete 2>/dev/null
+          fi
+          cp -aL apps/app/.next/standalone-original apps/app/.next/standalone
+          rm -rf apps/app/.next/standalone-original
+          echo "Symlinks resolved"
+          echo "standalone size: $(du -sh apps/app/.next/standalone | cut -f1)"
+          echo "standalone files: $(find apps/app/.next/standalone -type f | wc -l)"
+          echo ""
+          echo "node_modules check:"
+          if [ -d apps/app/.next/standalone/node_modules ]; then
+            echo "  node_modules exists"
+            echo "  size: $(du -sh apps/app/.next/standalone/node_modules | cut -f1)"
+            echo "  files: $(find apps/app/.next/standalone/node_modules -type f | wc -l)"
+          else
+            echo "  node_modules not found"
+          fi
+
+      - name: Test 1 - Upload directory directly
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-direct-upload
+          path: apps/app/.next/standalone
+          retention-days: 1
+
+      - name: Test 2 - Upload with explicit include pattern
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-with-pattern
+          path: |
+            apps/app/.next/standalone/**
+            !apps/app/.next/standalone/**/*.log
+          retention-days: 1
+
+      - name: Test 3 - Create and upload tar.gz
+        run: |
+          echo "Creating tar.gz..."
+          tar -czf /tmp/standalone.tar.gz -C apps/app/.next standalone
+          mv /tmp/standalone.tar.gz ./standalone.tar.gz
+          echo "tar.gz created"
+          ls -lh standalone.tar.gz
+
+      - name: Upload tar.gz
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-tar-gz
+          path: standalone.tar.gz
+          retention-days: 1
+          compression-level: 0
+
+      - name: Test 4 - Upload with include-hidden-files true
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-include-hidden
+          path: apps/app/.next/standalone
+          retention-days: 1
+          include-hidden-files: true
