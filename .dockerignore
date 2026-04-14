@@ -1,6 +1,5 @@
 # Dependencies
 node_modules
-.pnpm-store
 
 # Build outputs (但保留 standalone 产物)
 .next
@@ -28,7 +27,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 

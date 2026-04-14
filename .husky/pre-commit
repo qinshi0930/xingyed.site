@@ -9,9 +9,9 @@
 echo "🔍 运行代码质量检查..."
 
 # Lint 检查
-pnpm lint || exit 1
+bun run lint || exit 1
 
 # TypeScript 类型检查
-pnpm --filter @repo/app exec tsc --noEmit || exit 1
+cd apps/app && bunx tsc --noEmit || exit 1
 
 echo "✅ 代码质量检查通过"
