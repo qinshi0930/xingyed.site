@@ -137,9 +137,9 @@ jobs:
           echo "📊 产物大小: $(du -sh apps/app/.next/standalone | cut -f1)"
           echo "📁 文件数量: $(find apps/app/.next/standalone -type f | wc -l)"
 
-      - name: 📦 Upload build artifact
+      - name: 📦 Prepare build artifact
         run: |
-          echo "手动打包 artifact..."
+          echo "准备构建产物..."
           # standalone 目录已经包含完整的 monorepo 结构
           # 直接使用 standalone 作为根目录，然后添加其他文件
           
@@ -163,29 +163,19 @@ jobs:
           cp Dockerfile /tmp/artifact-build/
           cp podman-compose.yml /tmp/artifact-build/
           
-          # 创建 tar.gz 文件（保持目录结构）
-          cd /tmp/artifact-build
-          tar -czf /tmp/build-output.tar.gz .
-          
-          echo "✓ 打包完成"
-          echo "📦 包大小: $(du -sh /tmp/build-output.tar.gz | cut -f1)"
-          echo "📁 包内目录结构:"
-          tar -tzf /tmp/build-output.tar.gz | head -30
-          
-          # 移动回工作目录
-          cd $GITHUB_WORKSPACE
-          mv /tmp/build-output.tar.gz ./build-output.tar.gz
-          echo "✓ tar.gz 文件已移动到工作目录"
-          ls -lh ./build-output.tar.gz
+          echo "✓ 产物准备完成"
+          echo "📊 产物大小: $(du -sh /tmp/artifact-build | cut -f1)"
+          echo "📁 文件数量: $(find /tmp/artifact-build -type f | wc -l)"
 
       - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: build-output.tar.gz
+          path: /tmp/artifact-build
           retention-days: 7
-          # 不压缩，避免双重压缩
-          archive: false
+          # 包含隐藏文件（如 .pnpm 目录）
+          include-hidden-files: true
+          compression-level: 6
 
   # ============================================================
   # Job 3: 创建 Release (仅 Tag)
@@ -202,13 +192,8 @@ jobs:
         with:
           name: build-output
 
-      - name: 📁 Extract and verify artifact structure
+      - name: 📁 Verify artifact structure
         run: |
-          echo "解压 artifact..."
-          tar -xzf build-output.tar.gz
-          rm build-output.tar.gz
-          echo "✓ 解压完成"
-          echo ""
           echo "验证产物结构..."
           echo "📁 Artifact structure:"
           find . -maxdepth 4 -type d | head -50
@@ -224,11 +209,11 @@ jobs:
       - name: 📦 Compress artifact for Release
         run: |
           VERSION=${GITHUB_REF_NAME}
-          ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
+          ARTIFACT_NAME="xingyed-site-${VERSION}.tar.gz"
           echo "Compressing artifact for version: ${VERSION}"
           
-          # 直接压缩整个目录（保持 monorepo 路径结构）
-          zip -r "${ARTIFACT_NAME}" .
+          # 创建 tar.gz 压缩文件
+          tar -czf "${ARTIFACT_NAME}" .
           
           # 验证
           echo "✓ Artifact compressed: ${ARTIFACT_NAME}"
@@ -236,7 +221,7 @@ jobs:
           
           # 显示产物内容
           echo "📦 Artifact structure:"
-          unzip -l "${ARTIFACT_NAME}" | head -40
+          tar -tzf "${ARTIFACT_NAME}" | head -40
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -244,7 +229,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: xingyed-site-${{ github.ref_name }}.zip
+          files: xingyed-site-${{ github.ref_name }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -263,13 +248,8 @@ jobs:
         with:
           name: build-output
 
-      - name: 📁 Extract and verify artifact structure
+      - name: 📁 Verify artifact structure
         run: |
-          echo "解压 artifact..."
-          tar -xzf build-output.tar.gz
-          rm build-output.tar.gz
-          echo "✓ 解压完成"
-          echo ""
           echo "验证产物结构..."
           test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
