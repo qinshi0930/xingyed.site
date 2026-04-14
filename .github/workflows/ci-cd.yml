@@ -181,17 +181,36 @@ jobs:
           fi
 
       - name: 📦 Upload build artifact
+        run: |
+          echo "手动打包 artifact..."
+          # 创建临时目录
+          mkdir -p /tmp/artifact-build
+          
+          # 复制所有需要的文件
+          cp -r apps/app/.next/standalone /tmp/artifact-build/
+          cp -r apps/app/.next/static /tmp/artifact-build/
+          cp -r apps/app/public /tmp/artifact-build/
+          cp -r apps/app/src/contents /tmp/artifact-build/
+          cp -r packages /tmp/artifact-build/
+          cp Dockerfile /tmp/artifact-build/
+          cp podman-compose.yml /tmp/artifact-build/
+          
+          # 创建 zip 文件
+          cd /tmp/artifact-build
+          zip -r /tmp/build-output.zip .
+          
+          echo "✓ 打包完成"
+          echo "📦 包大小: $(du -sh /tmp/build-output.zip | cut -f1)"
+          echo "📁 包内文件数: $(unzip -l /tmp/build-output.zip | tail -1 | awk '{print $1}')"
+          
+          # 移动回工作目录
+          mv /tmp/build-output.zip ./build-output.zip
+
+      - name: 📤 Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: |
-            apps/app/.next/standalone
-            apps/app/.next/static
-            apps/app/public
-            apps/app/src/contents
-            packages
-            Dockerfile
-            podman-compose.yml
+          path: build-output.zip
           retention-days: 7
 
       - name: 🔄 Restore .gitignore
