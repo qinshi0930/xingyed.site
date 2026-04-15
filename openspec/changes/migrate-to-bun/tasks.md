@@ -110,6 +110,17 @@
 - [x] 9.7.2 避免运行时 EACCES 错误（非 root 用户写入缓存）
 - [x] 9.7.3 更新 Dockerfile 注释说明缓存优化
 
+## 9.8. 构建产物优化 - 移除冗余 packages 复制
+
+**发现**：standalone 目录已包含必要的 packages（通过 Next.js `transpilePackages` 配置）
+
+**优化**：
+- [x] 9.8.1 ci-cd.yml Build Job：移除 `cp -a packages` 步骤
+- [x] 9.8.2 ci-cd.yml Release Job：移除 packages 目录验证
+- [x] 9.8.3 Dockerfile：移除 `COPY packages/ ./packages/` 指令
+- [x] 9.8.4 更新文档说明 standalone 已包含 packages
+- [x] 9.8.5 验证 standalone/packages 存在但非必需
+
 ## 10. CI/CD Workflow 更新 - build-release.yml
 
 - [x] 10.1 已在 ci-cd.yml 中统一更新

@@ -15,16 +15,15 @@ WORKDIR /app
 # 复制预编译的 standalone 产物
 # 这些文件由 CI/CD 流程中的 bun run build 生成
 # 目录结构（artifact 解压后的 monorepo 结构）：
-# apps/app/.next/standalone/ - Next.js standalone 输出（包含 server.js 和 node_modules/.bun）
+# apps/app/.next/standalone/ - Next.js standalone 输出（包含 server.js、node_modules/.bun 和 packages）
 # apps/app/.next/static/     - 静态资源（CSS、JS chunks）
 # apps/app/public/           - 公共静态文件
 # apps/app/src/contents/     - MDX 内容
-# packages/                  - Monorepo 共享包（@repo/types, @repo/utils）
+# 注意：standalone 已通过 transpilePackages 包含 @repo/types 和 @repo/utils
 COPY apps/app/.next/standalone/ ./
 COPY apps/app/.next/static/ ./apps/app/.next/static/
 COPY apps/app/public/ ./apps/app/public/
 COPY apps/app/src/contents/ ./apps/app/src/contents/
-COPY packages/ ./packages/
 
 # 创建缓存目录并设置权限（避免运行时 EACCES 错误）
 RUN mkdir -p apps/app/.next/cache && chown nextjs:nodejs apps/app/.next/cache

@@ -113,13 +113,15 @@ COPY apps/app/.next/standalone/ ./
 COPY apps/app/.next/static/ ./apps/app/.next/static/
 COPY apps/app/public/ ./apps/app/public/
 COPY apps/app/src/contents/ ./apps/app/src/contents/
-COPY packages/ ./packages/
 CMD ["node", "apps/app/server.js"]
 ```
+
+**注意**：standalone 已通过 `transpilePackages` 包含 @repo/types 和 @repo/utils，无需单独 COPY packages
 
 **对比当前方案：**
 - 移除：`COPY pnpm-lock.yaml ./`
 - 移除：`RUN pnpm install --prod --frozen-lockfile`
+- 移除：`COPY packages/ ./packages/`
 
 ### Decision 6: CI/CD 脚本更新
 

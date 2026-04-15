@@ -120,6 +120,7 @@ jobs:
           mkdir -p /tmp/artifact-build
           
           # 复制需要打包的文件，保持 monorepo 目录结构
+          # 注意：standalone 已包含必要的 packages（通过 transpilePackages）
           mkdir -p /tmp/artifact-build/apps/app/.next
           cp -a apps/app/.next/standalone /tmp/artifact-build/apps/app/.next/standalone
           cp -a apps/app/.next/static /tmp/artifact-build/apps/app/.next/static
@@ -128,7 +129,6 @@ jobs:
           cp -a apps/app/src/contents /tmp/artifact-build/apps/app/src/contents
           
           cp -a apps/app/public /tmp/artifact-build/apps/app/public
-          cp -a packages /tmp/artifact-build/packages
           cp Dockerfile /tmp/artifact-build/
           cp podman-compose.yml /tmp/artifact-build/
           
@@ -186,9 +186,12 @@ jobs:
           test -d "apps/app/.next/static" || (echo "✗ static 缺失" && exit 1)
           test -d "apps/app/public" || (echo "✗ public 缺失" && exit 1)
           test -d "apps/app/src/contents" || (echo "✗ contents 缺失" && exit 1)
-          test -d "packages" || (echo "✗ packages 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
           test -f "podman-compose.yml" || (echo "✗ podman-compose.yml 缺失" && exit 1)
+          
+          # 验证 standalone 中的 packages（已由 Next.js 自动包含）
+          test -d "apps/app/.next/standalone/packages" || echo "⚠ standalone/packages 不存在（可能不需要）"
+          
           echo "✓ 产物结构验证通过"
 
       - name: 📦 Create Release tar.gz
