@@ -10,6 +10,7 @@ import projectsRoute from "./routes/projects";
 import readStatsRoute from "./routes/read-stats";
 import spotifyRoute from "./routes/spotify";
 import viewsRoute from "./routes/views";
+import { warmBlogCache } from "./services/blog";
 
 const app = new Hono().basePath("/api");
 
@@ -45,5 +46,10 @@ app.route("/projects", projectsRoute);
 app.route("/read-stats", readStatsRoute);
 app.route("/spotify", spotifyRoute);
 app.route("/views", viewsRoute);
+
+// 启动时预热博客缓存（异步，不阻塞应用启动）
+warmBlogCache().catch((err) => {
+	console.error("[API] Failed to warm blog cache:", err);
+});
 
 export default app;
