@@ -49,11 +49,11 @@
 
 ## 6. 删除重复代码
 
-- [ ] 6.1 确认无其他文件引用 `modules/blog/service.ts`
-- [ ] 6.2 删除 `apps/app/src/modules/blog/service.ts`
-- [ ] 6.3 确认无其他文件引用 `common/libs/blog.ts`
-- [ ] 6.4 删除 `apps/app/src/common/libs/blog.ts`
-- [ ] 6.5 运行类型检查确认无编译错误
+- [x] 6.1 确认无其他文件引用 `modules/blog/service.ts`
+- [x] 6.2 删除 `apps/app/src/modules/blog/service.ts`
+- [x] 6.3 确认无其他文件引用 `common/libs/blog.ts`
+- [x] 6.4 删除 `apps/app/src/common/libs/blog.ts`
+- [x] 6.5 运行类型检查确认无编译错误
 
 ## 7. 测试与验证
 

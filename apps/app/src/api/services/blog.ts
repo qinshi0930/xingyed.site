@@ -227,9 +227,11 @@ export const warmBlogCache = async (): Promise<void> => {
 
 		await redis.setex(BLOG_CACHE_KEY, BLOG_CACHE_TTL, JSON.stringify(blogs));
 		// 只在开发模式下打印一次详细日志
-		if (process.env.NODE_ENV === 'production' || !(globalThis as any).__blogWarmLogPrinted) {
+		if (process.env.NODE_ENV === "production" || !(globalThis as any).__blogWarmLogPrinted) {
 			(globalThis as any).__blogWarmLogPrinted = true;
-			console.log(`[Blog Service] Cache warmed: ${blogs.length} blog posts cached (TTL: ${BLOG_CACHE_TTL}s)`);
+			console.log(
+				`[Blog Service] Cache warmed: ${blogs.length} blog posts cached (TTL: ${BLOG_CACHE_TTL}s)`,
+			);
 		}
 	} catch (error) {
 		// 预热失败不应阻塞应用启动
