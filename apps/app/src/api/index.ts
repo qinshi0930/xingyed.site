@@ -1,15 +1,15 @@
 import { Hono } from "hono";
 
-import blogRoute from "./blog";
-import commentsRoute from "./comments";
-import contactRoute from "./contact";
-import contentRoute from "./content";
-import githubRoute from "./github";
-import learnRoute from "./learn";
-import projectsRoute from "./projects";
-import readStatsRoute from "./read-stats";
-import spotifyRoute from "./spotify";
-import viewsRoute from "./views";
+import blogRoute from "./routes/blog";
+import commentsRoute from "./routes/comments";
+import contactRoute from "./routes/contact";
+import contentRoute from "./routes/content";
+import githubRoute from "./routes/github";
+import learnRoute from "./routes/learn";
+import projectsRoute from "./routes/projects";
+import readStatsRoute from "./routes/read-stats";
+import spotifyRoute from "./routes/spotify";
+import viewsRoute from "./routes/views";
 
 const app = new Hono().basePath("/api");
 

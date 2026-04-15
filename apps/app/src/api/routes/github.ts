@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import { getGithubUser } from "@/services/github";
 
-import { cache } from "./middleware/cache";
+import { cache } from "../middleware/cache";
 
 const app = new Hono();
 

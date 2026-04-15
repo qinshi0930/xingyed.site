@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import { loadMdxFiles } from "@/common/libs/mdx";
 
-import { cache } from "./middleware/cache";
+import { cache } from "../middleware/cache";
 
 const app = new Hono();
 
