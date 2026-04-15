@@ -54,7 +54,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: 🔍 Lint
-        run: bun run lint
+        run: bun run app:lint
 
       - name: 🔍 Type check
         run: cd apps/app && bunx tsc --noEmit
@@ -100,7 +100,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: 🏗️ Build Next.js app
-        run: bun run build
+        run: bun run app:build
         env:
           GITHUB_APP_ID: ${{ secrets.APP_ID }}
           GITHUB_PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}

@@ -16,7 +16,7 @@
 - **API**: Hono + hono/vercel 适配器
 - **样式**: Tailwind CSS + shadcn/ui
 - **包管理器**: Bun 1.3.11+
-- **构建**: Bun + Next.js (传统模式)
+- **构建**: Node.js + Turbopack (构建速度提升 57%)
 - **部署**: Docker + Podman
 
 ## 环境要求
@@ -36,8 +36,8 @@ curl -fsSL https://bun.sh/install | bash
 # 安装依赖
 bun install
 
-# 启动开发服务器
-bun run dev
+# 启动开发服务器 (使用 Turbopack)
+bun run app:dev
 ```
 
 访问 http://localhost:3000
@@ -45,11 +45,11 @@ bun run dev
 ### 生产构建
 
 ```bash
-# 构建应用
-bun run build
+# 构建应用 (使用 Turbopack)
+bun run app:build
 
 # 启动生产服务器
-bun run start
+bun run app:start
 ```
 
 ### Docker 部署
