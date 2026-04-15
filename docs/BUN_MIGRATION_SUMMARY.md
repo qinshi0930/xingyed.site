@@ -62,9 +62,10 @@
 
 Bun 提供了以下优势：
 
-1. **彻底解决符号链接问题**
+1. **不同的依赖组织方式**
    - 依赖存储在 `node_modules/.bun/` 实际目录中
-   - 无需符号链接，Docker COPY 直接可用
+   - 符号链接结构更简单，更容易处理
+   - **注意**：Bun 仍然使用符号链接，只是组织方式不同
 
 2. **一体化解决方案**
    - 包管理器 + TypeScript 执行 + 运行时
@@ -115,34 +116,70 @@ next build → standalone (依赖已完整)
 Docker: COPY standalone → 直接运行
 ```
 
+**关键区别**：
+- pnpm 和 Bun **都使用符号链接**
+- 根本问题相同：CI/CD artifact 打包时符号链接可能丢失
+- Bun 的优势：符号链接结构更简单（集中在 `.bun` 目录），更容易通过 tar.gz 保留
+
 ---
 
 ## 遇到的问题与解决方案
 
-### 问题 1: Bun 构建产物符号链接丢失（严重）
+### 问题 1: 构建产物符号链接丢失（严重）
 
 **问题描述**:
 - CI/CD Build Job 使用 `upload-artifact` 打包构建产物
 - 默认 zip 压缩不保留符号链接
-- Bun 的 `.bun` 目录是实际依赖，其他位置是符号链接
+- **pnpm 和 Bun 都会遇到此问题**（根本原因相同）
 - Release 和 Docker Job 下载后符号链接断裂
 - 导致 `MODULE_NOT_FOUND` 错误
 
 **根本原因**:
+
+**pnpm 的符号链接结构**:
 ```
-standalone/
-├── node_modules/
-│   ├── .bun/              ← 实际依赖（77 MB）
-│   ├── next/              ← 符号链接 → .bun/...
-│   ├── react/             ← 符号链接 → .bun/...
-│   └── @swc/helpers/      ← 符号链接 → .bun/...
+standalone/node_modules/
+├── .pnpm/                           ← 实际依赖存储
+│   ├── next@14.0.0/
+│   ├── react@18.0.0/
+│   └── @swc+helpers@0.5.15/
+├── next/                            ← 符号链接 → .pnpm/next@14.0.0/node_modules/next
+├── react/                           ← 符号链接 → .pnpm/react@18.0.0/node_modules/react
+└── @swc/helpers/                    ← 符号链接 → .pnpm/@swc+helpers@...
 ```
 
-`upload-artifact` zip 打包时只复制符号链接本身，不跟随到实际文件。
+**Bun 的符号链接结构**:
+```
+standalone/node_modules/
+├── .bun/                            ← 实际依赖存储
+│   ├── next+14.0.0/
+│   ├── react+18.0.0/
+│   └── @swc+helpers@0.5.15/
+├── next/                            ← 符号链接 → .bun/next+14.0.0/node_modules/next
+├── react/                           ← 符号链接 → .bun/react+18.0.0/node_modules/react
+└── @swc/helpers/                    ← 符号链接 → .bun/@swc+helpers@0.5.15/
+```
+
+**共同问题**：
+- 两者都使用符号链接组织依赖
+- `upload-artifact` 默认 zip 打包**不跟随符号链接**
+- 只复制符号链接本身，不复制实际文件
+- 解压后符号链接指向的路径不存在
+
+**为什么之前 pnpm 能工作？**
+- pnpm 方案使用 `cp -aL` 解析符号链接（变通方案）
+- 或在 Docker runner 阶段重新 `pnpm install --prod`
+- 这些方案增加了复杂性和构建时间
+
+**Bun 的优势**：
+- 符号链接结构更简单（集中在 `.bun` 目录）
+- 使用 tar.gz 打包可以完整保留符号链接
+- 无需解析符号链接或重新安装依赖
 
 **解决方案**:
 ```yaml
 # Build Job: 使用 tar.gz 替代 zip
+tar 默认保留符号链接
 - name: 📦 Pack build output
   run: tar -czf build-output.tar.gz -C /tmp/artifact-build .
 
@@ -323,6 +360,7 @@ xingye  937101  0.0  rootlessport  # PID 937101，不是 243321
 - Next.js standalone 模式生成 Node.js 可执行文件
 - Bun 运行时兼容性问题（某些 npm 包可能不兼容）
 - 生产环境稳定性优先
+- **注意**：此决策与符号链接问题无关
 
 **实现**:
 ```json
@@ -540,10 +578,12 @@ CMD ["node", "server.js"]
    - 4 个阶段验证：基础 → 依赖 → 构建 → Docker
    - 确保每个阶段通过后再推进
 
-2. **符号链接问题彻底解决**
-   - Bun 的 `.bun` 目录设计避免了符号链接
-   - Docker COPY 直接可用，无需额外步骤
-   - 这是迁移的最大收益
+2. **理解符号链接问题的本质**
+   - pnpm 和 Bun **都使用符号链接**组织依赖
+   - 根本问题相同：artifact 打包时符号链接可能丢失
+   - **关键区别**：Bun 的符号链接结构更简单（集中在 `.bun` 目录）
+   - **解决方案**：使用 tar.gz 打包保留符号链接（对两者都有效）
+   - 这是理解整个迁移的关键点
 
 3. **CI/CD 流程同步更新**
    - 使用 OpenSpec 管理工作流变更
@@ -565,10 +605,11 @@ CMD ["node", "server.js"]
    - ✅ 正确做法：显式创建 `vercel.json` 配置
    - 📝 教训：平台特定配置需显式声明
 
-2. **Artifact 打包符号链接**
-   - ❌ 错误：使用 zip 打包（不保留符号链接）
-   - ✅ 正确：使用 tar.gz 打包（保留符号链接）
-   - 📝 教训：理解工具默认行为
+1. **Artifact 打包符号链接**
+   - ❌ 错误假设：Bun 没有符号链接问题
+   - ✅ 实际情况：**pnpm 和 Bun 都有符号链接**，根本问题相同
+   - ✅ 正确做法：使用 tar.gz 打包（保留符号链接）
+   - 📝 教训：理解包管理器的依赖组织方式，不要被表象误导
 
 3. **monorepo 目录结构**
    - ❌ 错误：临时目录打包丢失路径结构
@@ -750,7 +791,7 @@ podman run -d --name app -p 3000:3000 xingyed-site
 
 本次 Bun 迁移是一次**成功的现代化升级**，通过 92 个任务的系统化执行，实现了：
 
-✅ **技术收益**: 符号链接问题彻底解决，Docker 构建简化 67%  
+✅ **技术收益**: 符号链接问题通过 tar.gz 打包解决（对 pnpm 和 Bun 都有效），Docker 构建简化 67%  
 ✅ **性能收益**: 镜像减少 36%，启动时间减少 91%  
 ✅ **体验收益**: 工具链统一，开发流程简化  
 ✅ **质量收益**: 完整的测试验证，生产环境稳定运行  
@@ -761,7 +802,7 @@ podman run -d --name app -p 3000:3000 xingyed-site
 3. 完整的 CI/CD 测试
 4. 及时的问题发现和解决
 
-**最重要的一点**: Bun 的 `.bun` 目录设计从根本上解决了 pnpm 符号链接导致的部署问题，这是本次迁移的最大价值。
+**最重要的一点**: pnpm 和 Bun **都使用符号链接**，根本问题相同。Bun 的优势在于符号链接结构更简单（集中在 `.bun` 目录），通过 tar.gz 打包可以完整保留，无需额外的符号链接解析或重新安装依赖步骤。
 
 ---
 
