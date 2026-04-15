@@ -36,16 +36,16 @@
 
 ## 5. 修改前端博客详情页
 
-- [ ] 5.1 修改 `apps/app/src/app/(page)/blog/[slug]/page.tsx`
-- [ ] 5.2 添加 ISR 配置（`export const dynamic = 'force-static'`）
-- [ ] 5.3 设置 revalidate = 3600（1小时）
-- [ ] 5.4 删除 `generateStaticParams()` 函数
-- [ ] 5.5 移除 `getBlogById` 和 `loadBlogFiles` 导入
-- [ ] 5.6 改为通过 `fetch()` 调用 `/api/blog?slug={slug}`
-- [ ] 5.7 使用 `params.slug` 替代 `searchParams.id`
-- [ ] 5.8 处理加载状态和错误情况
-- [ ] 5.9 测试博客详情页渲染正常（URL 格式：`/blog/slug-name`）
-- [ ] 5.10 测试 metadata 生成正常
+- [x] 5.1 修改 `apps/app/src/app/(page)/blog/[slug]/page.tsx`
+- [x] 5.2 添加 ISR 配置（`export const dynamic = 'force-static'`）
+- [x] 5.3 设置 revalidate = 3600（1小时）
+- [x] 5.4 删除 `generateStaticParams()` 函数
+- [x] 5.5 移除 `getBlogById` 和 `loadBlogFiles` 导入
+- [x] 5.6 改为通过 `fetch()` 调用 `/api/blog?slug={slug}`
+- [x] 5.7 使用 `params.slug` 替代 `searchParams.id`
+- [x] 5.8 处理加载状态和错误情况
+- [x] 5.9 测试博客详情页渲染正常（URL 格式：`/blog/slug-name`）
+- [x] 5.10 测试 metadata 生成正常
 
 ## 6. 删除重复代码
 
