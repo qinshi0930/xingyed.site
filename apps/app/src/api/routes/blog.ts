@@ -2,7 +2,7 @@ import { Hono } from "hono";
 
 import { getBlogs } from "@/common/libs/blog";
 
-import { cache } from "./middleware/cache";
+import { cache } from "../middleware/cache";
 
 const app = new Hono();
 
