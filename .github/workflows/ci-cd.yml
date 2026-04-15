@@ -119,11 +119,15 @@ jobs:
           echo "Packing build artifact with tar.gz (preserves symlinks)..."
           mkdir -p /tmp/artifact-build
           
-          # 复制需要打包的文件到临时目录
-          cp -a apps/app/.next/standalone /tmp/artifact-build/standalone
-          cp -a apps/app/.next/static /tmp/artifact-build/static
-          cp -a apps/app/public /tmp/artifact-build/public
-          cp -a apps/app/src/contents /tmp/artifact-build/contents
+          # 复制需要打包的文件，保持 monorepo 目录结构
+          mkdir -p /tmp/artifact-build/apps/app/.next
+          cp -a apps/app/.next/standalone /tmp/artifact-build/apps/app/.next/standalone
+          cp -a apps/app/.next/static /tmp/artifact-build/apps/app/.next/static
+          
+          mkdir -p /tmp/artifact-build/apps/app/src
+          cp -a apps/app/src/contents /tmp/artifact-build/apps/app/src/contents
+          
+          cp -a apps/app/public /tmp/artifact-build/apps/app/public
           cp -a packages /tmp/artifact-build/packages
           cp Dockerfile /tmp/artifact-build/
           cp podman-compose.yml /tmp/artifact-build/
@@ -135,8 +139,8 @@ jobs:
           # 验证
           echo "✓ Artifact packed:"
           ls -lh /tmp/build-output.tar.gz
-          echo "✓ Archive contents (first 20 lines):"
-          tar -tzf /tmp/build-output.tar.gz | head -20
+          echo "✓ Archive contents (first 30 lines):"
+          tar -tzf /tmp/build-output.tar.gz | head -30
           
           # 移动到工作目录
           mv /tmp/build-output.tar.gz $GITHUB_WORKSPACE/
@@ -178,10 +182,10 @@ jobs:
         run: |
           cd build-output
           echo "验证产物结构..."
-          test -d "standalone" || (echo "✗ standalone 缺失" && exit 1)
-          test -d "static" || (echo "✗ static 缺失" && exit 1)
-          test -d "public" || (echo "✗ public 缺失" && exit 1)
-          test -d "contents" || (echo "✗ contents 缺失" && exit 1)
+          test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
+          test -d "apps/app/.next/static" || (echo "✗ static 缺失" && exit 1)
+          test -d "apps/app/public" || (echo "✗ public 缺失" && exit 1)
+          test -d "apps/app/src/contents" || (echo "✗ contents 缺失" && exit 1)
           test -d "packages" || (echo "✗ packages 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
           test -f "podman-compose.yml" || (echo "✗ podman-compose.yml 缺失" && exit 1)
@@ -238,12 +242,14 @@ jobs:
           
           echo "✓ Docker context prepared:"
           ls -la docker-context/
+          echo "✓ Directory structure:"
+          find docker-context -maxdepth 3 -type d | head -20
 
       - name: 📁 Verify artifact structure
         run: |
           cd docker-context
           echo "验证产物结构..."
-          test -d "standalone" || (echo "✗ standalone 缺失" && exit 1)
+          test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
           echo "✓ 产物结构验证通过"
 
