@@ -114,22 +114,40 @@ jobs:
           test -d apps/app/.next/standalone && echo "✓ standalone output exists" || (echo "✗ standalone output missing" && exit 1)
           echo "Build verification passed!"
 
+      - name: 📦 Pack build artifact (preserve symlinks)
+        run: |
+          echo "Packing build artifact with tar.gz (preserves symlinks)..."
+          mkdir -p /tmp/artifact-build
+          
+          # 复制需要打包的文件到临时目录
+          cp -a apps/app/.next/standalone /tmp/artifact-build/standalone
+          cp -a apps/app/.next/static /tmp/artifact-build/static
+          cp -a apps/app/public /tmp/artifact-build/public
+          cp -a apps/app/src/contents /tmp/artifact-build/contents
+          cp -a packages /tmp/artifact-build/packages
+          cp Dockerfile /tmp/artifact-build/
+          cp podman-compose.yml /tmp/artifact-build/
+          
+          # 使用 tar.gz 打包（默认保留符号链接）
+          cd /tmp/artifact-build
+          tar -czf /tmp/build-output.tar.gz .
+          
+          # 验证
+          echo "✓ Artifact packed:"
+          ls -lh /tmp/build-output.tar.gz
+          echo "✓ Archive contents (first 20 lines):"
+          tar -tzf /tmp/build-output.tar.gz | head -20
+          
+          # 移动到工作目录
+          mv /tmp/build-output.tar.gz $GITHUB_WORKSPACE/
+
       - name: 📤 Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: |
-            apps/app/.next/standalone
-            apps/app/.next/static
-            apps/app/public
-            apps/app/src/contents
-            packages
-            Dockerfile
-            podman-compose.yml
+          path: build-output.tar.gz
           retention-days: 7
-          # 包含隐藏文件（如 .bun 目录）
-          include-hidden-files: true
-          compression-level: 6
+          compression-level: 0  # 已压缩，不再二次压缩
 
   # ============================================================
   # Job 3: 创建 Release (仅 Tag)
@@ -146,30 +164,45 @@ jobs:
         with:
           name: build-output
 
+      - name: 📦 Extract build artifact
+        run: |
+          echo "Extracting build artifact..."
+          mkdir -p build-output
+          tar -xzf build-output.tar.gz -C build-output
+          rm build-output.tar.gz
+          
+          echo "✓ Extracted contents:"
+          ls -la build-output/
+
       - name: 📁 Verify artifact structure
         run: |
+          cd build-output
           echo "验证产物结构..."
-          test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
-          test -d "apps/app/.next/static" || (echo "✗ static 缺失" && exit 1)
-          test -d "apps/app/public" || (echo "✗ public 缺失" && exit 1)
-          test -d "apps/app/src/contents" || (echo "✗ contents 缺失" && exit 1)
+          test -d "standalone" || (echo "✗ standalone 缺失" && exit 1)
+          test -d "static" || (echo "✗ static 缺失" && exit 1)
+          test -d "public" || (echo "✗ public 缺失" && exit 1)
+          test -d "contents" || (echo "✗ contents 缺失" && exit 1)
           test -d "packages" || (echo "✗ packages 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
           test -f "podman-compose.yml" || (echo "✗ podman-compose.yml 缺失" && exit 1)
           echo "✓ 产物结构验证通过"
 
-      - name: 📦 Create Release zip
+      - name: 📦 Create Release tar.gz
         run: |
           VERSION=${GITHUB_REF_NAME}
-          ARTIFACT_NAME="xingyed-site-${VERSION}.zip"
-          echo "Creating Release zip for version: ${VERSION}"
+          ARTIFACT_NAME="xingyed-site-${VERSION}.tar.gz"
+          echo "Creating Release tar.gz for version: ${VERSION}"
           
-          # 直接压缩整个目录
-          zip -r "${ARTIFACT_NAME}" .
+          # 直接使用已打包的 tar.gz（符号链接已保留）
+          cd build-output
+          tar -czf ../${ARTIFACT_NAME} .
+          cd ..
           
           # 验证
           echo "✓ Release artifact created: ${ARTIFACT_NAME}"
           ls -lh "${ARTIFACT_NAME}"
+          echo "✓ Archive contents (first 20 lines):"
+          tar -tzf "${ARTIFACT_NAME}" | head -20
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -177,7 +210,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: xingyed-site-${{ github.ref_name }}.zip
+          files: xingyed-site-${{ github.ref_name }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -196,10 +229,21 @@ jobs:
         with:
           name: build-output
 
+      - name: 📦 Extract build artifact
+        run: |
+          echo "Extracting build artifact for Docker build..."
+          mkdir -p docker-context
+          tar -xzf build-output.tar.gz -C docker-context
+          rm build-output.tar.gz
+          
+          echo "✓ Docker context prepared:"
+          ls -la docker-context/
+
       - name: 📁 Verify artifact structure
         run: |
+          cd docker-context
           echo "验证产物结构..."
-          test -d "apps/app/.next/standalone" || (echo "✗ standalone 缺失" && exit 1)
+          test -d "standalone" || (echo "✗ standalone 缺失" && exit 1)
           test -f "Dockerfile" || (echo "✗ Dockerfile 缺失" && exit 1)
           echo "✓ 产物结构验证通过"
 
@@ -225,7 +269,7 @@ jobs:
       - name: 🐳 Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./docker-context
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

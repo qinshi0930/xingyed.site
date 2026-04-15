@@ -70,6 +70,19 @@
 - [x] 9.5 更新依赖缓存配置（基于 bun.lock）
 - [x] 9.6 移除符号链接解析步骤（Bun 不需要）
 
+## 9.5. CI/CD 符号链接保留修复（紧急）
+
+**问题**：Bun 构建产物使用符号链接（`standalone/.bun/` 存储实际文件），upload-artifact 的 zip 打包会导致符号链接丢失
+
+**解决方案**：使用 tar.gz 替代 zip，保留符号链接
+
+- [x] 9.5.1 Build Job：使用 `tar -czf` 打包产物（默认保留符号链接）
+- [x] 9.5.2 Build Job：上传 tar.gz 到 artifact（compression-level: 0）
+- [x] 9.5.3 Release Job：下载并解压 tar.gz，重新打包发布
+- [x] 9.5.4 Docker Job：下载并解压 tar.gz，构建 Docker 镜像
+- [x] 9.5.5 移除 zip 压缩逻辑，改用 tar.gz
+- [x] 9.5.6 更新 Release 文件名为 `xingyed-site-{version}.tar.gz`
+
 ## 10. CI/CD Workflow 更新 - build-release.yml
 
 - [x] 10.1 已在 ci-cd.yml 中统一更新
