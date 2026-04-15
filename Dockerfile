@@ -26,6 +26,9 @@ COPY apps/app/public/ ./apps/app/public/
 COPY apps/app/src/contents/ ./apps/app/src/contents/
 COPY packages/ ./packages/
 
+# 创建缓存目录并设置权限（避免运行时 EACCES 错误）
+RUN mkdir -p apps/app/.next/cache && chown nextjs:nodejs apps/app/.next/cache
+
 USER nextjs
 
 EXPOSE 3000

@@ -83,6 +83,33 @@
 - [x] 9.5.5 移除 zip 压缩逻辑，改用 tar.gz
 - [x] 9.5.6 更新 Release 文件名为 `xingyed-site-{version}.tar.gz`
 
+## 9.6. CI/CD tar 打包目录结构优化
+
+**问题**：tar 打包时将所有文件放在临时目录根级别，丢失 monorepo 路径结构
+
+**解决方案**：复制文件时保持完整的 monorepo 目录结构
+
+- [x] 9.6.1 Build Job：复制文件时保持 `apps/app/.next/standalone` 等完整路径
+- [x] 9.6.2 Release Job：验证路径更新为 `apps/app/.next/standalone`
+- [x] 9.6.3 Docker Job：验证路径更新为 `apps/app/.next/standalone`
+- [x] 9.6.4 增加目录结构输出，便于调试
+
+## 9.7. Release 包验证与 Docker 缓存优化
+
+**验证结果**：
+- ✅ Release 包下载成功（56 MB tar.gz）
+- ✅ 解压后目录结构完整（保持 monorepo 路径）
+- ✅ 符号链接保留成功（`.bun` 目录完整）
+- ✅ Docker 镜像构建成功（283 MB）
+- ✅ 容器启动正常，无 MODULE_NOT_FOUND 错误
+- ✅ 健康检查通过（`/api/health` 返回 ok）
+- ✅ 主页、博客、关于页面均正常访问（HTTP 200）
+
+**Docker 缓存优化**：
+- [x] 9.7.1 Dockerfile：创建 `.next/cache` 目录并设置权限
+- [x] 9.7.2 避免运行时 EACCES 错误（非 root 用户写入缓存）
+- [x] 9.7.3 更新 Dockerfile 注释说明缓存优化
+
 ## 10. CI/CD Workflow 更新 - build-release.yml
 
 - [x] 10.1 已在 ci-cd.yml 中统一更新
