@@ -31,68 +31,108 @@ const getClientOptions = (): RedisOptions => ({
 	maxRetriesPerRequest: 3,
 });
 
-// 单例模式：延迟初始化 Redis 实例
-let redisInstance: Redis | null = null;
+// 单例模式：使用 globalThis 确保在 Next.js 开发模式的模块重载中保持同一个实例
+// 这样避免了每次模块重新加载时创建新的 Redis 连接
+declare global {
+	let __redisInstance: Redis | null;
+	let __redisListenersRegistered: boolean;
+}
+
+const getGlobalThis = () => {
+	if (!(globalThis as any).__redisInstance) {
+		(globalThis as any).__redisInstance = null;
+	}
+	if (!(globalThis as any).__redisListenersRegistered) {
+		(globalThis as any).__redisListenersRegistered = false;
+	}
+	return globalThis as any;
+};
 
 /**
  * 获取 Redis 实例（延迟初始化）
  * 只有在调用此函数时才会创建 Redis 连接
  * 避免了模块级导入时的副作用
+ *
+ * 使用 globalThis 存储单例，确保在 Next.js 开发模式下模块重载时复用同一实例
  */
 export const getRedis = (): Redis => {
-	if (!redisInstance) {
+	const g = getGlobalThis();
+
+	if (!g.__redisInstance) {
 		const connectionUrl = getConnectionConfig();
 		const clientOptions = getClientOptions();
 
-		redisInstance = new Redis(connectionUrl, clientOptions);
+		g.__redisInstance = new Redis(connectionUrl, clientOptions);
 
-		redisInstance.on("error", (err) => {
+		g.__redisInstance.on("error", (err: Error) => {
 			console.error("Redis Client Error:", err);
 		});
 
-		redisInstance.on("connect", () => {
+		g.__redisInstance.on("connect", () => {
 			console.log("Redis Client Connected");
 		});
 
 		// 优雅关闭：监听进程退出信号
+		// 使用 globalThis 存储实例引用，避免闭包问题
 		const gracefulShutdown = async (signal: string) => {
 			console.log(`\n${signal} received. Closing Redis connection...`);
 			try {
-				if (redisInstance) {
-					await redisInstance.quit();
+				if (g.__redisInstance) {
+					await g.__redisInstance.quit();
 					console.log("Redis connection closed gracefully.");
-					redisInstance = null;
+					g.__redisInstance = null;
 				}
 			} catch (error) {
 				console.error("Error closing Redis connection:", error);
 				// 强制关闭
-				if (redisInstance) {
-					redisInstance.disconnect();
-					redisInstance = null;
+				if (g.__redisInstance) {
+					g.__redisInstance.disconnect();
+					g.__redisInstance = null;
 				}
 			}
 		};
 
-		// 监听进程退出信号
-		process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-		process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+		// 只在首次注册事件监听器，避免重复注册
+		if (!g.__redisListenersRegistered) {
+			g.__redisListenersRegistered = true;
+			process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+			process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+		}
 	}
 
-	return redisInstance;
+	return g.__redisInstance;
 };
 
 /**
  * 关闭 Redis 连接
+ * 注意：不会清理 globalThis 中的标记，因为进程即将退出
  */
 export const closeRedis = async (): Promise<void> => {
-	if (redisInstance) {
+	const g = getGlobalThis();
+
+	if (g.__redisInstance) {
 		try {
-			await redisInstance.quit();
+			await g.__redisInstance.quit();
 			console.log("Redis connection closed gracefully.");
 		} catch (error) {
 			console.error("Error closing Redis connection:", error);
-			redisInstance.disconnect();
+			g.__redisInstance.disconnect();
 		}
-		redisInstance = null;
+		g.__redisInstance = null;
 	}
+};
+
+/**
+ * 清理 globalThis 中的 Redis 相关标记
+ * 仅用于测试环境或需要完全重置的场景
+ * 生产环境和开发环境不需要调用此函数
+ */
+export const cleanupRedisGlobalState = (): void => {
+	const g = globalThis as any;
+	if (g.__redisInstance) {
+		console.warn("[Redis] Cleaning up active Redis instance");
+		g.__redisInstance.disconnect();
+	}
+	g.__redisInstance = null;
+	g.__redisListenersRegistered = false;
 };

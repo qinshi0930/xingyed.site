@@ -217,17 +217,20 @@ export const getBlogs = async ({
 /**
  * 启动时预热缓存
  * 在应用启动时调用，提前加载博客数据到 Redis
+ * 注意：在 Next.js 开发模式下，每次 API 路由编译都会调用此函数
+ * 这是正常行为，生产环境不会出现
  */
 export const warmBlogCache = async (): Promise<void> => {
 	try {
-		console.log("[Blog Service] Starting cache warmup...");
 		const blogs = loadBlogFiles();
 		const redis = getRedis();
 
 		await redis.setex(BLOG_CACHE_KEY, BLOG_CACHE_TTL, JSON.stringify(blogs));
-		console.log(
-			`[Blog Service] Cache warmed: ${blogs.length} blog posts cached (TTL: ${BLOG_CACHE_TTL}s)`,
-		);
+		// 只在开发模式下打印一次详细日志
+		if (process.env.NODE_ENV === 'production' || !(globalThis as any).__blogWarmLogPrinted) {
+			(globalThis as any).__blogWarmLogPrinted = true;
+			console.log(`[Blog Service] Cache warmed: ${blogs.length} blog posts cached (TTL: ${BLOG_CACHE_TTL}s)`);
+		}
 	} catch (error) {
 		// 预热失败不应阻塞应用启动
 		console.error("[Blog Service] Failed to warm cache:", error);
