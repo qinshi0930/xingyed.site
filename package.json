@@ -4,15 +4,15 @@
   "private": true,
   "workspaces": ["apps/app", "packages/*"],
   "scripts": {
-    "dev": "bun --filter @repo/app dev",
-    "build": "bun --filter @repo/app build",
-    "start": "bun --filter @repo/app start",
-    "lint": "bun --filter @repo/app lint",
+    "app:dev": "bun --filter @repo/app dev",
+    "app:build": "bun --filter @repo/app build",
+    "app:start": "bun --filter @repo/app start",
+    "app:lint": "bun --filter @repo/app lint",
     "clean": "bun run clean:all",
     "clean:all": "rimraf -rf node_modules apps/*/node_modules packages/*/node_modules",
-    "docker:build": "bun run build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build",
+    "docker:build": "bun run app:build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build",
     "docker:up": "podman-compose up -d",
-    "docker:deploy": "bun run build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build && podman-compose up -d",
+    "docker:deploy": "bun run app:build && test -d apps/app/.next/standalone || (echo 'Build failed: .next/standalone not found' && exit 1) && podman-compose build && podman-compose up -d",
     "prepare": "husky"
   },
   "devDependencies": {
