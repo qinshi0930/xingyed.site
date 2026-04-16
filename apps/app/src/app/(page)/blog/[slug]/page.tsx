@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 // import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 
+import { getBlogs } from "@/api/services/blog";
 import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
 import TrackView from "@/common/components/elements/TrackView";
@@ -27,19 +28,9 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 		return {};
 	}
 
-	// 通过 API 获取博客数据
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-	const res = await fetch(`${baseUrl}/api/blog?slug=${slug}`, {
-		next: { revalidate: 3600 }, // 1 小时缓存
-	});
+	// 直接调用服务层函数，避免自引用 fetch
+	const apiResponse = await getBlogs({ slug });
 
-	if (!res.ok) {
-		return {};
-	}
-
-	const { data: apiResponse } = await res.json();
-
-	// API 返回格式：{ posts: [], page, per_page, total_pages, total_posts }
 	if (!apiResponse || !apiResponse.posts || apiResponse.posts.length === 0) {
 		return {};
 	}
@@ -81,19 +72,9 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 		redirect("/blog");
 	}
 
-	// 通过 API 获取博客数据
-	const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-	const res = await fetch(`${baseUrl}/api/blog?slug=${slug}`, {
-		next: { revalidate: 3600 }, // 1 小时缓存
-	});
+	// 直接调用服务层函数，避免自引用 fetch
+	const apiResponse = await getBlogs({ slug });
 
-	if (!res.ok) {
-		notFound();
-	}
-
-	const { data: apiResponse } = await res.json();
-
-	// API 返回格式：{ posts: [], page, per_page, total_pages, total_posts }
 	if (!apiResponse || !apiResponse.posts || apiResponse.posts.length === 0) {
 		notFound();
 	}
