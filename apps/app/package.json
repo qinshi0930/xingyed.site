@@ -9,7 +9,7 @@
 	"scripts": {
 		"dev": "next dev --turbopack",
 		"build": "next build --turbopack",
-		"start": "next start",
+		"start": "cp .env.local .next/standalone/apps/app/.env.local 2>/dev/null || true && node .next/standalone/apps/app/server.js",
 		"lint": "eslint",
 		"addsc": "bunx shadcn@latest add",
 		"seed": "bun run src/lib/seed/index.ts",
