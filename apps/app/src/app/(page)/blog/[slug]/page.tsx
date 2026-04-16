@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-// import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
 
 import { getBlogs } from "@/api/services/blog";
 import BackButton from "@/common/components/elements/BackButton";
@@ -9,8 +9,6 @@ import Container from "@/common/components/elements/Container";
 import TrackView from "@/common/components/elements/TrackView";
 import { formatExcerpt } from "@/common/helpers";
 import BlogDetail from "@/modules/blog/components/BlogDetail";
-
-// const GiscusComment = dynamic(() => import("@/modules/blog/components/GiscusComment"));
 
 interface BlogDetailPageProps {
 	params: Promise<{ slug: string }>;
@@ -21,6 +19,11 @@ interface BlogDetailPageProps {
 export const dynamic = "force-static";
 export const revalidate = 3600; // 1 小时重新验证
 
+// 缓存 getBlogs 调用，避免 generateMetadata 和组件重复执行
+const getCachedBlog = cache(async (slug: string) => {
+	return await getBlogs({ slug });
+});
+
 export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
 	const { slug } = await params;
 
@@ -29,14 +32,14 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 	}
 
 	// 直接调用服务层函数，避免自引用 fetch
-	const apiResponse = await getBlogs({ slug });
+	const apiResponse = await getCachedBlog(slug);
 
 	if (!apiResponse || !apiResponse.posts || apiResponse.posts.length === 0) {
 		return {};
 	}
 
 	const blog = apiResponse.posts[0];
-	const description = formatExcerpt(blog?.excerpt?.rendered);
+	const description = formatExcerpt(blog?.excerpt?.rendered || "");
 	const canonicalUrl = `https://xingyed.xyz/blog/${blog?.slug}`;
 
 	return {
@@ -73,7 +76,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 	}
 
 	// 直接调用服务层函数，避免自引用 fetch
-	const apiResponse = await getBlogs({ slug });
+	const apiResponse = await getCachedBlog(slug);
 
 	if (!apiResponse || !apiResponse.posts || apiResponse.posts.length === 0) {
 		notFound();
@@ -87,7 +90,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 			<BlogDetail {...blogData} />
 			{/* 客户端组件：页面加载后发送浏览量统计请求 */}
 			<TrackView slug={blogData.slug} />
-			<section id="comments">{/* <GiscusComment isEnableReaction={false} /> */}</section>
+			<section id="comments" />
 		</Container>
 	);
 }
