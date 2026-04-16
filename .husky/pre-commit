@@ -3,15 +3,15 @@
 # Git Pre-Commit Hook
 # ============================================
 # 功能：提交前执行轻量级代码质量检查
-# 注意：完整的检查（包括 build）在 pre-push 时执行
+# 策略：使用 lint-staged 只检查修改的文件（快速）
+# 完整检查（build、测试）在 pre-push 时执行
 # ============================================
 
-echo "🔍 运行代码质量检查..."
+echo "🔍 运行代码质量检查（增量）..."
+echo ""
 
-# Lint 检查
-bun run app:lint || exit 1
+# 使用 lint-staged 只检查暂存的文件
+npx lint-staged --quiet || exit 1
 
-# TypeScript 类型检查
-cd apps/app && bunx tsc --noEmit || exit 1
-
+echo ""
 echo "✅ 代码质量检查通过"
