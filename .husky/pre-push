@@ -2,10 +2,11 @@
 # ============================================
 # Git Pre-Push Hook
 # ============================================
-# 功能：推送前验证
-# 说明：
-#   代码质量检查已在 pre-commit 时完成
-#   此 hook 仅做推送验证（删除分支确认等）
+# 功能：推送前完整验证
+# 策略：
+#   1. 分支保护（禁止直接推送到 main）
+#   2. 完整构建验证（确保生产构建成功）
+#   3. 代码质量检查已在 pre-commit 时完成
 # ============================================
 
 set -e
@@ -26,7 +27,7 @@ echo -e "${NC}"
 # 获取推送信息
 read -r local_ref local_sha remote_ref remote_sha
 
-# 判断是否为删除操作
+# 1. 判断是否为删除操作
 if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
     echo -e "${YELLOW}⚠️  删除分支/标签操作${NC}"
     echo -e "${BLUE}   本地引用: $local_ref${NC}"
@@ -34,8 +35,34 @@ if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
     exit 0
 fi
 
-echo -e "${GREEN}✅ 推送验证通过${NC}"
+# 2. 分支保护：禁止直接推送到 main/production
+echo -e "${BLUE}[1/2] 检查分支保护规则...${NC}"
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "detached")
+
+if [ "$branch" = "main" ] || [ "$branch" = "master" ] || [ "$branch" = "production" ]; then
+    echo -e "${RED}❌ 禁止直接推送到 $branch 分支${NC}"
+    echo -e "${YELLOW}   请使用 Pull Request 进行代码审查${NC}"
+    echo -e "${BLUE}   或者使用: git push origin --delete <branch> 删除远程分支${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}   ✅ 分支检查通过 ($branch)${NC}"
+echo ""
+
+# 3. 完整构建验证（确保生产构建成功）
+echo -e "${BLUE}[2/2] 构建验证 (bun run app:build)...${NC}"
+if bun run app:build; then
+    echo -e "${GREEN}   ✅ 构建成功${NC}"
+else
+    echo -e "${RED}   ❌ 构建失败，请修复后再推送${NC}"
+    exit 1
+fi
+echo ""
+
+# 4. 所有检查通过
+echo -e "${GREEN}${BOLD}=========================================${NC}"
+echo -e "${GREEN}${BOLD}  ✅ 所有检查通过，允许推送！${NC}"
+echo -e "${GREEN}${BOLD}=========================================${NC}"
 echo -e "${BLUE}   本地分支: $local_ref${NC}"
 echo -e "${BLUE}   远程分支: $remote_ref${NC}"
-echo -e "${GREEN}   代码质量检查已在 commit 时完成${NC}"
 echo ""
