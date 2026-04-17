@@ -1,0 +1,92 @@
+"use client";
+
+import { GithubIcon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import type { ApiResponse } from "@/common/types/guestbook";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/ui/avatar";
+import { Button } from "@/common/components/ui/button";
+import { Textarea } from "@/common/components/ui/textarea";
+import { signIn, useSession } from "@/common/libs/auth-client";
+
+export const MessageForm = () => {
+	const { data: session } = useSession();
+	const [message, setMessage] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	const handleSubmit = async () => {
+		if (!message.trim()) return;
+
+		setIsSubmitting(true);
+		try {
+			const response = await fetch("/api/guestbook", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ message: message.trim() }),
+			});
+
+			const result: ApiResponse = await response.json();
+
+			if (!result.success) {
+				toast.error(result.error || "提交失败");
+				return;
+			}
+
+			toast.success("留言成功！");
+			setMessage("");
+		} catch {
+			toast.error("网络错误，请稍后重试");
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
+	const handleLogin = () => {
+		signIn.github({
+			callbackURL: "/guestbook",
+		});
+	};
+
+	return (
+		<div className="space-y-4">
+			<Textarea
+				value={message}
+				onChange={(e) => setMessage(e.target.value)}
+				placeholder={session ? "写下你的留言..." : "登录后即可留言"}
+				disabled={!session}
+				className={!session ? "bg-muted cursor-not-allowed" : ""}
+				rows={4}
+			/>
+
+			<div className="flex items-center justify-between">
+				{session && (
+					<div className="flex items-center gap-2">
+						<Avatar className="h-8 w-8">
+							<AvatarImage
+								src={session.user.image || ""}
+								alt={session.user.name || ""}
+							/>
+							<AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
+						</Avatar>
+						<span className="text-sm text-muted-foreground">
+							@{session.user.username || session.user.name}
+						</span>
+					</div>
+				)}
+
+				{session ? (
+					<Button onClick={handleSubmit} disabled={!message.trim() || isSubmitting}>
+						{isSubmitting ? "提交中..." : "提交留言"}
+					</Button>
+				) : (
+					<Button onClick={handleLogin}>
+						<GithubIcon className="mr-2 h-4 w-4" />
+						使用 GitHub 登录
+					</Button>
+				)}
+			</div>
+		</div>
+	);
+};
