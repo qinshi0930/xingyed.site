@@ -69,12 +69,12 @@ WITH CHECK (auth.uid() IS NOT NULL);
 DROP POLICY IF EXISTS "用户只能更新自己的留言" ON guestbook_messages;
 CREATE POLICY "用户只能更新自己的留言"
 ON guestbook_messages FOR UPDATE
-USING (user_id = auth.uid());
+USING (user_id = auth.uid()::text);
 
 DROP POLICY IF EXISTS "用户只能删除自己的留言" ON guestbook_messages;
 CREATE POLICY "用户只能删除自己的留言"
 ON guestbook_messages FOR DELETE
-USING (user_id = auth.uid());
+USING (user_id = auth.uid()::text);
 
 -- 启用 Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE guestbook_messages;

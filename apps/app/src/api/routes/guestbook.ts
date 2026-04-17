@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 import { authMiddleware } from "@/api/middleware/auth";
+import "@/api/types/hono";
 import { supabaseServerClient } from "@/common/libs/supabase-server";
 
 const guestbookRoute = new Hono();
