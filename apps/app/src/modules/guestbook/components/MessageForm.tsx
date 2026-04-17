@@ -1,14 +1,16 @@
 "use client";
 
+import type { ChangeEvent } from "react";
+
 import { GithubIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import type { ApiResponse } from "@/common/types/guestbook";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/ui/avatar";
-import { Button } from "@/common/components/ui/button";
-import { Textarea } from "@/common/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
+import { Button } from "@/common/components/shadcn/ui/button";
+import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { signIn, useSession } from "@/common/libs/auth-client";
 
 export const MessageForm = () => {
@@ -44,7 +46,8 @@ export const MessageForm = () => {
 	};
 
 	const handleLogin = () => {
-		signIn.github({
+		signIn.social({
+			provider: "github",
 			callbackURL: "/guestbook",
 		});
 	};
@@ -53,7 +56,7 @@ export const MessageForm = () => {
 		<div className="space-y-4">
 			<Textarea
 				value={message}
-				onChange={(e) => setMessage(e.target.value)}
+				onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
 				placeholder={session ? "写下你的留言..." : "登录后即可留言"}
 				disabled={!session}
 				className={!session ? "bg-muted cursor-not-allowed" : ""}

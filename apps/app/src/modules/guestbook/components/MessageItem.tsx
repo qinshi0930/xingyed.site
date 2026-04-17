@@ -9,9 +9,9 @@ import { toast } from "sonner";
 
 import type { ApiResponse, GuestbookMessage } from "@/common/types/guestbook";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/ui/avatar";
-import { Button } from "@/common/components/ui/button";
-import { Textarea } from "@/common/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
+import { Button } from "@/common/components/shadcn/ui/button";
+import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { useSession } from "@/common/libs/auth-client";
 import "dayjs/locale/zh-cn";
 
