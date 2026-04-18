@@ -4,6 +4,7 @@ import {
 	FiPieChart as AnalyticsIcon,
 	FiRss as BlogIcon,
 	FiCpu as DashboardIcon,
+	FiMessageSquare as GuestbookIcon,
 	FiPocket as HomeIcon,
 	FiBookOpen as LearnIcon,
 	FiUser as ProfileIcon,
@@ -59,6 +60,15 @@ export const MENU_ITEMS: MenuItemProps[] = [
 		isShow: true,
 		isExternal: false,
 		eventName: "Pages: Learn",
+		type: "Pages",
+	},
+	{
+		title: "Guestbook",
+		href: "/guestbook",
+		icon: <GuestbookIcon size={iconSize} />,
+		isShow: true,
+		isExternal: false,
+		eventName: "Pages: Guestbook",
 		type: "Pages",
 	},
 	{

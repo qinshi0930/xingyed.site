@@ -8,7 +8,7 @@ import remarkParse from "remark-parse";
 
 import type { BlogItemProps } from "@/common/types/blog";
 
-import { getRedis } from "@/common/libs/redis";
+import { getRedis } from "@/api/services/redis";
 
 // ==================== 类型定义 ====================
 
