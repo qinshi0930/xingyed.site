@@ -139,7 +139,6 @@
 		"eslint-plugin-react-hooks": "^5.2.0",
 		"eslint-plugin-react-refresh": "^0.4.22",
 		"eslint-plugin-unused-imports": "^4.2.0",
-		"firebase": "^12.6.0",
 		"prettier": "^3.6.2",
 		"rimraf": "^6.0.1",
 		"stylelint": "^16.24.0",

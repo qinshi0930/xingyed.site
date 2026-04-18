@@ -46,7 +46,6 @@ export const STACKS: stacksProps = {
 	Vite: <SiVite size={iconSize} className="text-purple-500" />,
 	Prisma: <SiPrisma size={iconSize} className="text-emerald-500" />,
 	Drizzle: <SiDrizzle size={iconSize} className="text-yellow-500" />,
-	// Firebase: <SiFirebase size={iconSize} className="text-yellow-500" />,
 	// "Artificial Intelligence": <BsRobot size={iconSize} className="text-rose-500" />,
 	// Angular: <SiAngular size={iconSize} className="text-red-500" />,
 	// "Vue.js": <SiVuedotjs size={iconSize} className="text-green-500" />,
