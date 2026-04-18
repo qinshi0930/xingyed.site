@@ -1325,9 +1325,22 @@ git commit -m "feat: Guestbook 模块完成，准备部署"
   - 修复水合错误（`dayjs.fromNow()` → `format()`）
   - 确保 SSR 和客户端渲染一致性
 
+- [x] Task 20: 代码审查 Critical Issues 修复
+  - 修正 `db:generate` 命令使用 `drizzle-kit`
+  - 添加 `async/await` 到 Hono auth handler
+  - 添加数据库连接池配置和 `closeDb()` 函数
+  - 修复 Supabase URL 环境变量前缀
+
+- [x] Task 21: 额外水合错误修复
+  - ThemeToggleButton: 使用 mounted 状态避免主题切换水合错误
+  - SkeletonLoader: 固定默认颜色避免主题水合错误
+  - BlogCardNewSkeleton: 修正 height 属性类型（字符串）
+
 ### Git 提交历史
 
 ```
+333185f refactor: 后端代码隔离 - 移动后端专属模块到 api/ 目录
+b29c9e9 feat: 添加 Drizzle ORM 官方集成配置和迁移文件
 69a8a85 fix(guestbook): 修复组件路径和 signIn 方法调用
 627a4db fix(guestbook): 修复 Hono 类型声明以支持 null 值
 83efe11 fix(guestbook): 修复 TypeScript 类型错误和缺失依赖
@@ -1336,15 +1349,16 @@ git commit -m "feat: Guestbook 模块完成，准备部署"
 5ccb6fc feat(guestbook): 添加 Supabase 基础设施和数据库配置
 ```
 
+### Pull Request
+
+- **PR #27**: feat: 实现 Guestbook 留言板模块与后端架构优化
+  - 链接: https://github.com/qinshi0930/xingyed.site/pull/27
+  - 状态: Open
+  - 关联 Issue: Closes #20, #21, #22, #23, #24, #25, #26
+
 ### 未提交的改动
 
-- `apps/app/drizzle.config.ts` - Drizzle Kit 配置
-- `apps/app/drizzle/` - 数据库迁移文件
-- `apps/app/src/api/auth.ts` - Better Auth 配置（新位置）
-- `apps/app/src/api/db/` - 数据库相关代码（新目录）
-- `apps/app/src/api/routes/auth.ts` - Better Auth Hono 路由
-- `apps/app/src/api/services/redis.ts` - Redis 服务（新位置）
-- `docs/DRIZZLE_MIGRATION.md` - Drizzle 迁移指南
+无（所有改动已提交并推送到 PR #27）
 
 ### 关键架构决策
 
@@ -1352,12 +1366,13 @@ git commit -m "feat: Guestbook 模块完成，准备部署"
 2. **Drizzle ORM 官方集成**: 使用官方 CLI 工具管理 schema 和迁移，而非手动编写
 3. **Hono 统一 API 网关**: Better Auth 集成到 Hono 路由，不使用 Next.js API routes
 4. **独立数据库表**: Guestbook 表不依赖外键约束，通过应用层验证保证数据完整性
-5. **SSR 一致性**: 避免使用 `dayjs.fromNow()` 等动态时间函数，使用固定格式避免水合错误
+5. **SSR 一致性**: 避免使用动态函数（`dayjs.fromNow()`, `useTheme()` 等），使用 mounted 状态模式避免水合错误
+6. **数据库连接管理**: 使用连接池配置和优雅关闭函数，防止连接泄漏
 
 ### 下一步建议
 
-1. **提交所有改动**: 将未提交的改动按逻辑分组提交
-2. **测试完整流程**: 在预览环境中测试 GitHub OAuth 登录和留言提交
-3. **创建 PR**: 通过 Pull Request 合并到 main 分支
-4. **部署验证**: 在部署环境中验证所有功能正常
-5. **清理临时文件**: 删除 `DRIZZLE_MIGRATION.md` 等一次性文档
+1. **修复水合错误提交**: 将 ThemeToggleButton 和 SkeletonLoader 的修复提交
+2. **代码审查**: 等待 PR #27 的审查反馈
+3. **测试完整流程**: 在预览环境中测试 GitHub OAuth 登录和留言提交
+4. **创建 PR**: 通过 Pull Request 合并到 main 分支
+5. **部署验证**: 在部署环境中验证所有功能正常

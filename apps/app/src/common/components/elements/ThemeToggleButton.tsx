@@ -1,20 +1,32 @@
 "use client";
 import styled from "@emotion/styled";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 const ThemeToggleButton = () => {
 	const { resolvedTheme, setTheme } = useTheme();
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
 	const toggleTheme = () => setTheme(resolvedTheme === "light" ? "dark" : "light");
+
+	// 避免水合错误：在服务端和首次渲染时使用固定的 data-umami-event 值
+	const umamiEvent = mounted
+		? `Switch to ${resolvedTheme === "light" ? "Dark" : "Light"} Mode`
+		: "Switch to Dark Mode";
 
 	return (
 		<StyledToggle className="flex">
 			<input
-				checked={resolvedTheme === "dark"}
+				checked={mounted ? resolvedTheme === "dark" : false}
 				type="checkbox"
 				className="mode-toggle"
 				onChange={toggleTheme}
 				id="switch-theme"
-				data-umami-event={`Switch to ${resolvedTheme === "light" ? "Dark" : "Light"} Mode`}
+				data-umami-event={umamiEvent}
 			/>
 			<label className="mode-toggle-label" htmlFor="switch-theme">
 				<span className="sr-only">Toggle dark/light mode</span>
