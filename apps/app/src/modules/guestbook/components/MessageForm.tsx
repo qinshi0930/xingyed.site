@@ -64,7 +64,7 @@ export const MessageForm = () => {
 			/>
 
 			<div className="flex items-center justify-between">
-				{session && (
+				{session ? (
 					<div className="flex items-center gap-2">
 						<Avatar className="h-8 w-8">
 							<AvatarImage
@@ -76,6 +76,13 @@ export const MessageForm = () => {
 						<span className="text-sm text-muted-foreground">
 							@{session.user.username || session.user.name}
 						</span>
+					</div>
+				) : (
+					<div className="flex items-center gap-2">
+						<Avatar className="h-8 w-8">
+							<AvatarFallback className="bg-muted">?</AvatarFallback>
+						</Avatar>
+						<span className="text-sm text-muted-foreground">未登录用户</span>
 					</div>
 				)}
 

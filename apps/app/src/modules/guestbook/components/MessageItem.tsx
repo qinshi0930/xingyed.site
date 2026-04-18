@@ -2,7 +2,6 @@
 "use client";
 
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { EditIcon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,10 +12,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/
 import { Button } from "@/common/components/shadcn/ui/button";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { useSession } from "@/common/libs/auth-client";
-import "dayjs/locale/zh-cn";
-
-dayjs.extend(relativeTime);
-dayjs.locale("zh-cn");
 
 interface MessageItemProps {
 	message: GuestbookMessage;
@@ -91,7 +86,7 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 					<div className="flex items-center gap-2">
 						<span className="font-medium">@{message.github_username}</span>
 						<span className="text-xs text-muted-foreground">
-							{dayjs(message.created_at).fromNow()}
+							{dayjs(message.created_at).format("YYYY-MM-DD HH:mm")}
 						</span>
 					</div>
 

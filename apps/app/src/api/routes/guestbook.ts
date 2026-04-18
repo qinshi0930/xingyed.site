@@ -2,9 +2,9 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 
-import { authMiddleware } from "@/api/middleware/auth";
+import { supabaseServerClient } from "@/api/db/supabase-server";
 import "@/api/types/hono";
-import { supabaseServerClient } from "@/common/libs/supabase-server";
+import { authMiddleware } from "@/api/middleware/auth";
 
 const guestbookRoute = new Hono();
 
@@ -23,7 +23,8 @@ guestbookRoute.post("/", authMiddleware, zValidator("json", createMessageSchema)
 			user_id: user.id,
 			user_name: user.name,
 			user_image: user.image,
-			github_username: user.githubUsername,
+			// 使用 username 或 name 作为 github_username 的 fallback
+			github_username: user.githubUsername || user.name || "unknown",
 			content: message.trim(),
 		})
 		.select()

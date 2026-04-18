@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { getRedis } from "@/common/libs/redis";
+import { getRedis } from "@/api/services/redis";
 
 const app = new Hono();
 

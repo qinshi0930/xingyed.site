@@ -14,28 +14,35 @@
 
 ### 新建文件
 
-- `apps/app/src/common/libs/supabase-client.ts` - Supabase 前端客户端
-- `apps/app/src/common/libs/supabase-server.ts` - Supabase 服务端客户端
-- `apps/app/src/common/libs/supabase-drizzle.ts` - Drizzle ORM 配置
-- `apps/app/src/common/types/guestbook.ts` - Guestbook 类型定义
-- `apps/app/src/api/middleware/auth.ts` - 认证中间件
-- `apps/app/src/api/routes/guestbook.ts` - Guestbook API 路由
-- `apps/app/src/modules/guestbook/index.tsx` - Guestbook 模块入口
-- `apps/app/src/modules/guestbook/api.ts` - API 路由注册
-- `apps/app/src/modules/guestbook/components/MessageForm.tsx` - 留言表单
-- `apps/app/src/modules/guestbook/components/MessageList.tsx` - 留言列表
-- `apps/app/src/modules/guestbook/components/MessageItem.tsx` - 单条留言
-- `apps/app/src/modules/guestbook/components/RealtimeListener.tsx` - Realtime 订阅
-- `apps/app/src/app/(page)/guestbook/page.tsx` - Guestbook 页面
+- `apps/app/src/common/libs/supabase-client.ts` - Supabase 前端客户端 ✅
+- `apps/app/src/common/libs/supabase-server.ts` - Supabase 服务端客户端 ✅ → 已移动到 `apps/app/src/api/db/supabase-server.ts`
+- `apps/app/src/common/libs/supabase-drizzle.ts` - Drizzle ORM 配置 ✅ → 已移动到 `apps/app/src/api/db/index.ts`
+- `apps/app/src/common/types/guestbook.ts` - Guestbook 类型定义 ✅
+- `apps/app/src/api/middleware/auth.ts` - 认证中间件 ✅
+- `apps/app/src/api/routes/guestbook.ts` - Guestbook API 路由 ✅
+- `apps/app/src/api/routes/auth.ts` - Better Auth Hono 路由 ✅ (额外)
+- `apps/app/src/api/auth.ts` - Better Auth 配置 ✅ (额外)
+- `apps/app/src/api/db/schema/auth-schema.ts` - Better Auth 数据库 Schema ✅ (额外)
+- `apps/app/src/api/services/redis.ts` - Redis 服务 ✅ (额外)
+- `apps/app/src/modules/guestbook/index.tsx` - Guestbook 模块入口 ✅
+- `apps/app/src/modules/guestbook/components/MessageForm.tsx` - 留言表单 ✅
+- `apps/app/src/modules/guestbook/components/MessageList.tsx` - 留言列表 ✅
+- `apps/app/src/modules/guestbook/components/MessageItem.tsx` - 单条留言 ✅
+- `apps/app/src/modules/guestbook/components/RealtimeListener.tsx` - Realtime 订阅 ✅
+- `apps/app/src/app/(page)/guestbook/page.tsx` - Guestbook 页面 ✅
+- `apps/app/drizzle.config.ts` - Drizzle Kit 配置 ✅ (额外)
 
 ### 修改文件
 
-- `apps/app/src/common/libs/auth.ts` - 添加 Drizzle 数据库适配器
-- `apps/app/src/api/index.ts` - 注册 guestbook 路由
-- `apps/app/src/common/constant/menu.tsx` - 添加 Guestbook 菜单项
-- `apps/app/package.json` - 添加 Supabase 依赖
-- `.env.example` - 添加 Supabase 环境变量
-- `apps/app/.env.local` - 添加 Supabase 环境变量（实际值）
+- `apps/app/src/common/libs/auth.ts` - 添加 Drizzle 数据库适配器 ✅ → 已移动到 `apps/app/src/api/auth.ts`
+- `apps/app/src/common/libs/redis.ts` - Redis 服务 ✅ → 已移动到 `apps/app/src/api/services/redis.ts`
+- `apps/app/src/api/index.ts` - 注册 guestbook 和 auth 路由 ✅
+- `apps/app/src/common/constant/menu.tsx` - 添加 Guestbook 菜单项 ✅
+- `apps/app/package.json` - 添加 Supabase 和 Drizzle Kit 依赖 ✅
+- `.env.example` - 添加 Supabase 和 Better Auth 环境变量 ✅
+- `apps/app/.env.local` - 添加 Supabase 和 Better Auth 环境变量（实际值） ✅
+- `apps/app/src/modules/guestbook/components/MessageForm.tsx` - 修复未登录状态布局 ✅ (额外)
+- `apps/app/src/modules/guestbook/components/MessageItem.tsx` - 修复水合错误 ✅ (额外)
 
 ---
 
@@ -47,23 +54,23 @@
 
 - Modify: `apps/app/package.json`
 
-- [ ] **Step 1: 安装 Supabase 相关依赖**
+- [x] **Step 1: 安装 Supabase 相关依赖**
 
 ```bash
 cd apps/app
-bun add @supabase/supabase-js drizzle-orm postgres
+bun add @supabase/supabase-js drizzle-orm postgres drizzle-kit
 bun add -d @types/pg
 ```
 
-- [ ] **Step 2: 验证安装成功**
+- [x] **Step 2: 验证安装成功**
 
 ```bash
 bun install
 ```
 
-Expected: 无错误，依赖安装成功
+Expected: 无错误，依赖安装成功 ✅
 
-- [ ] **Step 3: 提交**
+- [x] **Step 3: 提交**
 
 ```bash
 git add package.json bun.lock
@@ -1250,3 +1257,107 @@ git commit -m "feat: Guestbook 模块完成，准备部署"
 4. 管理员删除任何留言
 5. 邮件通知
 6. 表情支持
+
+---
+
+## 📊 实施进度总结
+
+> **最后更新:** 2026-04-18
+> **当前状态:** ✅ 核心功能已完成，额外架构优化已完成
+
+### 总体进度：100% (核心功能) + 额外优化
+
+#### Phase 1: 基础设施 - Supabase 集成 ✅ 100%
+
+- [x] Task 1: 安装 Supabase 依赖 (包括 drizzle-kit)
+- [x] Task 2: 创建 Supabase 客户端配置
+- [x] Task 3: 配置 Better Auth + Drizzle ORM
+- [x] Task 4: 配置环境变量
+
+#### Phase 2: API 层 - Hono 路由和中间件 ✅ 100%
+
+- [x] Task 5: 创建认证中间件
+- [x] Task 6: 创建 Guestbook API 路由
+- [x] Task 7: 注册 API 路由
+
+#### Phase 3: UI 层 - Guestbook 组件 ✅ 100%
+
+- [x] Task 8: 创建 Guestbook 模块入口
+- [x] Task 9: 创建 MessageForm 组件
+- [x] Task 10: 创建 MessageList 组件
+- [x] Task 11: 创建 MessageItem 组件
+- [x] Task 12: 创建 RealtimeListener 组件
+- [x] Task 13: 创建 Guestbook 页面
+
+#### Phase 4: 架构优化 ✅ (额外完成)
+
+- [x] Task 14: 后端代码隔离重构
+  - 移动 `auth.ts` → `api/auth.ts`
+  - 移动 `supabase-server.ts` → `api/db/supabase-server.ts`
+  - 移动 `supabase-drizzle.ts` → `api/db/index.ts`
+  - 移动 `redis.ts` → `api/services/redis.ts`
+  - 更新所有导入路径
+- [x] Task 15: Drizzle ORM 官方集成
+  - 使用 `bunx auth@latest generate` 生成官方 schema
+  - 配置 `drizzle.config.ts`
+  - 使用 `bunx drizzle-kit generate` 生成迁移
+  - 使用 `bunx drizzle-kit migrate` 应用到数据库
+  - 添加 npm scripts: `db:generate`, `db:migrate`, `db:push`
+
+- [x] Task 16: Better Auth Hono 集成
+  - 创建 `api/routes/auth.ts` Hono 路由
+  - 使用 `auth.handler(c.req.raw)` 集成方式
+  - 在 Hono 主应用中挂载 auth 路由
+  - 更新 `auth-client.ts` 配置
+
+- [x] Task 17: GitHub OAuth 配置
+  - 使用 `AUTH_GITHUB_` 前缀避免命名冲突
+  - 使 OAuth 配置变为可选（条件启用）
+  - 添加 `BETTER_AUTH_URL` 环境变量
+
+- [x] Task 18: 数据库问题修复
+  - 添加 `authSchema` 聚合导出
+  - 移除外键约束 `guestbook_messages_user_id_fkey`
+  - 添加 `github_username` fallback 逻辑
+
+- [x] Task 19: UI/UX 优化
+  - 修复未登录状态布局（添加占位信息）
+  - 修复水合错误（`dayjs.fromNow()` → `format()`）
+  - 确保 SSR 和客户端渲染一致性
+
+### Git 提交历史
+
+```
+69a8a85 fix(guestbook): 修复组件路径和 signIn 方法调用
+627a4db fix(guestbook): 修复 Hono 类型声明以支持 null 值
+83efe11 fix(guestbook): 修复 TypeScript 类型错误和缺失依赖
+9d0bffa feat(guestbook): 完成 Guestbook UI 组件和页面集成
+5a6aa1c feat(guestbook): 添加 Guestbook API 路由和认证中间件
+5ccb6fc feat(guestbook): 添加 Supabase 基础设施和数据库配置
+```
+
+### 未提交的改动
+
+- `apps/app/drizzle.config.ts` - Drizzle Kit 配置
+- `apps/app/drizzle/` - 数据库迁移文件
+- `apps/app/src/api/auth.ts` - Better Auth 配置（新位置）
+- `apps/app/src/api/db/` - 数据库相关代码（新目录）
+- `apps/app/src/api/routes/auth.ts` - Better Auth Hono 路由
+- `apps/app/src/api/services/redis.ts` - Redis 服务（新位置）
+- `docs/DRIZZLE_MIGRATION.md` - Drizzle 迁移指南
+
+### 关键架构决策
+
+1. **后端代码隔离**: 所有后端专属代码移至 `api/` 目录，`common/libs` 仅保留前后端共享代码
+2. **Drizzle ORM 官方集成**: 使用官方 CLI 工具管理 schema 和迁移，而非手动编写
+3. **Hono 统一 API 网关**: Better Auth 集成到 Hono 路由，不使用 Next.js API routes
+4. **独立数据库表**: Guestbook 表不依赖外键约束，通过应用层验证保证数据完整性
+5. **SSR 一致性**: 避免使用 `dayjs.fromNow()` 等动态时间函数，使用固定格式避免水合错误
+
+### 下一步建议
+
+1. **提交所有改动**: 将未提交的改动按逻辑分组提交
+2. **测试完整流程**: 在预览环境中测试 GitHub OAuth 登录和留言提交
+3. **创建 PR**: 通过 Pull Request 合并到 main 分支
+4. **部署验证**: 在部署环境中验证所有功能正常
+5. **清理临时文件**: 删除 `DRIZZLE_MIGRATION.md` 等一次性文档

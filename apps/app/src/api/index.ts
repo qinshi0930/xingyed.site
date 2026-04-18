@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 
+import authRoute from "./routes/auth";
 import blogRoute from "./routes/blog";
 import commentsRoute from "./routes/comments";
 import contactRoute from "./routes/contact";
@@ -37,6 +38,7 @@ app.get("/health", (c) => {
 });
 
 // 挂载子路由
+app.route("/auth", authRoute);
 app.route("/blog", blogRoute);
 app.route("/comments", commentsRoute);
 app.route("/contact", contactRoute);
