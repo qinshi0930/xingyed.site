@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks-extra/no-direct-set-state-in-use-effect */
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";

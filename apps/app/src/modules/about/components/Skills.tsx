@@ -1,5 +1,5 @@
 /* eslint-disable react/no-array-index-key */
-/* eslint-disable react-hooks-extra/no-direct-set-state-in-use-effect */
+
 "use client";
 
 import type { ReactNode } from "react";
