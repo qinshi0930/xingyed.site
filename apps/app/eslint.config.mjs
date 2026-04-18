@@ -50,6 +50,7 @@ export default antfu(
 			"node/prefer-global/buffer": "off",
 			"import/no-named-default": "off",
 			"react-hooks/exhaustive-deps": "off",
+			"react-hooks-extra/no-direct-set-state-in-use-effect": "off",
 			"react-refresh/only-export-components": "off",
 			"react/no-leaked-conditional-rendering": "off",
 			"react/no-forward-ref": "off",
