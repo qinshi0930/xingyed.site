@@ -31,6 +31,7 @@
 - ✅ 生产环境验证通过
 
 **核心收益**：
+
 - 镜像大小减少 **36%**（440 MB → 283 MB）
 - 启动时间减少 **91%**（1000ms → 89ms）
 - 构建工具链简化（pnpm + Node.js + tsx → Bun 一体化）
@@ -82,17 +83,18 @@ Bun 提供了以下优势：
 
 ### 技术指标
 
-| 指标 | pnpm 版本 | Bun 版本 (v1.0.0) | 改进 |
-|------|-----------|-------------------|------|
-| **Docker 镜像大小** | ~440 MB | 283 MB | **-36%** |
-| **容器启动时间** | ~1000ms | 89ms | **-91%** |
-| **Lockfile 大小** | 472 KB (pnpm-lock.yaml) | 352 KB (bun.lock) | **-25%** |
-| **Dockerfile 阶段** | 3 阶段 | 1 阶段 | **简化 67%** |
-| **构建步骤** | pnpm install → build → install --prod | bun install → build | **减少 33%** |
+| 指标                | pnpm 版本                             | Bun 版本 (v1.0.0)   | 改进         |
+| ------------------- | ------------------------------------- | ------------------- | ------------ |
+| **Docker 镜像大小** | ~440 MB                               | 283 MB              | **-36%**     |
+| **容器启动时间**    | ~1000ms                               | 89ms                | **-91%**     |
+| **Lockfile 大小**   | 472 KB (pnpm-lock.yaml)               | 352 KB (bun.lock)   | **-25%**     |
+| **Dockerfile 阶段** | 3 阶段                                | 1 阶段              | **简化 67%** |
+| **构建步骤**        | pnpm install → build → install --prod | bun install → build | **减少 33%** |
 
 ### 架构改进
 
 **Before (pnpm)**:
+
 ```
 pnpm-lock.yaml + pnpm-workspace.yaml
     ↓
@@ -106,6 +108,7 @@ Docker: COPY pnpm-lock.yaml → pnpm install --prod (生产依赖)
 ```
 
 **After (Bun)**:
+
 ```
 bun.lock
     ↓
@@ -117,6 +120,7 @@ Docker: COPY standalone → 直接运行
 ```
 
 **关键区别**：
+
 - pnpm 和 Bun **都使用符号链接**
 - 根本问题相同：CI/CD artifact 打包时符号链接可能丢失
 - Bun 的优势：符号链接结构更简单（集中在 `.bun` 目录），更容易通过 tar.gz 保留
@@ -128,6 +132,7 @@ Docker: COPY standalone → 直接运行
 ### 问题 1: 构建产物符号链接丢失（严重）
 
 **问题描述**:
+
 - CI/CD Build Job 使用 `upload-artifact` 打包构建产物
 - 默认 zip 压缩不保留符号链接
 - **pnpm 和 Bun 都会遇到此问题**（根本原因相同）
@@ -137,6 +142,7 @@ Docker: COPY standalone → 直接运行
 **根本原因**:
 
 **pnpm 的符号链接结构**:
+
 ```
 standalone/node_modules/
 ├── .pnpm/                           ← 实际依赖存储
@@ -149,6 +155,7 @@ standalone/node_modules/
 ```
 
 **Bun 的符号链接结构**:
+
 ```
 standalone/node_modules/
 ├── .bun/                            ← 实际依赖存储
@@ -161,22 +168,26 @@ standalone/node_modules/
 ```
 
 **共同问题**：
+
 - 两者都使用符号链接组织依赖
 - `upload-artifact` 默认 zip 打包**不跟随符号链接**
 - 只复制符号链接本身，不复制实际文件
 - 解压后符号链接指向的路径不存在
 
 **为什么之前 pnpm 能工作？**
+
 - pnpm 方案使用 `cp -aL` 解析符号链接（变通方案）
 - 或在 Docker runner 阶段重新 `pnpm install --prod`
 - 这些方案增加了复杂性和构建时间
 
 **Bun 的优势**：
+
 - 符号链接结构更简单（集中在 `.bun` 目录）
 - 使用 tar.gz 打包可以完整保留符号链接
 - 无需解析符号链接或重新安装依赖
 
 **解决方案**:
+
 ```yaml
 # Build Job: 使用 tar.gz 替代 zip
 tar 默认保留符号链接
@@ -192,6 +203,7 @@ tar 默认保留符号链接
 ```
 
 **验证结果**:
+
 - ✅ tar.gz 默认保留符号链接
 - ✅ Release 包解压后 `.bun` 目录完整
 - ✅ Docker 镜像构建成功，无 MODULE_NOT_FOUND
@@ -203,12 +215,14 @@ tar 默认保留符号链接
 ### 问题 2: tar 打包丢失 monorepo 目录结构
 
 **问题描述**:
+
 - 初始实现使用临时目录打包
 - tar 打包时将所有文件放在根级别
 - 丢失 `apps/app/.next/standalone` 等路径结构
 - Release 和 Docker Job 验证失败
 
 **错误示例**:
+
 ```bash
 # ❌ 错误：丢失路径结构
 tar -czf build-output.tar.gz -C /tmp/artifact-build .
@@ -216,6 +230,7 @@ tar -czf build-output.tar.gz -C /tmp/artifact-build .
 ```
 
 **解决方案**:
+
 ```bash
 # ✅ 正确：保持完整 monorepo 路径
 mkdir -p /tmp/artifact-build/apps/app/.next/standalone
@@ -228,6 +243,7 @@ tar -czf build-output.tar.gz -C /tmp/artifact-build .
 ```
 
 **验证步骤**:
+
 ```yaml
 - name: 📁 Verify artifact structure
   run: |
@@ -245,17 +261,20 @@ tar -czf build-output.tar.gz -C /tmp/artifact-build .
 ### 问题 3: Vercel 部署失败
 
 **问题描述**:
+
 - 迁移到 Bun 后，Vercel 自动部署失败
 - 日志显示：`Running "install" command: pnpm install`
 - 错误：`ERR_INVALID_THIS`，所有依赖请求失败
 
 **根本原因**:
+
 - Vercel 未识别 `package.json` 中的 `packageManager: "bun@1.3.11"` 字段
 - Vercel 默认使用 pnpm 作为包管理器
 - pnpm 无法解析 `bun.lock` 文件
 
 **解决方案**:
 创建 `vercel.json` 配置文件：
+
 ```json
 {
   "buildCommand": "bun run build",
@@ -265,11 +284,13 @@ tar -czf build-output.tar.gz -C /tmp/artifact-build .
 ```
 
 **验证结果**:
+
 - ✅ Vercel 正确识别 Bun 配置
 - ✅ 依赖安装成功
 - ✅ 构建和部署正常
 
 **经验教训**:
+
 - 平台特定配置需要显式声明，不能依赖隐式检测
 - 迁移包管理器时需检查所有部署平台
 
@@ -280,11 +301,13 @@ tar -czf build-output.tar.gz -C /tmp/artifact-build .
 ### 问题 4: standalone 产物中冗余 packages 复制
 
 **问题描述**:
+
 - CI/CD Build Job 中手动复制 `packages/` 目录到 artifact
 - Dockerfile 中也包含 `COPY packages/ ./packages/`
 - 实际 Next.js 的 `transpilePackages` 配置已自动包含这些包
 
 **发现过程**:
+
 ```bash
 # 检查 standalone 产物
 $ ls apps/app/.next/standalone/
@@ -295,16 +318,17 @@ $ ls apps/app/.next/standalone/packages/
 ```
 
 **解决方案**:
+
 ```yaml
 # ❌ 移除冗余步骤
 - name: Copy workspace packages
   run: cp -a packages /tmp/artifact-build/
-
 # Dockerfile: 移除冗余 COPY
 # COPY packages/ ./packages/  # 已删除
 ```
 
 **优化效果**:
+
 - CI/CD 构建时间减少 ~5 秒
 - Artifact 大小减少 ~2 MB
 - Dockerfile 简化
@@ -316,11 +340,13 @@ $ ls apps/app/.next/standalone/packages/
 ### 问题 5: IDE 端口映射面板误报
 
 **问题描述**:
+
 - IDE 显示 3000 端口被 `rootlessport(243321)` 占用
 - 实际该进程不存在
 - 导致无法启动开发服务器
 
 **排查过程**:
+
 ```bash
 # 1. 检查进程
 $ ps -p 243321
@@ -336,15 +362,18 @@ xingye  937101  0.0  rootlessport  # PID 937101，不是 243321
 ```
 
 **根本原因**:
+
 - IDE 缓存旧的端口映射信息
 - rootlessport 实际占用的是 6379 (Redis) 和 5432 (PostgreSQL)
 
 **解决方案**:
+
 - 刷新 IDE 端口面板
 - 或重启 IDE 清除缓存
 - 使用 `ss` 命令验证真实端口占用
 
 **经验教训**:
+
 - IDE 面板信息可能不准确，需用命令行验证
 - rootlessport 是 podman 容器端口映射工具，不影响开发
 
@@ -357,18 +386,20 @@ xingye  937101  0.0  rootlessport  # PID 937101，不是 243321
 **选择**: ✅ 采用
 
 **理由**:
+
 - Next.js standalone 模式生成 Node.js 可执行文件
 - Bun 运行时兼容性问题（某些 npm 包可能不兼容）
 - 生产环境稳定性优先
 - **注意**：此决策与符号链接问题无关
 
 **实现**:
+
 ```json
 {
   "scripts": {
-    "dev": "bun --bun next dev",      // Bun 执行 next
-    "build": "bun --bun next build",  // Bun 构建
-    "start": "bun --bun next start"   // Bun 启动（实际仍是 Node.js）
+    "dev": "bun --bun next dev", // Bun 执行 next
+    "build": "bun --bun next build", // Bun 构建
+    "start": "bun --bun next start" // Bun 启动（实际仍是 Node.js）
   }
 }
 ```
@@ -380,6 +411,7 @@ xingye  937101  0.0  rootlessport  # PID 937101，不是 243321
 **选择**: ✅ 从三阶段简化为单阶段
 
 **Before (pnpm - 3 阶段)**:
+
 ```dockerfile
 FROM node:20-alpine AS base
 FROM base AS builder
@@ -390,6 +422,7 @@ RUN pnpm install --prod  # 重新安装依赖
 ```
 
 **After (Bun - 1 阶段)**:
+
 ```dockerfile
 FROM node:20-alpine
 COPY standalone/ ./  # 依赖已完整
@@ -398,6 +431,7 @@ CMD ["node", "server.js"]
 ```
 
 **理由**:
+
 - Bun 的 standalone 产物已包含完整依赖
 - 无需重新安装
 - 镜像更小，构建更快
@@ -410,14 +444,15 @@ CMD ["node", "server.js"]
 
 **对比**:
 
-| 特性 | zip | tar.gz |
-|------|-----|--------|
+| 特性         | zip           | tar.gz      |
+| ------------ | ------------- | ----------- |
 | 符号链接保留 | ❌ 默认不保留 | ✅ 默认保留 |
-| 压缩率 | 中等 | 高 |
-| Linux 兼容性 | 好 | 原生 |
-| 文件大小 | 稍大 | 稍小 |
+| 压缩率       | 中等          | 高          |
+| Linux 兼容性 | 好            | 原生        |
+| 文件大小     | 稍大          | 稍小        |
 
 **实现**:
+
 ```yaml
 # Build Job
 - name: Pack
@@ -427,7 +462,7 @@ CMD ["node", "server.js"]
   uses: actions/upload-artifact@v4
   with:
     path: build-output.tar.gz
-    compression-level: 0  # 已压缩
+    compression-level: 0 # 已压缩
 ```
 
 ---
@@ -437,16 +472,18 @@ CMD ["node", "server.js"]
 **选择**: ✅ 开发环境禁用 Turbopack
 
 **理由**:
+
 - Turbopack 与 `--bun` 标志不兼容
 - Bun 已提供足够的性能
 - 避免潜在的类型检查问题
 
 **变更**:
+
 ```json
 {
   "scripts": {
-    "dev": "bun --bun next dev",  // 移除 --turbopack
-    "build": "bun --bun next build"  // 移除 --turbopack
+    "dev": "bun --bun next dev", // 移除 --turbopack
+    "build": "bun --bun next build" // 移除 --turbopack
   }
 }
 ```
@@ -458,17 +495,19 @@ CMD ["node", "server.js"]
 ### Build Job 变更
 
 **Before (pnpm)**:
+
 ```yaml
 - uses: pnpm/action-setup@v4
 - run: pnpm install
 - run: pnpm build
-- run: cp -aL standalone/ resolved-standalone/  # 解析符号链接
+- run: cp -aL standalone/ resolved-standalone/ # 解析符号链接
 - uses: actions/upload-artifact@v4
   with:
     path: resolved-standalone/
 ```
 
 **After (Bun)**:
+
 ```yaml
 - uses: oven-sh/setup-bun@v2
 - run: bun install --frozen-lockfile
@@ -481,6 +520,7 @@ CMD ["node", "server.js"]
 ```
 
 **关键变化**:
+
 - ✅ pnpm → Bun
 - ✅ 移除符号链接解析步骤（Bun 不需要）
 - ✅ 使用 tar.gz 打包（保留符号链接）
@@ -491,6 +531,7 @@ CMD ["node", "server.js"]
 ### Release Job 变更
 
 **Before (pnpm)**:
+
 ```yaml
 - uses: actions/download-artifact@v4
 - run: cp -a build-output/ release/
@@ -498,6 +539,7 @@ CMD ["node", "server.js"]
 ```
 
 **After (Bun)**:
+
 ```yaml
 - uses: actions/download-artifact@v4
 - run: tar -xzf build-output.tar.gz -C build-output/
@@ -511,6 +553,7 @@ CMD ["node", "server.js"]
 ```
 
 **关键变化**:
+
 - ✅ 解压 tar.gz 而非直接使用
 - ✅ 增加产物验证步骤
 - ✅ 重新打包为带版本号的 Release 文件
@@ -520,6 +563,7 @@ CMD ["node", "server.js"]
 ### Docker Job 变更
 
 **Before (pnpm)**:
+
 ```yaml
 - uses: actions/download-artifact@v4
 - run: cp -a build-output/ docker-context/
@@ -527,6 +571,7 @@ CMD ["node", "server.js"]
 ```
 
 **After (Bun)**:
+
 ```yaml
 - uses: actions/download-artifact@v4
 - run: tar -xzf build-output.tar.gz -C docker-context/
@@ -534,6 +579,7 @@ CMD ["node", "server.js"]
 ```
 
 **关键变化**:
+
 - ✅ 解压 tar.gz 到构建上下文
 - ✅ Dockerfile 已简化为单阶段
 
@@ -543,29 +589,29 @@ CMD ["node", "server.js"]
 
 ### 构建性能
 
-| 指标 | pnpm | Bun | 改进 |
-|------|------|-----|------|
-| **依赖安装（首次）** | ~30s | ~30s | 相当 |
-| **依赖安装（缓存）** | ~10s | ~8s | -20% |
-| **Next.js 构建** | ~60s | ~55s | -8% |
-| **CI/CD 总时间** | ~180s | ~165s | -8% |
+| 指标                 | pnpm  | Bun   | 改进 |
+| -------------------- | ----- | ----- | ---- |
+| **依赖安装（首次）** | ~30s  | ~30s  | 相当 |
+| **依赖安装（缓存）** | ~10s  | ~8s   | -20% |
+| **Next.js 构建**     | ~60s  | ~55s  | -8%  |
+| **CI/CD 总时间**     | ~180s | ~165s | -8%  |
 
 ### 运行时性能
 
-| 指标 | pnpm | Bun | 改进 |
-|------|------|-----|------|
-| **容器启动时间** | ~1000ms | 89ms | **-91%** |
-| **首次请求延迟** | ~200ms | ~180ms | -10% |
-| **内存占用** | ~250 MB | ~230 MB | -8% |
+| 指标             | pnpm    | Bun     | 改进     |
+| ---------------- | ------- | ------- | -------- |
+| **容器启动时间** | ~1000ms | 89ms    | **-91%** |
+| **首次请求延迟** | ~200ms  | ~180ms  | -10%     |
+| **内存占用**     | ~250 MB | ~230 MB | -8%      |
 
 ### 产物大小
 
-| 指标 | pnpm | Bun | 改进 |
-|------|------|-----|------|
-| **Lockfile** | 472 KB | 352 KB | **-25%** |
+| 指标             | pnpm    | Bun           | 改进     |
+| ---------------- | ------- | ------------- | -------- |
+| **Lockfile**     | 472 KB  | 352 KB        | **-25%** |
 | **node_modules** | ~300 MB | ~77 MB (.bun) | **-74%** |
-| **Docker 镜像** | ~440 MB | 283 MB | **-36%** |
-| **Release 包** | ~65 MB | 56 MB | **-14%** |
+| **Docker 镜像**  | ~440 MB | 283 MB        | **-36%** |
+| **Release 包**   | ~65 MB  | 56 MB         | **-14%** |
 
 ---
 
@@ -611,17 +657,17 @@ CMD ["node", "server.js"]
    - ✅ 正确做法：使用 tar.gz 打包（保留符号链接）
    - 📝 教训：理解包管理器的依赖组织方式，不要被表象误导
 
-3. **monorepo 目录结构**
+1. **monorepo 目录结构**
    - ❌ 错误：临时目录打包丢失路径结构
    - ✅ 正确：复制时保持完整 monorepo 路径
    - 📝 教训：验证 artifact 解压后的结构
 
-4. **冗余文件复制**
+1. **冗余文件复制**
    - ❌ 错误：手动复制 `packages/` 目录
    - ✅ 正确：Next.js 已自动包含（transpilePackages）
    - 📝 教训：理解框架默认行为，避免重复工作
 
-5. **IDE 信息误导**
+1. **IDE 信息误导**
    - ❌ 错误：完全信任 IDE 端口面板
    - ✅ 正确：用 `ss` / `lsof` 命令验证
    - 📝 教训：IDE 缓存可能不准确
@@ -631,6 +677,7 @@ CMD ["node", "server.js"]
 ### 📚 最佳实践
 
 1. **迁移 checklist**
+
    ```
    □ 创建实验分支
    □ 备份原配置文件
@@ -648,6 +695,7 @@ CMD ["node", "server.js"]
    ```
 
 2. **CI/CD 验证流程**
+
    ```
    Build Job → 验证产物打包
       ↓
@@ -731,6 +779,7 @@ CMD ["node", "server.js"]
 ### A. 修改的文件清单
 
 **配置文件**:
+
 - `package.json` - 根工作区配置
 - `apps/app/package.json` - 应用配置
 - `vercel.json` - Vercel 部署配置（新增）
@@ -739,9 +788,11 @@ CMD ["node", "server.js"]
 - `.dockerignore` - 更新忽略规则
 
 **CI/CD**:
+
 - `.github/workflows/ci-cd.yml` - 统一工作流
 
 **OpenSpec**:
+
 - `openspec/changes/migrate-to-bun/` - 变更文档（已归档）
 - `openspec/specs/bun-package-manager/` - Bun 规范（新增）
 - `openspec/specs/build-release-workflow/` - 构建规范（更新）
@@ -794,9 +845,10 @@ podman run -d --name app -p 3000:3000 xingyed-site
 ✅ **技术收益**: 符号链接问题通过 tar.gz 打包解决（对 pnpm 和 Bun 都有效），Docker 构建简化 67%  
 ✅ **性能收益**: 镜像减少 36%，启动时间减少 91%  
 ✅ **体验收益**: 工具链统一，开发流程简化  
-✅ **质量收益**: 完整的测试验证，生产环境稳定运行  
+✅ **质量收益**: 完整的测试验证，生产环境稳定运行
 
 **关键成功因素**:
+
 1. 充分的实验验证（4 个阶段）
 2. 系统化的任务管理（OpenSpec）
 3. 完整的 CI/CD 测试
