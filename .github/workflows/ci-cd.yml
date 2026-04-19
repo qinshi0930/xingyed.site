@@ -105,6 +105,8 @@ jobs:
           GITHUB_APP_ID: ${{ secrets.APP_ID }}
           GITHUB_PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}
           GITHUB_INSTALLATION_ID: ${{ secrets.INSTALLATION_ID }}
+          # 数据库连接（构建时需要，用于 Next.js 静态分析 API 路由）
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: ✅ Verify build output
         run: |

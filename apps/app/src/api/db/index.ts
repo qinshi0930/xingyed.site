@@ -2,10 +2,12 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 // 扩展 globalThis 类型以支持数据库单例
+/* eslint-disable vars-on-top */
 declare global {
 	var __db: ReturnType<typeof drizzle> | undefined;
 	var __dbClient: ReturnType<typeof postgres> | undefined;
 }
+/* eslint-enable vars-on-top */
 
 /**
  * 获取数据库实例（单例）
