@@ -107,8 +107,12 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 							<Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
 								<EditIcon className="h-4 w-4" />
 							</Button>
-							<Button variant="ghost" size="sm" onClick={handleDelete}>
-								<TrashIcon className="h-4 w-4" />
+							<Button variant="ghost" size="sm" onClick={handleDelete} disabled={isDeleting}>
+								{isDeleting ? (
+									<Loader2Icon className="h-4 w-4 animate-spin" />
+								) : (
+									<TrashIcon className="h-4 w-4" />
+								)}
 							</Button>
 						</div>
 					)}
