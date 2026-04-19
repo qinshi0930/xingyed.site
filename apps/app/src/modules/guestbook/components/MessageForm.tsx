@@ -3,7 +3,7 @@
 import type { ChangeEvent } from "react";
 
 import { GithubIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import type { ApiResponse } from "@/common/types/guestbook";
@@ -17,6 +17,19 @@ export const MessageForm = () => {
 	const { data: session } = useSession();
 	const [message, setMessage] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+
+	// 检测登录错误
+	useEffect(() => {
+		const searchParams = new URLSearchParams(window.location.search);
+		const loginFailed = searchParams.get("login");
+
+		if (loginFailed === "failed" && !session) {
+			toast.error("未完成登录，请重试");
+
+			// 清除 URL 参数
+			window.history.replaceState({}, "", "/guestbook");
+		}
+	}, [session]);
 
 	const handleSubmit = async () => {
 		if (!message.trim()) return;
@@ -45,11 +58,25 @@ export const MessageForm = () => {
 		}
 	};
 
-	const handleLogin = () => {
-		signIn.social({
-			provider: "github",
-			callbackURL: "/guestbook",
-		});
+	const handleLogin = async () => {
+		try {
+			// 先检查 OAuth 配置
+			const response = await fetch("/api/auth/github/status");
+			const data = await response.json();
+
+			if (!data.enabled) {
+				toast.error("登录功能暂时不可用");
+				return;
+			}
+
+			// 配置正常，执行跳转
+			signIn.social({
+				provider: "github",
+				callbackURL: "/guestbook",
+			});
+		} catch {
+			toast.error("网络错误，请稍后重试");
+		}
 	};
 
 	return (
