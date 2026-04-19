@@ -122,8 +122,8 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 							rows={3}
 						/>
 						<div className="flex gap-2">
-							<Button size="sm" onClick={handleUpdate}>
-								保存
+							<Button size="sm" onClick={handleUpdate} disabled={!editContent.trim() || isUpdating}>
+								{isUpdating ? "保存中..." : "保存"}
 							</Button>
 							<Button
 								size="sm"
