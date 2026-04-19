@@ -2,7 +2,7 @@
 "use client";
 
 import dayjs from "dayjs";
-import { EditIcon, TrashIcon } from "lucide-react";
+import { EditIcon, Loader2Icon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -23,6 +23,8 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 	const { data: session } = useSession();
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);
+	const [isUpdating, setIsUpdating] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const isOwner = session?.user?.id === message.user_id;
 
