@@ -61,6 +61,10 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 		const confirmed = window.confirm("确定要删除这条留言吗？");
 		if (!confirmed) return;
 
+		if (isDeleting) return;
+
+		setIsDeleting(true);
+
 		try {
 			const response = await fetch(`/api/guestbook/${message.id}`, {
 				method: "DELETE",
@@ -77,6 +81,8 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 			onDelete();
 		} catch {
 			toast.error("网络错误，请稍后重试");
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
