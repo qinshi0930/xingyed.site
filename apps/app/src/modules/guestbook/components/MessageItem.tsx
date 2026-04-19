@@ -104,7 +104,12 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 
 					{isOwner && !isEditing && (
 						<div className="flex gap-1">
-							<Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setIsEditing(true)}
+								disabled={isDeleting}
+							>
 								<EditIcon className="h-4 w-4" />
 							</Button>
 							<Button
