@@ -29,7 +29,9 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 	const isOwner = session?.user?.id === message.user_id;
 
 	const handleUpdate = async () => {
-		if (!editContent.trim()) return;
+		if (!editContent.trim() || isUpdating) return;
+
+		setIsUpdating(true);
 
 		try {
 			const response = await fetch(`/api/guestbook/${message.id}`, {
@@ -50,6 +52,8 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 			onUpdate();
 		} catch {
 			toast.error("网络错误，请稍后重试");
+		} finally {
+			setIsUpdating(false);
 		}
 	};
 
