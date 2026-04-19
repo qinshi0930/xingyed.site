@@ -2,7 +2,7 @@
 "use client";
 
 import dayjs from "dayjs";
-import { EditIcon, TrashIcon } from "lucide-react";
+import { EditIcon, Loader2Icon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -23,11 +23,15 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 	const { data: session } = useSession();
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);
+	const [isUpdating, setIsUpdating] = useState(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	const isOwner = session?.user?.id === message.user_id;
 
 	const handleUpdate = async () => {
-		if (!editContent.trim()) return;
+		if (!editContent.trim() || isUpdating) return;
+
+		setIsUpdating(true);
 
 		try {
 			const response = await fetch(`/api/guestbook/${message.id}`, {
@@ -48,12 +52,18 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 			onUpdate();
 		} catch {
 			toast.error("网络错误，请稍后重试");
+		} finally {
+			setIsUpdating(false);
 		}
 	};
 
 	const handleDelete = async () => {
 		const confirmed = window.confirm("确定要删除这条留言吗？");
 		if (!confirmed) return;
+
+		if (isDeleting) return;
+
+		setIsDeleting(true);
 
 		try {
 			const response = await fetch(`/api/guestbook/${message.id}`, {
@@ -71,6 +81,8 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 			onDelete();
 		} catch {
 			toast.error("网络错误，请稍后重试");
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -92,11 +104,25 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 
 					{isOwner && !isEditing && (
 						<div className="flex gap-1">
-							<Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={() => setIsEditing(true)}
+								disabled={isDeleting}
+							>
 								<EditIcon className="h-4 w-4" />
 							</Button>
-							<Button variant="ghost" size="sm" onClick={handleDelete}>
-								<TrashIcon className="h-4 w-4" />
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={handleDelete}
+								disabled={isDeleting}
+							>
+								{isDeleting ? (
+									<Loader2Icon className="h-4 w-4 animate-spin" />
+								) : (
+									<TrashIcon className="h-4 w-4" />
+								)}
 							</Button>
 						</div>
 					)}
@@ -110,8 +136,12 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 							rows={3}
 						/>
 						<div className="flex gap-2">
-							<Button size="sm" onClick={handleUpdate}>
-								保存
+							<Button
+								size="sm"
+								onClick={handleUpdate}
+								disabled={!editContent.trim() || isUpdating}
+							>
+								{isUpdating ? "保存中..." : "保存"}
 							</Button>
 							<Button
 								size="sm"
