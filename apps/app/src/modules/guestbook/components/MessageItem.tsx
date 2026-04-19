@@ -107,7 +107,12 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 							<Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
 								<EditIcon className="h-4 w-4" />
 							</Button>
-							<Button variant="ghost" size="sm" onClick={handleDelete} disabled={isDeleting}>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={handleDelete}
+								disabled={isDeleting}
+							>
 								{isDeleting ? (
 									<Loader2Icon className="h-4 w-4 animate-spin" />
 								) : (
@@ -126,7 +131,11 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 							rows={3}
 						/>
 						<div className="flex gap-2">
-							<Button size="sm" onClick={handleUpdate} disabled={!editContent.trim() || isUpdating}>
+							<Button
+								size="sm"
+								onClick={handleUpdate}
+								disabled={!editContent.trim() || isUpdating}
+							>
 								{isUpdating ? "保存中..." : "保存"}
 							</Button>
 							<Button
