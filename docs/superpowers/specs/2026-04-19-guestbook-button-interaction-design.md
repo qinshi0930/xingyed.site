@@ -14,6 +14,7 @@ Guestbook 模块的留言簿编辑和删除按钮存在以下问题：
 2. **重复提交风险**：快速点击多次会触发多个并发请求
 3. **Toast 提示混乱**：第一个请求成功后，后续请求因数据已变更而失败，导致"成功后又提示失败"
 4. **并发操作风险**：删除操作进行时，用户仍可点击编辑按钮，可能导致状态混乱
+5. **GitHub 登录按钮无错误反馈**：点击登录按钮后，如果 OAuth 未配置或登录失败，用户没有任何提示
 
 ---
 
@@ -181,6 +182,101 @@ const handleDelete = async () => {
 import { EditIcon, TrashIcon, Loader2Icon } from "lucide-react";
 ```
 
+### 5. GitHub 登录错误处理
+
+#### 后端：OAuth 状态检查接口
+
+**文件**：`apps/app/src/api/routes/auth.ts`
+
+```typescript
+// GitHub OAuth 状态检查接口
+authRoute.get("/github/status", async (c) => {
+  const clientId = process.env.AUTH_GITHUB_CLIENT_ID;
+  const clientSecret = process.env.AUTH_GITHUB_CLIENT_SECRET;
+
+  const isEnabled = !!(
+    clientId &&
+    clientSecret &&
+    clientId !== '""' &&
+    clientSecret !== '""'
+  );
+
+  if (!isEnabled) {
+    console.error("[GitHub OAuth] Not configured: missing credentials");
+  }
+
+  return c.json({ enabled: isEnabled });
+});
+```
+
+**设计要点**：
+
+- 前端友好的响应：只返回 `{ enabled: boolean }`
+- 后端详细日志：`console.error` 记录配置问题
+- 不暴露敏感信息：不返回具体的配置错误细节
+
+#### 前端：MessageForm 登录逻辑改造
+
+**文件**：`apps/app/src/modules/guestbook/components/MessageForm.tsx`
+
+```typescript
+// 检测登录错误
+useEffect(() => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const loginFailed = searchParams.get("login");
+
+  if (loginFailed === "failed" && !session) {
+    toast.error("未完成登录，请重试");
+    window.history.replaceState({}, "", "/guestbook");
+  }
+}, [session]);
+
+const handleLogin = async () => {
+  try {
+    // 先检查 OAuth 配置
+    const response = await fetch("/api/auth/github/status");
+    const data = await response.json();
+
+    if (!data.enabled) {
+      toast.error("登录功能暂时不可用");
+      return;
+    }
+
+    // 配置正常，执行跳转
+    signIn.social({
+      provider: "github",
+      callbackURL: "/guestbook",
+    });
+  } catch {
+    toast.error("网络错误，请稍后重试");
+  }
+};
+```
+
+**交互逻辑**：
+
+1. **点击登录** → 调用 `/api/auth/github/status` 检查配置
+2. **配置不可用** → Toast: "登录功能暂时不可用" + 后端记录错误日志
+3. **配置正常** → 跳转 GitHub 授权页面
+4. **网络错误** → Toast: "网络错误，请稍后重试"
+5. **用户取消/其他错误** → Toast: "未完成登录，请重试"
+
+**用户体验流程**：
+
+```
+场景 1：OAuth 未配置
+用户点击登录 → 检查 API → 返回 {enabled: false} → Toast: "登录功能暂时不可用"
+
+场景 2：用户取消授权
+用户点击登录 → 跳转 GitHub → 用户取消 → 回调 /guestbook → 无 session → Toast: "未完成登录，请重试"
+
+场景 3：网络错误
+用户点击登录 → fetch 失败 → catch → Toast: "网络错误，请稍后重试"
+
+场景 4：登录成功
+用户点击登录 → 跳转 GitHub → 授权成功 → 回调 /guestbook → 有 session → 无提示
+```
+
 ---
 
 ## 用户体验流程
@@ -227,6 +323,18 @@ import { EditIcon, TrashIcon, Loader2Icon } from "lucide-react";
 - 防止并发操作：避免用户在删除过程中点击编辑导致状态混乱
 - 保持 UI 布局稳定：采用禁用而非隐藏，避免按钮跳动
 - 视觉一致性：两个按钮都使用相同的 disabled 状态反馈
+
+### 为什么 GitHub 登录要先检查配置？
+
+- 提前发现问题：在跳转前检测 OAuth 配置，避免无效的跳转
+- 友好的用户提示：根据错误类型显示不同的 Toast 文案
+- 后端日志追踪：`console.error` 记录配置问题，方便开发人员排查
+
+### 为什么前端不暴露详细的错误信息？
+
+- 安全性：不暴露后端配置细节（如缺少哪个环境变量）
+- 用户体验：简洁友好的提示，避免技术术语
+- 职责分离：详细日志在后端，前端只负责用户反馈
 
 ---
 
