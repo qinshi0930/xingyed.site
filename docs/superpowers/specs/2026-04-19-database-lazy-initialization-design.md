@@ -1,12 +1,54 @@
-# 数据库延迟初始化设计文档
+# 数据库初始化方案设计文档
 
-> **设计目标**: 解决 Next.js 构建时因缺少 DATABASE_URL 导致的失败问题，采用 globalThis 单例模式实现延迟初始化。
+> **设计目标**: 解决 Next.js 构建时因缺少 DATABASE_URL 导致的失败问题。
+>
+> **最终方案**: 在 GitHub Actions 中添加 DATABASE_URL 环境变量，保持简单的直接初始化方式。
+
+---
+
+## 📋 方案演进
+
+### 最终方案（已实施）✅
+
+**方案**: CI/CD 环境变量注入 + 简单直接初始化
+
+**核心思想**:
+
+- 既然构建阶段必须有 DATABASE_URL（Next.js 静态分析需要），那就直接提供
+- 不需要延迟初始化的复杂性
+- 所有环境（CI/CD、Vercel、VPS）都配置 DATABASE_URL
+
+**实施内容**:
+
+1. GitHub Actions Build Job 添加 `DATABASE_URL` 环境变量
+2. `db/index.ts` 保持简单直接初始化（25 行代码）
+3. `auth.ts` 直接导入 `db` 对象
+
+**优势**:
+
+- ✅ 代码简单易懂（25 行 vs 65 行）
+- ✅ 无额外复杂度（无 Proxy、无 globalThis、无工厂函数）
+- ✅ 维护成本低
+- ✅ 运行时行为一致
+
+### 探索方案（已废弃）❌
+
+**方案**: globalThis 单例模式延迟初始化
+
+**为什么废弃**:
+
+- 构建阶段仍然需要 DATABASE_URL（Next.js 静态分析 API 路由）
+- 延迟初始化没有解决根本问题
+- 增加了不必要的复杂度（65 行代码、Proxy、globalThis）
+- 所有环境都有 DATABASE_URL，延迟初始化无意义
+
+**详细信息**: 见下方历史分析
 
 ---
 
 ## 问题描述
 
-### 当前问题
+### 原始问题
 
 在 GitHub Actions 的 Build Job 中，Next.js 构建过程在 `Collecting page data` 阶段失败：
 
@@ -528,10 +570,89 @@ export const db = drizzle(client);
 | 类型安全问题       | 低   | 中   | TypeScript 类型声明 |
 | Better Auth 兼容性 | 低   | 高   | 本地测试验证        |
 
-### 成功标准
+---
 
-- [x] 构建时不需要 DATABASE_URL
-- [ ] GitHub Actions Build Job 通过
-- [ ] 运行时数据库连接正常
-- [ ] 开发模式热重载正常
-- [ ] 所有 API 路由正常工作
+## 📝 实施总结（2026-04-19）
+
+### 最终决策
+
+**选择简单方案**：在 GitHub Actions 中添加 `DATABASE_URL` 环境变量，保持直接初始化。
+
+### 决策依据
+
+1. **构建阶段约束**：
+   - Next.js 在 `Collecting page data` 阶段会预渲染 API 路由
+   - `auth.ts` 模块加载时立即调用 `betterAuth()`，进而调用 `getDb()`
+   - **无论如何，构建阶段都需要 DATABASE_URL**
+
+2. **环境一致性**：
+   - CI/CD：需要 DATABASE_URL（构建）
+   - Vercel：需要 DATABASE_URL（运行时）
+   - VPS：需要 DATABASE_URL（运行时）
+   - 本地开发：需要 DATABASE_URL（开发）
+
+3. **简化优先原则**：
+   - 延迟初始化没有解决根本问题（构建时仍需要 DATABASE_URL）
+   - 增加了不必要的复杂度（65 行代码 vs 25 行）
+   - 维护成本高（Proxy、globalThis、工厂函数）
+
+### 方案对比
+
+| 维度              | 延迟初始化（废弃）       | 简单初始化（采用） |
+| ----------------- | ------------------------ | ------------------ |
+| **代码行数**      | 65 行                    | 25 行              |
+| **复杂度**        | 高（Proxy + globalThis） | 低（直接初始化）   |
+| **构建时需要 DB** | ✅ 是                    | ✅ 是              |
+| **运行时需要 DB** | ✅ 是                    | ✅ 是              |
+| **维护成本**      | 高                       | 低                 |
+| **理解难度**      | 需要理解多个概念         | 一目了然           |
+
+### 实施内容
+
+1. ✅ **GitHub Actions 工作流更新**（`.github/workflows/ci-cd.yml`）
+
+   ```yaml
+   - name: 🏗️ Build Next.js app
+     env:
+       DATABASE_URL: ${{ secrets.DATABASE_URL }} # 新增
+   ```
+
+2. ✅ **数据库模块保持简单**（`apps/app/src/api/db/index.ts`）
+   - 25 行代码
+   - 直接初始化
+   - 无延迟加载
+
+3. ✅ **认证模块简化**（`apps/app/src/api/auth.ts`）
+   - 直接导入 `db` 对象
+   - 不使用 `getDb()` 函数
+
+### 经验教训
+
+1. **先理解约束，再设计方案**
+   - 我们最初以为延迟初始化可以让构建时不需要 DATABASE_URL
+   - 但实际上 Next.js 的静态分析机制要求构建时必须有 DATABASE_URL
+   - **教训**：在设计方案前，先彻底理解所有约束条件
+
+2. **简单就是美**
+   - 当复杂性没有带来额外价值时，选择简单方案
+   - 65 行复杂代码 vs 25 行简单代码，功能完全相同
+   - **教训**：定期审视技术方案，去除不必要的复杂度
+
+3. **迭代式改进**
+   - 先实施了延迟初始化方案
+   - 发现构建时仍需要 DATABASE_URL 后，回退到简单方案
+   - **教训**：允许试错，及时纠正方向
+
+### Git 提交记录
+
+```
+e3d0259 refactor(database): revert to simple initialization scheme
+ce51e00 ci(build): add DATABASE_URL to GitHub Actions build job
+6e6bbec refactor(auth): use getDb() for lazy database initialization
+1b0db64 refactor(database): implement lazy initialization with globalThis singleton pattern
+```
+
+### 相关文档
+
+- 实施计划：`docs/superpowers/plans/2026-04-19-database-lazy-initialization-plan.md`
+- PR #32：https://github.com/qinshi0930/xingyed.site/pull/32

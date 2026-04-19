@@ -1,12 +1,31 @@
-# 数据库延迟初始化实施计划
+# 数据库初始化方案实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 将数据库连接从立即初始化改为延迟初始化（globalThis 单例模式），解决 Next.js 构建时缺少 DATABASE_URL 导致的失败问题
+**Goal:** 在 GitHub Actions 中添加 DATABASE_URL 环境变量，保持简单的直接初始化方式
 
-**Architecture:** 使用 globalThis 存储数据库单例，通过 Proxy 对象保持 API 兼容性，首次调用时创建连接并缓存到 globalThis
+**Architecture:** 简单直接的数据库初始化，模块加载时创建连接
 
 **Tech Stack:** TypeScript, postgres (postgres.js), drizzle-orm, Next.js
+
+---
+
+## 📋 方案变更说明
+
+### 原计划（已废弃）❌
+
+延迟初始化（globalThis 单例模式）
+
+### 最终方案（已实施）✅
+
+CI/CD 环境变量注入 + 简单直接初始化
+
+### 变更原因
+
+- Next.js 构建阶段静态分析 API 路由时必须有 DATABASE_URL
+- 延迟初始化不能解决根本问题
+- 简单方案代码量减少 61%（65 行 → 25 行）
+- 所有环境都需要 DATABASE_URL
 
 ---
 
@@ -14,17 +33,18 @@
 
 **修改文件：**
 
-- `apps/app/src/api/db/index.ts` - 核心改造：实现延迟初始化 + globalThis 单例 + Proxy
-- `apps/app/src/api/auth.ts` - 修改导入：将 `db` 改为 `getDb()`
+- `.github/workflows/ci-cd.yml` - 在 Build Job 中添加 DATABASE_URL 环境变量
+- `apps/app/src/api/db/index.ts` - 保持简单直接初始化（25 行）
+- `apps/app/src/api/auth.ts` - 直接导入 `db` 对象
 
 **测试方式：**
 
-- 手动测试：在没有 DATABASE_URL 的环境中运行构建
-- 运行时测试：启动开发服务器验证数据库连接正常
+- 本地构建测试：`bun run app:build`
+- CI/CD 构建测试：GitHub Actions Build Job
 
 ---
 
-### Task 1: 重构 db/index.ts 实现延迟初始化
+### Task 1: 更新 GitHub Actions 工作流 ✅
 
 **Files:**
 
@@ -442,22 +462,36 @@ export const closeDb = async () => {
 
 ## 注意事项
 
-1. **不修改 API 路由代码**：本次优化仅涉及数据库初始化层，不需要修改任何 API 路由
-2. **保持 API 兼容**：Proxy 确保所有使用 `db` 的代码无需修改（除了 auth.ts）
-3. **类型安全**：使用 TypeScript 类型声明确保 Proxy 操作类型安全
-4. **与 Redis 模式一致**：采用与项目 Redis 相同的 globalThis 单例模式
-5. **构建安全**：顶层代码无副作用，构建时不会执行任何数据库操作
+1. **简单优先**：选择简单直接的初始化方式，避免过度设计
+2. **环境变量配置**：所有环境（CI/CD、Vercel、VPS、本地）都需要配置 DATABASE_URL
+3. **GitHub Secrets**：确保在 GitHub 仓库设置中配置 `DATABASE_URL` secret
+4. **构建时约束**：Next.js 静态分析 API 路由时需要 DATABASE_URL，这是无法避免的
 
 ---
 
 ## 实施进度总结
 
-- **Task 1**: ✅ 重构 db/index.ts（延迟初始化）
-- **Task 2**: ✅ 修改 auth.ts（使用 getDb）
-- **Task 3**: ✅ 代码质量检查
-- **Task 4**: ⏸️ 构建测试验证（需要本地执行）
-- **Task 5**: ⏸️ 运行时功能验证（需要本地执行）
-- **Task 6**: ✅ 工作流更新（无需修改）
+### 已实施 ✅
 
-**预计提交数**: 3-4 个
+- **Task 1**: ✅ 更新 GitHub Actions 工作流（添加 DATABASE_URL）
+- **Task 2**: ✅ 保持 db/index.ts 简单初始化（25 行代码）
+- **Task 3**: ✅ 保持 auth.ts 直接导入 db
+- **Task 4**: ✅ 代码质量检查（ESLint + TypeScript）
+- **Task 5**: ✅ 本地构建测试通过
+
+### 待验证 ⏸️
+
+- **Task 6**: ⏸️ GitHub Actions CI/CD 构建测试（需合并 PR 后验证）
+
+### Git 提交
+
+```
+e3d0259 refactor(database): revert to simple initialization scheme
+ce51e00 ci(build): add DATABASE_URL to GitHub Actions build job
+6e6bbec refactor(auth): use getDb() for lazy database initialization (回退)
+1b0db64 refactor(database): implement lazy initialization with globalThis singleton pattern (回退)
+```
+
+**实际提交数**: 2 个有效提交（后 2 个已回退）
 **最后更新**: 2026-04-19
+**PR**: https://github.com/qinshi0930/xingyed.site/pull/32
