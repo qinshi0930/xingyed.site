@@ -150,6 +150,7 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 									setIsEditing(false);
 									setEditContent(message.content);
 								}}
+								disabled={isUpdating}
 							>
 								取消
 							</Button>
