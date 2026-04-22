@@ -1,4 +1,3 @@
-/* eslint-disable no-alert -- 删除确认需要使用 confirm */
 "use client";
 
 import dayjs from "dayjs";
@@ -13,6 +12,8 @@ import { Button } from "@/common/components/shadcn/ui/button";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { useSession } from "@/common/libs/auth-client";
 
+import { ConfirmDialog } from "./ConfirmDialog";
+
 interface MessageItemProps {
 	message: GuestbookMessage;
 	onUpdate: () => void;
@@ -25,6 +26,7 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 	const [editContent, setEditContent] = useState(message.content);
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	const isOwner = session?.user?.id === message.user_id;
 
@@ -57,10 +59,12 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 		}
 	};
 
-	const handleDelete = async () => {
-		const confirmed = window.confirm("确定要删除这条留言吗？");
-		if (!confirmed) return;
+	const handleDelete = () => {
+		if (isDeleting) return;
+		setIsDeleteDialogOpen(true);
+	};
 
+	const handleConfirmDelete = async () => {
 		if (isDeleting) return;
 
 		setIsDeleting(true);
@@ -78,6 +82,7 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 			}
 
 			toast.success("删除成功！");
+			setIsDeleteDialogOpen(false);
 			onDelete();
 		} catch {
 			toast.error("网络错误，请稍后重试");
@@ -160,6 +165,17 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 					<p className="text-sm">{message.content}</p>
 				)}
 			</div>
+
+			<ConfirmDialog
+				open={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+				title="删除留言"
+				description="确定要删除这条留言吗？此操作不可撤销。"
+				confirmText="删除"
+				cancelText="取消"
+				onConfirm={handleConfirmDelete}
+				isLoading={isDeleting}
+			/>
 		</div>
 	);
 };
