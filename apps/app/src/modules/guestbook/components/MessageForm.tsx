@@ -126,9 +126,11 @@ export const MessageForm = () => {
 				)}
 
 				{isPending ? (
-					<Button disabled>
-						<Skeleton className="h-4 w-16" />
-					</Button>
+					<Skeleton>
+						<Button disabled variant="ghost">
+							<span className="opacity-0">登录中...</span>
+						</Button>
+					</Skeleton>
 				) : session ? (
 					<Button onClick={handleSubmit} disabled={!message.trim() || isSubmitting}>
 						{isSubmitting ? "提交中..." : "提交留言"}
