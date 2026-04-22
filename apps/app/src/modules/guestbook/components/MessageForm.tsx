@@ -10,11 +10,12 @@ import type { ApiResponse } from "@/common/types/guestbook";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
 import { Button } from "@/common/components/shadcn/ui/button";
+import { Skeleton } from "@/common/components/shadcn/ui/skeleton";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { signIn, useSession } from "@/common/libs/auth-client";
 
 export const MessageForm = () => {
-	const { data: session } = useSession();
+	const { data: session, isPending } = useSession();
 	const [message, setMessage] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -88,14 +89,21 @@ export const MessageForm = () => {
 			<Textarea
 				value={message}
 				onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
-				placeholder={session ? "写下你的留言..." : "登录后即可留言"}
-				disabled={!session}
-				className={!session ? "bg-muted cursor-not-allowed" : ""}
+				placeholder={
+					isPending ? "加载中..." : session ? "写下你的留言..." : "登录后即可留言"
+				}
+				disabled={!session || isPending}
+				className={!session || isPending ? "bg-muted cursor-not-allowed" : ""}
 				rows={4}
 			/>
 
 			<div className="flex items-center justify-between">
-				{session ? (
+				{isPending ? (
+					<div className="flex items-center gap-2">
+						<Skeleton className="h-8 w-8 rounded-full" />
+						<Skeleton className="h-4 w-24" />
+					</div>
+				) : session ? (
 					<div className="flex items-center gap-2">
 						<Avatar className="h-8 w-8">
 							<AvatarImage
@@ -117,7 +125,11 @@ export const MessageForm = () => {
 					</div>
 				)}
 
-				{session ? (
+				{isPending ? (
+					<Button disabled>
+						<Skeleton className="h-4 w-16" />
+					</Button>
+				) : session ? (
 					<Button onClick={handleSubmit} disabled={!message.trim() || isSubmitting}>
 						{isSubmitting ? "提交中..." : "提交留言"}
 					</Button>
