@@ -17,6 +17,7 @@ export const MessageForm = () => {
 	const { data: session } = useSession();
 	const [message, setMessage] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isLoggingIn, setIsLoggingIn] = useState(false);
 
 	// 检测登录错误
 	useEffect(() => {
@@ -59,6 +60,7 @@ export const MessageForm = () => {
 	};
 
 	const handleLogin = async () => {
+		setIsLoggingIn(true);
 		try {
 			// 先检查 OAuth 配置
 			const response = await fetch("/api/auth/github/status");
@@ -76,6 +78,8 @@ export const MessageForm = () => {
 			});
 		} catch {
 			toast.error("网络错误，请稍后重试");
+		} finally {
+			setIsLoggingIn(false);
 		}
 	};
 
@@ -118,9 +122,9 @@ export const MessageForm = () => {
 						{isSubmitting ? "提交中..." : "提交留言"}
 					</Button>
 				) : (
-					<Button onClick={handleLogin}>
+					<Button onClick={handleLogin} disabled={isLoggingIn}>
 						<GithubIcon className="mr-2 h-4 w-4" />
-						使用 GitHub 登录
+						{isLoggingIn ? "登录中..." : "使用 GitHub 登录"}
 					</Button>
 				)}
 			</div>
