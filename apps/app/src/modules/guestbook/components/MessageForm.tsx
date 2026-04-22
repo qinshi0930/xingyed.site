@@ -20,6 +20,13 @@ export const MessageForm = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+	// 登录成功后重置 loading 状态（处理 signIn.social 与 useSession 的 race condition）
+	useEffect(() => {
+		if (session && isLoggingIn) {
+			setIsLoggingIn(false);
+		}
+	}, [session, isLoggingIn]);
+
 	// 检测登录错误
 	useEffect(() => {
 		const searchParams = new URLSearchParams(window.location.search);
@@ -69,17 +76,18 @@ export const MessageForm = () => {
 
 			if (!data.enabled) {
 				toast.error("登录功能暂时不可用");
+				setIsLoggingIn(false);
 				return;
 			}
 
 			// 配置正常，执行跳转
-			signIn.social({
+			// 注意：登录成功后不立即重置 isLoggingIn，等待 useSession 检测到 session 更新
+			await signIn.social({
 				provider: "github",
 				callbackURL: "/guestbook",
 			});
 		} catch {
 			toast.error("网络错误，请稍后重试");
-		} finally {
 			setIsLoggingIn(false);
 		}
 	};
