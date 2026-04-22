@@ -10,13 +10,22 @@ import type { ApiResponse } from "@/common/types/guestbook";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
 import { Button } from "@/common/components/shadcn/ui/button";
+import { Skeleton } from "@/common/components/shadcn/ui/skeleton";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { signIn, useSession } from "@/common/libs/auth-client";
 
 export const MessageForm = () => {
-	const { data: session } = useSession();
+	const { data: session, isPending } = useSession();
 	const [message, setMessage] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+	// 登录成功后重置 loading 状态（处理 signIn.social 与 useSession 的 race condition）
+	useEffect(() => {
+		if (session && isLoggingIn) {
+			setIsLoggingIn(false);
+		}
+	}, [session, isLoggingIn]);
 
 	// 检测登录错误
 	useEffect(() => {
@@ -59,6 +68,7 @@ export const MessageForm = () => {
 	};
 
 	const handleLogin = async () => {
+		setIsLoggingIn(true);
 		try {
 			// 先检查 OAuth 配置
 			const response = await fetch("/api/auth/github/status");
@@ -66,16 +76,19 @@ export const MessageForm = () => {
 
 			if (!data.enabled) {
 				toast.error("登录功能暂时不可用");
+				setIsLoggingIn(false);
 				return;
 			}
 
 			// 配置正常，执行跳转
-			signIn.social({
+			// 注意：登录成功后不立即重置 isLoggingIn，等待 useSession 检测到 session 更新
+			await signIn.social({
 				provider: "github",
 				callbackURL: "/guestbook",
 			});
 		} catch {
 			toast.error("网络错误，请稍后重试");
+			setIsLoggingIn(false);
 		}
 	};
 
@@ -84,14 +97,21 @@ export const MessageForm = () => {
 			<Textarea
 				value={message}
 				onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
-				placeholder={session ? "写下你的留言..." : "登录后即可留言"}
-				disabled={!session}
-				className={!session ? "bg-muted cursor-not-allowed" : ""}
+				placeholder={
+					isPending ? "加载中..." : session ? "写下你的留言..." : "登录后即可留言"
+				}
+				disabled={!session || isPending}
+				className={!session || isPending ? "bg-muted cursor-not-allowed" : ""}
 				rows={4}
 			/>
 
 			<div className="flex items-center justify-between">
-				{session ? (
+				{isPending ? (
+					<div className="flex items-center gap-2">
+						<Skeleton className="h-8 w-8 rounded-full" />
+						<Skeleton className="h-4 w-24" />
+					</div>
+				) : session ? (
 					<div className="flex items-center gap-2">
 						<Avatar className="h-8 w-8">
 							<AvatarImage
@@ -113,14 +133,20 @@ export const MessageForm = () => {
 					</div>
 				)}
 
-				{session ? (
+				{isPending ? (
+					<Skeleton>
+						<Button disabled variant="ghost">
+							<span className="opacity-0">登录中...</span>
+						</Button>
+					</Skeleton>
+				) : session ? (
 					<Button onClick={handleSubmit} disabled={!message.trim() || isSubmitting}>
 						{isSubmitting ? "提交中..." : "提交留言"}
 					</Button>
 				) : (
-					<Button onClick={handleLogin}>
+					<Button onClick={handleLogin} disabled={isLoggingIn}>
 						<GithubIcon className="mr-2 h-4 w-4" />
-						使用 GitHub 登录
+						{isLoggingIn ? "登录中..." : "使用 GitHub 登录"}
 					</Button>
 				)}
 			</div>
