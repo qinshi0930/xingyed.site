@@ -14,9 +14,9 @@
 		"addsc": "bunx shadcn@latest add",
 		"seed": "bun run src/lib/seed/index.ts",
 		"clean": "rimraf -rf .next dist",
-		"db:generate": "bunx drizzle-kit generate",
-		"db:migrate": "bunx drizzle-kit generate && bunx drizzle-kit migrate",
-		"db:push": "bunx drizzle-kit push"
+		"db:generate": "dotenv -e .env.local -- bunx drizzle-kit generate",
+		"db:migrate": "dotenv -e .env.local -- bunx drizzle-kit generate && dotenv -e .env.local -- bunx drizzle-kit migrate",
+		"db:push": "dotenv -e .env.local -- bunx drizzle-kit push"
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.0.0",
@@ -129,6 +129,7 @@
 		"@types/react-syntax-highlighter": "^15.5.13",
 		"baseline-browser-mapping": "^2.9.11",
 		"date-fns": "^4.1.0",
+		"dotenv-cli": "^11.0.0",
 		"drizzle-kit": "^0.31.10",
 		"eslint": "^9",
 		"eslint-config-prettier": "^10.1.8",
