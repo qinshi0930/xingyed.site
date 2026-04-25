@@ -62,10 +62,22 @@ async function main() {
 	console.log("\n🎉 部署完成！");
 	console.log(`   部署路径: ${remoteDistDir}`);
 	console.log("\n📝 后续步骤:");
-	console.log("   1. 进入部署目录: cd /var/www/xingyed.site");
-	console.log("   2. 构建镜像: podman build -t xingye-site:stable .");
-	console.log("   3. 启动容器: podman-compose up -d --force-recreate");
-	console.log("   4. 查看日志: podman-compose logs -f");
+	console.log("\n   1. 进入部署目录:");
+	console.log("      cd /var/www/xingyed.site");
+	console.log("\n   2. 启动基础设施（首次部署）:");
+	console.log("      podman-compose --env-file .env.production -f compose.infra.yml up -d");
+	console.log("\n   3. 构建应用镜像:");
+	console.log("      podman build -t xingye-site:stable .");
+	console.log("      podman tag xingye-site:stable xingye-site:canary");
+	console.log("\n   4. 启动生产环境:");
+	console.log("      podman-compose --env-file .env.production -f compose.production.yml up -d");
+	console.log("\n   5. 验证服务:");
+	console.log("      curl -sI http://localhost:6080/");
+	console.log("      curl -sI http://localhost:6080/health");
+	console.log("\n   6. 灰度发布（可选）:");
+	console.log("      podman-compose --env-file .env.production -f compose.canary.yml up -d");
+	console.log("      ./scripts/canary-weight.sh 10    # 10% 流量到 canary");
+	console.log("\n   📖 详细文档: /var/www/xingyed.site/README.md");
 }
 
 main().catch((err) => {
