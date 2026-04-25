@@ -14,4 +14,16 @@ export const PROJECT_CONTENTS: ProjectItemProps[] = [
 		is_featured: true,
 		updated_at: new Date("2026-04-25"),
 	},
+	{
+		title: "next-canary-release",
+		slug: "next-canary-release",
+		description: "基于 Podman Compose + Nginx 权重路由的灰度发布系统",
+		image: "/images/projects/next-canary-release.svg",
+		link_github: "https://github.com/qinshi0930/next-canary-release",
+		stacks: '["Nginx", "Node.js"]',
+		content: "next-canary-release.mdx",
+		is_show: true,
+		is_featured: false,
+		updated_at: new Date("2026-04-25"),
+	},
 ];
