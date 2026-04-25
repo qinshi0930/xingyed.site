@@ -14,6 +14,7 @@
 		"addsc": "bunx shadcn@latest add",
 		"seed": "bun run src/lib/seed/index.ts",
 		"bundle": "bun run scripts/build-dist.ts",
+		"deploy:local": "bun run scripts/deploy-local.ts",
 		"clean": "rimraf -rf .next dist",
 		"db:generate": "dotenv -e .env.local -- bunx drizzle-kit generate",
 		"db:migrate": "dotenv -e .env.local -- bunx drizzle-kit generate && dotenv -e .env.local -- bunx drizzle-kit migrate",
