@@ -1,0 +1,50 @@
+<svg width="550" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="550" height="300" fill="url(#bg)" rx="8"/>
+
+  <!-- Title -->
+  <text x="275" y="45" text-anchor="middle" fill="#e0e0e0" font-family="monospace" font-size="18" font-weight="bold">Canary Release System</text>
+
+  <!-- Client -->
+  <rect x="225" y="65" width="100" height="30" rx="4" fill="#4a90d9" opacity="0.85"/>
+  <text x="275" y="85" text-anchor="middle" fill="#fff" font-family="monospace" font-size="12">Client</text>
+
+  <!-- Arrow down -->
+  <line x1="275" y1="95" x2="275" y2="115" stroke="#666" stroke-width="1.5"/>
+  <polygon points="275,120 270,115 280,115" fill="#666"/>
+
+  <!-- Nginx -->
+  <rect x="200" y="120" width="150" height="35" rx="4" fill="#009639" opacity="0.85"/>
+  <text x="275" y="142" text-anchor="middle" fill="#fff" font-family="monospace" font-size="13" font-weight="bold">Nginx Gateway</text>
+
+  <!-- Arrows to stable and canary -->
+  <line x1="245" y1="155" x2="175" y2="180" stroke="#4caf50" stroke-width="1.5"/>
+  <polygon points="172,183 178,176 172,176" fill="#4caf50"/>
+  <line x1="305" y1="155" x2="375" y2="180" stroke="#ff9800" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <polygon points="378,183 372,176 378,176" fill="#ff9800"/>
+
+  <!-- Weight labels -->
+  <text x="195" y="170" text-anchor="middle" fill="#4caf50" font-family="monospace" font-size="10">90%</text>
+  <text x="355" y="170" text-anchor="middle" fill="#ff9800" font-family="monospace" font-size="10">10%</text>
+
+  <!-- Stable -->
+  <rect x="100" y="185" width="150" height="35" rx="4" fill="#2e7d32" opacity="0.85"/>
+  <text x="175" y="207" text-anchor="middle" fill="#fff" font-family="monospace" font-size="12">stable-app</text>
+
+  <!-- Canary -->
+  <rect x="300" y="185" width="150" height="35" rx="4" fill="#e65100" opacity="0.85"/>
+  <text x="375" y="207" text-anchor="middle" fill="#fff" font-family="monospace" font-size="12">canary-app</text>
+
+  <!-- Arrows to infra -->
+  <line x1="175" y1="220" x2="225" y2="248" stroke="#666" stroke-width="1"/>
+  <line x1="375" y1="220" x2="325" y2="248" stroke="#666" stroke-width="1"/>
+
+  <!-- Infra -->
+  <rect x="175" y="248" width="200" height="35" rx="4" fill="#37474f" opacity="0.85"/>
+  <text x="275" y="270" text-anchor="middle" fill="#b0bec5" font-family="monospace" font-size="12">Redis + PostgreSQL</text>
+</svg>

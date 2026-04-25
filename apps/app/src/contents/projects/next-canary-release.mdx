@@ -1,0 +1,35 @@
+---
+title: "next-canary-release"
+date: "2026-04-25"
+featured: false
+---
+
+# next-canary-release
+
+## 项目概述
+
+基于 Podman Compose + Nginx 权重路由的灰度发布系统，支持 stable/canary 双版本流量切换与故障自动回切。
+
+## 主要功能
+
+- Nginx 权重路由实现流量按百分比分配（0-99%）
+- 一键 canary 提升为 stable 或快速回滚
+- 故障自动转移（max_fails + fail_timeout）
+- 三层 Compose 独立生命周期管理（infra / production / canary）
+- 环境变量集中管理，支持多环境配置
+
+## 技术特点
+
+- Podman Compose 容器编排
+- Nginx upstream 动态权重路由
+- Bash 脚本自动化灰度操作
+- 外部网络隔离，应用端口不暴露
+- PostgreSQL + Redis 数据持久化
+- Next.js standalone 产物容器化
+
+## 开发亮点
+
+- Nginx 不支持 weight=0，通过动态添加/移除 upstream 行解决
+- 脚本严格执行「先切流量再停容器」避免服务中断
+- 三层 Compose 解耦，灰度发布仅需启停 canary 层
+- 容器内 HOSTNAME=0.0.0.0 解决 standalone 绑定问题
