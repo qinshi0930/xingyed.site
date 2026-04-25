@@ -15,23 +15,19 @@ const rootDir = resolve(appDir, "../..");
 const distDir = resolve(appDir, "dist");
 
 const sourcePaths = {
-	standalone: resolve(appDir, ".next/standalone"),
+	standalone: resolve(appDir, ".next/standalone/"),
 	static: resolve(appDir, ".next/static"),
 	public: resolve(appDir, "public"),
 	contents: resolve(appDir, "src/contents"),
 	envProduction: resolve(rootDir, ".env.production"),
-	podmanCompose: resolve(rootDir, "podman-compose.yml"),
-	dockerfile: resolve(rootDir, "Dockerfile"),
 };
 
 const targetPaths = {
-	standalone: resolve(distDir, "apps/app/.next/standalone"),
-	static: resolve(distDir, "apps/app/.next/static"),
-	public: resolve(distDir, "apps/app/public"),
-	contents: resolve(distDir, "apps/app/src/contents"),
+	standalone: resolve(distDir, "bundle/"),
+	static: resolve(distDir, "bundle/apps/app/.next/static"),
+	public: resolve(distDir, "bundle/apps/app/public"),
+	contents: resolve(distDir, "bundle/apps/app/src/contents"),
 	envProduction: resolve(distDir, ".env.production"),
-	podmanCompose: resolve(distDir, "podman-compose.yml"),
-	dockerfile: resolve(distDir, "Dockerfile"),
 };
 
 console.log("📦 开始打包构建产物...\n");
@@ -66,24 +62,17 @@ console.log("📁 拷贝 src/contents 目录...");
 await fs.copy(sourcePaths.contents, targetPaths.contents);
 
 // 步骤 7: 拷贝根目录配置文件
-console.log("📄 拷贝 podman-compose.yml...");
-await fs.copy(sourcePaths.podmanCompose, targetPaths.podmanCompose);
-
-console.log("📄 拷贝 Dockerfile...");
-await fs.copy(sourcePaths.dockerfile, targetPaths.dockerfile);
-
 console.log("📄 拷贝 .env.production...");
 await fs.copy(sourcePaths.envProduction, targetPaths.envProduction);
 
 console.log("\n✅ 打包完成！输出目录: dist/");
 console.log("\n📂 产物结构:");
 console.log("  dist/");
-console.log("  ├── apps/app/");
-console.log("  │   ├── .next/");
-console.log("  │   │   ├── standalone/       # Next.js standalone 产物");
-console.log("  │   │   └── static/           # 静态资源");
-console.log("  │   ├── public/               # 公共文件");
-console.log("  │   └── src/contents/         # 内容数据");
-console.log("  ├── .env.production        # 环境变量（运行时由 compose 加载，不打包进镜像）");
-console.log("  ├── Dockerfile             # 容器构建文件（复用根目录）");
-console.log("  └── podman-compose.yml     # 编排配置文件");
+console.log("  ├── bundle/");
+console.log("  │   └── apps/app/");
+console.log("  │       ├── .next/              # Next.js standalone 产物");
+console.log("  │       │   ├── server/         # 服务端代码");
+console.log("  │       │   └── static/         # 静态资源（构建时生成）");
+console.log("  │       ├── public/             # 公共静态资源（字体、图片等）");
+console.log("  │       └── src/contents/       # 内容数据（blog、learn、projects）");
+console.log("  ├── .env.production             # 环境变量（运行时由 compose 加载，不打包进镜像）");
