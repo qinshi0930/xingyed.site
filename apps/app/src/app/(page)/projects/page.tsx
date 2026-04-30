@@ -15,7 +15,7 @@ const PAGE_TITLE = "Projects";
 const PAGE_DESCRIPTION = "Several projects that I have worked on, both private and open source.";
 
 export const metadata: Metadata = {
-	title: PAGE_TITLE,
+	title: `${PAGE_TITLE} - Adam`,
 	description: PAGE_DESCRIPTION,
 };
 

@@ -9,7 +9,7 @@ const PAGE_DESCRIPTION =
 	"This is my personal dashboard, built with Next.js API routes deployed as serverless functions.";
 
 export const metadata: Metadata = {
-	title: `${PAGE_TITLE} - Ryan Aulia`,
+	title: `${PAGE_TITLE} - Adam`,
 	description: PAGE_DESCRIPTION,
 };
 

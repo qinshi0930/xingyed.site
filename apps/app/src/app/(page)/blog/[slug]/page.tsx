@@ -43,14 +43,14 @@ export async function generateMetadata({ params }: BlogDetailPageProps): Promise
 	const canonicalUrl = `https://xingyed.xyz/blog/${blog?.slug}`;
 
 	return {
-		title: `${blog?.title?.rendered} - Blog Adam`,
+		title: `${blog?.title?.rendered} - Adam`,
 		description,
 		alternates: {
 			canonical: canonicalUrl,
 		},
 		openGraph: {
 			type: "article",
-			title: `${blog?.title?.rendered} - Blog Adam`,
+			title: `${blog?.title?.rendered} - Adam`,
 			description,
 			url: canonicalUrl,
 			siteName: "Adam blog",
