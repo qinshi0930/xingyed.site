@@ -34,11 +34,6 @@ const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) =
 		}
 	}, []);
 
-	// const formatTagName = (name: string) => {
-	// 	if (!name) return "";
-	// 	return name.charAt(0).toUpperCase() + name.slice(1);
-	// };
-
 	return (
 		<section className={clsx(!isMobile && "flex gap-6")}>
 			<div className={clsx(!isMobile && "w-3/4")}>
