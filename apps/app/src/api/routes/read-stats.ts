@@ -18,8 +18,7 @@ app.get("/", cache(), async (c) => {
 		};
 
 		return c.json(data);
-		// eslint-disable-next-line unused-imports/no-unused-vars
-	} catch (error) {
+	} catch {
 		return c.json(
 			{
 				message: "Internal Server Error",

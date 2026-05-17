@@ -12,14 +12,10 @@ import ProjectCard from "./ProjectCard";
 
 interface ProjectsComponentProps {
 	projects: ProjectsProps["projects"];
-	// loadMore: () => void;
-	// hasMore: boolean;
 }
 
 const Projects = ({ projects }: ProjectsComponentProps) => {
 	const [visibleProjects, setVisibleProjects] = useState(6);
-
-	// const filteredProjects = projects.filter((project) => project?.is_show);
 
 	if (projects?.length === 0) {
 		return <EmptyState message="No Data" />;

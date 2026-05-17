@@ -89,15 +89,6 @@ export const MENU_ITEMS: MenuItemProps[] = [
 		eventName: "Pages: Contact",
 		type: "Pages",
 	},
-	// {
-	// 	title: "Guestbook",
-	// 	href: "/guestbook",
-	// 	icon: <ChatIcon size={iconSize} />,
-	// 	isShow: true,
-	// 	isExternal: false,
-	// 	eventName: "Pages: Chat",
-	// 	type: "Pages",
-	// },
 ];
 
 export const MENU_APPS: MenuItemProps[] = [
@@ -124,36 +115,6 @@ export const SOCIAL_MEDIA: MenuItemProps[] = [
 		type: "Link",
 	},
 
-	// {
-	// 	title: "Linkedin",
-	// 	href: "https://www.linkedin.com/in/aulianza/",
-	// 	icon: <LinkedinIcon size={iconSize} />,
-	// 	isShow: true,
-	// 	isExternal: true,
-	// 	eventName: "Social: Linkedin",
-	// 	className: "!bg-blue-500 border border dark:border-neutral-700",
-	// 	type: "Link",
-	// },
-	// {
-	// 	title: "Twitter",
-	// 	href: "https://twitter.com/aulianzaa",
-	// 	icon: <TwitterIcon size={iconSize} />,
-	// 	isShow: true,
-	// 	isExternal: true,
-	// 	eventName: "Social: Twitter",
-	// 	className: "!bg-sky-500 border border dark:border-neutral-700",
-	// 	type: "Link",
-	// },
-	// {
-	// 	title: "Instagram",
-	// 	href: "https://instagram.com/aulianza",
-	// 	icon: <InstagramIcon size={iconSize} />,
-	// 	isShow: true,
-	// 	isExternal: true,
-	// 	eventName: "Social: Instagram",
-	// 	className: "!bg-orange-700 border border dark:border-neutral-700",
-	// 	type: "Link",
-	// },
 	{
 		title: "Github",
 		href: "https://github.com/qinshi0930",

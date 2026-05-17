@@ -26,15 +26,6 @@ const CareerCard = ({
 }: CareerProps) => {
 	const [isShowResponsibility, setIsShowResponsibility] = useState<boolean>(false);
 
-	// const startDateFormatted = dayjs(start_date).format("MMM YYYY");
-	// const endDateFormatted = end_date ? dayjs(end_date).format("MMM YYYY") : "Present";
-
-	// const durationMonths = dayjs(end_date || Date.now()).diff(dayjs(start_date), "month");
-	// const durationYears = Math.floor(durationMonths / 12);
-	// const remainingMonths = durationMonths % 12;
-
-	// const durationText = `${durationYears > 0 ? `${durationYears} Year${durationYears > 1 ? "s" : ""}, ` : ""}${remainingMonths} Month${remainingMonths > 1 ? "s" : ""}`;
-
 	const startDateFormatted = formatDate(start_date, "MMM YYYY");
 	const endDateFormatted = end_date ? formatDate(end_date, "MMM YYYY") : "Present";
 	const durationText = calculateDuration(start_date, end_date);

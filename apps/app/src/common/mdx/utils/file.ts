@@ -46,22 +46,3 @@ export const getMarkdownFromSlug = async (
 		};
 	}
 };
-
-/**
- * get the frontmatter and slug of a file
- */
-// export const getPostInformation = (filename: string): Post | undefined => {
-// 	const source = getSourceSync(filename);
-
-// 	if (!source) return;
-
-// 	const frontmatter = getFrontmatter<Frontmatter>(source).frontmatter;
-
-// 	const post: Post = {
-// 		...frontmatter,
-// 		// replace the last dot with dash in the filename for slug
-// 		slug: filename.replace(/\.(?=[^.]*$)/, "-"),
-// 	};
-
-// 	return post;
-// };

@@ -1,4 +1,3 @@
-/* eslint-disable unused-imports/no-unused-vars */
 import type { EvaluateOptions } from "next-mdx-remote-client/rsc";
 
 import { isNil } from "lodash";
@@ -28,7 +27,7 @@ export default async function MdxEvaluate({ source }: MdxEvaluateProps) {
 		},
 	};
 
-	const { content, frontmatter, error } = await evaluate<Frontmatter>({
+	const { content, error } = await evaluate<Frontmatter>({
 		source,
 		options,
 		components,

@@ -14,21 +14,11 @@ export const metadata: Metadata = {
 };
 
 const DashboardPage = async () => {
-	// const githubUserPersonal = await getGithubUser("personal");
-
 	return (
-		// <SWRConfig
-		// 	value={{
-		// 		fallback: {
-		// 			"/api/github?type=personal": githubUserPersonal?.data,
-		// 		},
-		// 	}}
-		// >
 		<Container data-aos="fade-up">
 			<PageHeading title={PAGE_TITLE} description={PAGE_DESCRIPTION} />
 			<Dashboard />
 		</Container>
-		// </SWRConfig>
 	);
 };
 
