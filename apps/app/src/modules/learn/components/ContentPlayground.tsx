@@ -1,7 +1,6 @@
 import { SiJavascript } from "react-icons/si";
 
-// eslint-disable-next-line unused-imports/no-unused-vars
-const ContentPlayground = ({ initialCode }: { initialCode: string }) => {
+const ContentPlayground = ({ initialCode: _initialCode }: { initialCode: string }) => {
 	return (
 		<>
 			<div className="mb-5 flex items-center gap-3 border-t border-gray-300 pt-6 dark:border-neutral-700">

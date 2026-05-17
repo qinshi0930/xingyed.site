@@ -32,8 +32,7 @@ interface CodeBlockProps {
 }
 const CodeBlock = ({ className = "", children, ...props }: CodeBlockProps) => {
 	const [isCopied, setIsCopied] = useState<boolean>(false);
-	// eslint-disable-next-line unused-imports/no-unused-vars
-	const [value, copy] = useCopyToClipboard();
+	const [, copy] = useCopyToClipboard();
 	const match = /language-(\w+)/.exec(className || "");
 	const isCodeBlock = Boolean(match);
 
