@@ -91,7 +91,6 @@ async function getInstallationToken(): Promise<string> {
 	const now = Date.now();
 
 	if (installationToken.expiresAt - now > 5 * 60 * 1000) {
-		console.log(`read cached token`);
 		return installationToken.token;
 	}
 

@@ -11,6 +11,9 @@
 
 set -e
 
+# 确保 Bun 工具链可用
+export PATH="$HOME/.bun/bin:$PATH"
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'

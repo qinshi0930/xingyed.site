@@ -69,7 +69,6 @@ const CodeBlock = ({ className = "", children, ...props }: CodeBlockProps) => {
 						)}
 					</button>
 
-					{/* {children} */}
 					<SyntaxHighlighter
 						{...props}
 						style={themeColor}
