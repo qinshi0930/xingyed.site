@@ -4,12 +4,17 @@ import { useEffect, useState } from "react";
 
 import type { GuestbookMessage } from "@/common/types/guestbook";
 
-import { supabaseClient } from "@/common/libs/supabase-client";
+import { apiFetch } from "@/common/libs/api-fetch";
 
 import { MessageItem } from "./MessageItem";
 
 interface MessageListProps {
 	onNewMessage: () => void;
+}
+
+interface ListResponse {
+	items: GuestbookMessage[];
+	total: number;
 }
 
 export const MessageList = ({ onNewMessage }: MessageListProps) => {
@@ -22,15 +27,11 @@ export const MessageList = ({ onNewMessage }: MessageListProps) => {
 
 	const loadMessages = async () => {
 		try {
-			const { data, error } = await supabaseClient
-				.from("guestbook_messages")
-				.select("*")
-				.order("created_at", { ascending: false });
-
-			if (error) throw error;
-			setMessages(data || []);
-		} catch (error) {
-			console.error("Failed to load messages:", error);
+			// limit=100 覆盖当前活跃留言量；分页 UI 留作未来增强
+			const result = await apiFetch<ListResponse>("/api/guestbook?limit=100");
+			setMessages(result.items);
+		} catch {
+			// apiFetch 已统一弹 toast
 		} finally {
 			setLoading(false);
 		}

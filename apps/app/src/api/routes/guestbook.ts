@@ -8,6 +8,29 @@ import { authMiddleware } from "@/api/middleware/auth";
 
 const guestbookRoute = new Hono();
 
+// 查询留言列表（公开接口，不需要鉴权）
+const listQuerySchema = z.object({
+	limit: z.coerce.number().int().min(1).max(100).default(20),
+	offset: z.coerce.number().int().min(0).default(0),
+});
+
+guestbookRoute.get("/", zValidator("query", listQuerySchema), async (c) => {
+	const { limit, offset } = c.req.valid("query");
+
+	const { data, error, count } = await supabaseServerClient
+		.from("guestbook_messages")
+		.select("*", { count: "exact" })
+		.order("created_at", { ascending: false })
+		.range(offset, offset + limit - 1);
+
+	if (error) {
+		console.error("Failed to list messages:", error);
+		return c.json({ success: false, error: "Failed to list messages" }, 500);
+	}
+
+	return c.json({ success: true, data: { items: data ?? [], total: count ?? 0 } });
+});
+
 // 创建留言
 const createMessageSchema = z.object({
 	message: z.string().min(1, "Message is required").max(1000),
