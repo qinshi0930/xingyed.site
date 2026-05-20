@@ -14,8 +14,16 @@ import { Skeleton } from "@/common/components/shadcn/ui/skeleton";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
 import { signIn, useSession } from "@/common/libs/auth-client";
 
+import { useInitialSession } from "../context/InitialSessionContext";
+
 export const MessageForm = () => {
 	const { data: session, isPending } = useSession();
+	const initialSession = useInitialSession();
+
+	// 渲染层 fallback：SSR 预取有值时直接使用，消除首帧 isPending=true 带来的闪烁
+	// 注意：useEffect 依赖仍使用 session（实时态），仅 JSX 渲染在 displaySession/displayPending 上做降级
+	const displaySession = session ?? initialSession;
+	const displayPending = isPending && !initialSession;
 	const [message, setMessage] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -137,30 +145,34 @@ export const MessageForm = () => {
 				value={message}
 				onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setMessage(e.target.value)}
 				placeholder={
-					isPending ? "加载中..." : session ? "写下你的留言..." : "登录后即可留言"
+					displayPending
+						? "加载中..."
+						: displaySession
+							? "写下你的留言..."
+							: "登录后即可留言"
 				}
-				disabled={!session || isPending}
-				className={!session || isPending ? "bg-muted cursor-not-allowed" : ""}
+				disabled={!displaySession || displayPending}
+				className={!displaySession || displayPending ? "bg-muted cursor-not-allowed" : ""}
 				rows={4}
 			/>
 
 			<div className="flex items-center justify-between">
-				{isPending ? (
+				{displayPending ? (
 					<div className="flex items-center gap-2">
 						<Skeleton className="h-8 w-8 rounded-full" />
 						<Skeleton className="h-4 w-24" />
 					</div>
-				) : session ? (
+				) : displaySession ? (
 					<div className="flex items-center gap-2">
 						<Avatar className="h-8 w-8">
 							<AvatarImage
-								src={session.user.image || ""}
-								alt={session.user.name || ""}
+								src={displaySession.user.image || ""}
+								alt={displaySession.user.name || ""}
 							/>
-							<AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
+							<AvatarFallback>{displaySession.user.name?.charAt(0)}</AvatarFallback>
 						</Avatar>
 						<span className="text-sm text-muted-foreground">
-							@{session.user.username || session.user.name}
+							@{displaySession.user.username || displaySession.user.name}
 						</span>
 					</div>
 				) : (
@@ -172,13 +184,13 @@ export const MessageForm = () => {
 					</div>
 				)}
 
-				{isPending ? (
+				{displayPending ? (
 					<Skeleton>
 						<Button disabled variant="ghost">
 							<span className="opacity-0">登录中...</span>
 						</Button>
 					</Skeleton>
-				) : session ? (
+				) : displaySession ? (
 					<Button onClick={handleSubmit} disabled={!message.trim() || isSubmitting}>
 						{isSubmitting ? "提交中..." : "提交留言"}
 					</Button>
