@@ -27,6 +27,43 @@ export const MessageForm = () => {
 		}
 	}, [session, isLoggingIn]);
 
+	// 兜底重置 isLoggingIn：用户从 GitHub 取消授权返回（bfcache）/ 切回 tab / 长时间无响应
+	// 解决 issue #53：handleLogin 触发外部跳转后，若用户中止流程，单纯靠 catch / session 副作用无法恢复 loading 状态
+	useEffect(() => {
+		if (!isLoggingIn) return;
+
+		const reset = () => setIsLoggingIn(false);
+		let visibilityTimeout: number | undefined;
+
+		// 1. 浏览器 bfcache 命中（用户在 GitHub 点取消 / 后退按钮）—— 立即重置
+		const onPageShow = (event: PageTransitionEvent) => {
+			if (event.persisted) reset();
+		};
+
+		// 2. 标签页可见性切换（用户切回 /guestbook）—— 给 useSession 1.5s 拉取窗口后再重置
+		const onVisibility = () => {
+			if (document.visibilityState !== "visible") return;
+			if (visibilityTimeout) window.clearTimeout(visibilityTimeout);
+			visibilityTimeout = window.setTimeout(() => {
+				// 函数式 setState 保证读到最新值；session 进入后另一 useEffect 已将其置 false
+				setIsLoggingIn((current) => (current ? false : current));
+			}, 1500);
+		};
+
+		// 3. 30 秒超时兜底，覆盖任何遗漏路径
+		const timeoutId = window.setTimeout(reset, 30_000);
+
+		window.addEventListener("pageshow", onPageShow);
+		document.addEventListener("visibilitychange", onVisibility);
+
+		return () => {
+			window.removeEventListener("pageshow", onPageShow);
+			document.removeEventListener("visibilitychange", onVisibility);
+			window.clearTimeout(timeoutId);
+			if (visibilityTimeout) window.clearTimeout(visibilityTimeout);
+		};
+	}, [isLoggingIn]);
+
 	// 检测登录错误
 	useEffect(() => {
 		const searchParams = new URLSearchParams(window.location.search);
@@ -82,9 +119,11 @@ export const MessageForm = () => {
 
 			// 配置正常，执行跳转
 			// 注意：登录成功后不立即重置 isLoggingIn，等待 useSession 检测到 session 更新
+			// errorCallbackURL：OAuth 失败（用户取消授权 / token 交换失败 / state 校验失败）时跳回 /guestbook?login=failed触发 toast 提示
 			await signIn.social({
 				provider: "github",
 				callbackURL: "/guestbook",
+				errorCallbackURL: "/guestbook?login=failed",
 			});
 		} catch {
 			toast.error("网络错误，请稍后重试");
