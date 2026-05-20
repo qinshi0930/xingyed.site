@@ -5,11 +5,12 @@ import { EditIcon, Loader2Icon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { ApiResponse, GuestbookMessage } from "@/common/types/guestbook";
+import type { GuestbookMessage } from "@/common/types/guestbook";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
 import { Button } from "@/common/components/shadcn/ui/button";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
+import { apiFetch } from "@/common/libs/api-fetch";
 import { useSession } from "@/common/libs/auth-client";
 
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -36,24 +37,16 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 		setIsUpdating(true);
 
 		try {
-			const response = await fetch(`/api/guestbook/${message.id}`, {
+			await apiFetch(`/api/guestbook/${message.id}`, {
 				method: "PUT",
-				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ message: editContent.trim() }),
+				defaultErrorMessage: "更新失败",
 			});
-
-			const result: ApiResponse = await response.json();
-
-			if (!result.success) {
-				toast.error(result.error || "更新失败");
-				return;
-			}
-
 			toast.success("更新成功！");
 			setIsEditing(false);
 			onUpdate();
 		} catch {
-			toast.error("网络错误，请稍后重试");
+			// apiFetch 已统一弹 toast，仅业务清理
 		} finally {
 			setIsUpdating(false);
 		}
@@ -70,22 +63,15 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 		setIsDeleting(true);
 
 		try {
-			const response = await fetch(`/api/guestbook/${message.id}`, {
+			await apiFetch(`/api/guestbook/${message.id}`, {
 				method: "DELETE",
+				defaultErrorMessage: "删除失败",
 			});
-
-			const result: ApiResponse = await response.json();
-
-			if (!result.success) {
-				toast.error(result.error || "删除失败");
-				return;
-			}
-
 			toast.success("删除成功！");
 			setIsDeleteDialogOpen(false);
 			onDelete();
 		} catch {
-			toast.error("网络错误，请稍后重试");
+			// apiFetch 已统一弹 toast，仅业务清理
 		} finally {
 			setIsDeleting(false);
 		}

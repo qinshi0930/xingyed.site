@@ -6,12 +6,11 @@ import { GithubIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import type { ApiResponse } from "@/common/types/guestbook";
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
 import { Button } from "@/common/components/shadcn/ui/button";
 import { Skeleton } from "@/common/components/shadcn/ui/skeleton";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
+import { apiFetch } from "@/common/libs/api-fetch";
 import { signIn, useSession } from "@/common/libs/auth-client";
 
 import { useInitialSession } from "../context/InitialSessionContext";
@@ -90,23 +89,15 @@ export const MessageForm = () => {
 
 		setIsSubmitting(true);
 		try {
-			const response = await fetch("/api/guestbook", {
+			await apiFetch("/api/guestbook", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ message: message.trim() }),
+				defaultErrorMessage: "提交失败",
 			});
-
-			const result: ApiResponse = await response.json();
-
-			if (!result.success) {
-				toast.error(result.error || "提交失败");
-				return;
-			}
-
 			toast.success("留言成功！");
 			setMessage("");
 		} catch {
-			toast.error("网络错误，请稍后重试");
+			// apiFetch 已统一弹 toast（401/403/网络/业务错误），此处仅业务清理
 		} finally {
 			setIsSubmitting(false);
 		}
