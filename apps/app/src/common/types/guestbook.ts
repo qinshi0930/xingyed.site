@@ -9,6 +9,11 @@ export interface GuestbookMessage {
 	updated_at: string;
 }
 
+/** 带乐观更新标记的留言类型 */
+export interface OptimisticGuestbookMessage extends GuestbookMessage {
+	_optimistic?: boolean;
+}
+
 export interface ApiResponse<T = unknown> {
 	success: boolean;
 	data?: T;

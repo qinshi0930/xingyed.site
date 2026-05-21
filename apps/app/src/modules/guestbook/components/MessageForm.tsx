@@ -6,6 +6,8 @@ import { GithubIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import type { GuestbookMessage, OptimisticGuestbookMessage } from "@/common/types/guestbook";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
 import { Button } from "@/common/components/shadcn/ui/button";
 import { Skeleton } from "@/common/components/shadcn/ui/skeleton";
@@ -15,7 +17,17 @@ import { signIn, useSession } from "@/common/libs/auth-client";
 
 import { useInitialSession } from "../context/InitialSessionContext";
 
-export const MessageForm = () => {
+interface MessageFormProps {
+	onOptimisticAdd: (msg: OptimisticGuestbookMessage) => void;
+	onOptimisticConfirm: (tempId: string, realMsg: GuestbookMessage) => void;
+	onOptimisticRevert: (tempId: string) => void;
+}
+
+export const MessageForm = ({
+	onOptimisticAdd,
+	onOptimisticConfirm,
+	onOptimisticRevert,
+}: MessageFormProps) => {
 	const { data: session, isPending } = useSession();
 	const initialSession = useInitialSession();
 
@@ -85,19 +97,35 @@ export const MessageForm = () => {
 	}, [session]);
 
 	const handleSubmit = async () => {
-		if (!message.trim()) return;
+		if (!message.trim() || !displaySession) return;
 
+		const tempId = crypto.randomUUID();
+		const tempMsg: OptimisticGuestbookMessage = {
+			id: tempId,
+			user_id: displaySession.user.id,
+			user_name: displaySession.user.name || "User",
+			user_image: displaySession.user.image || undefined,
+			github_username: displaySession.user.username || displaySession.user.name || "unknown",
+			content: message.trim(),
+			created_at: new Date().toISOString(),
+			updated_at: new Date().toISOString(),
+			_optimistic: true,
+		};
+
+		onOptimisticAdd(tempMsg);
+		setMessage("");
 		setIsSubmitting(true);
+
 		try {
-			await apiFetch("/api/guestbook", {
+			const realMsg = await apiFetch<GuestbookMessage>("/api/guestbook", {
 				method: "POST",
-				body: JSON.stringify({ message: message.trim() }),
+				body: JSON.stringify({ message: tempMsg.content }),
 				defaultErrorMessage: "提交失败",
 			});
+			onOptimisticConfirm(tempId, realMsg);
 			toast.success("留言成功！");
-			setMessage("");
 		} catch {
-			// apiFetch 已统一弹 toast（401/403/网络/业务错误），此处仅业务清理
+			onOptimisticRevert(tempId);
 		} finally {
 			setIsSubmitting(false);
 		}

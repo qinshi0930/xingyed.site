@@ -1,54 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useIntersectionObserver } from "usehooks-ts";
 
-import type { GuestbookMessage } from "@/common/types/guestbook";
-
-import { apiFetch } from "@/common/libs/api-fetch";
+import type { OptimisticGuestbookMessage } from "@/common/types/guestbook";
 
 import { MessageItem } from "./MessageItem";
+import { MessageItemSkeleton } from "./MessageItemSkeleton";
 
 interface MessageListProps {
-	onNewMessage: () => void;
+	messages: OptimisticGuestbookMessage[];
+	isLoadingInitial: boolean;
+	isLoadingMore: boolean;
+	hasMore: boolean;
+	loadMore: () => void;
+	onUpdate: () => void;
+	onDelete: (messageId: string) => void;
 }
 
-interface ListResponse {
-	items: GuestbookMessage[];
-	total: number;
-}
-
-export const MessageList = ({ onNewMessage }: MessageListProps) => {
-	const [messages, setMessages] = useState<GuestbookMessage[]>([]);
-	const [loading, setLoading] = useState(true);
+export const MessageList = ({
+	messages,
+	isLoadingInitial,
+	isLoadingMore,
+	hasMore,
+	loadMore,
+	onUpdate,
+	onDelete,
+}: MessageListProps) => {
+	const { ref: sentinelRef, isIntersecting } = useIntersectionObserver({
+		threshold: 0,
+		rootMargin: "100px",
+	});
 
 	useEffect(() => {
-		loadMessages();
-	}, []);
-
-	const loadMessages = async () => {
-		try {
-			// limit=100 覆盖当前活跃留言量；分页 UI 留作未来增强
-			const result = await apiFetch<ListResponse>("/api/guestbook?limit=100");
-			setMessages(result.items);
-		} catch {
-			// apiFetch 已统一弹 toast
-		} finally {
-			setLoading(false);
+		if (isIntersecting && hasMore && !isLoadingMore && !isLoadingInitial) {
+			loadMore();
 		}
-	};
+	}, [isIntersecting, hasMore, isLoadingMore, isLoadingInitial, loadMore]);
 
-	const handleMessageUpdate = () => {
-		loadMessages();
-		onNewMessage();
-	};
-
-	const handleMessageDelete = () => {
-		loadMessages();
-		onNewMessage();
-	};
-
-	if (loading) {
-		return <div className="text-center py-8">加载中...</div>;
+	if (isLoadingInitial) {
+		return (
+			<div className="space-y-4">
+				{Array.from({ length: 5 }).map((_, i) => (
+					<MessageItemSkeleton key={i} />
+				))}
+			</div>
+		);
 	}
 
 	if (messages.length === 0) {
@@ -65,10 +62,27 @@ export const MessageList = ({ onNewMessage }: MessageListProps) => {
 				<MessageItem
 					key={message.id}
 					message={message}
-					onUpdate={handleMessageUpdate}
-					onDelete={handleMessageDelete}
+					onUpdate={onUpdate}
+					onDelete={() => onDelete(message.id)}
 				/>
 			))}
+
+			{/* 加载更多骨架屏 */}
+			{isLoadingMore && (
+				<>
+					<MessageItemSkeleton />
+					<MessageItemSkeleton />
+				</>
+			)}
+
+			{/* Sentinel div for Intersection Observer */}
+			{hasMore && !isLoadingMore && (
+				<div
+					ref={sentinelRef as React.RefCallback<HTMLDivElement>}
+					className="h-1"
+					aria-hidden="true"
+				/>
+			)}
 		</div>
 	);
 };

@@ -1,22 +1,23 @@
 "use client";
 
-import dayjs from "dayjs";
 import { EditIcon, Loader2Icon, TrashIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import type { GuestbookMessage } from "@/common/types/guestbook";
+import type { OptimisticGuestbookMessage } from "@/common/types/guestbook";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/common/components/shadcn/ui/avatar";
 import { Button } from "@/common/components/shadcn/ui/button";
 import { Textarea } from "@/common/components/shadcn/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/common/components/shadcn/ui/tooltip";
 import { apiFetch } from "@/common/libs/api-fetch";
 import { useSession } from "@/common/libs/auth-client";
+import { formatDate, formatRelativeTime } from "@/common/libs/utils/time";
 
 import { ConfirmDialog } from "./ConfirmDialog";
 
 interface MessageItemProps {
-	message: GuestbookMessage;
+	message: OptimisticGuestbookMessage;
 	onUpdate: () => void;
 	onDelete: () => void;
 }
@@ -78,7 +79,9 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 	};
 
 	return (
-		<div className="flex gap-3 p-4 border rounded-lg bg-card">
+		<div
+			className={`flex gap-3 p-4 border rounded-lg bg-card${message._optimistic ? " opacity-60" : ""}`}
+		>
 			<Avatar className="h-10 w-10">
 				<AvatarImage src={message.user_image || ""} alt={message.user_name} />
 				<AvatarFallback>{message.user_name.charAt(0)}</AvatarFallback>
@@ -88,9 +91,16 @@ export const MessageItem = ({ message, onUpdate, onDelete }: MessageItemProps) =
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-2">
 						<span className="font-medium">@{message.github_username}</span>
-						<span className="text-xs text-muted-foreground">
-							{dayjs(message.created_at).format("YYYY-MM-DD HH:mm")}
-						</span>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<span className="text-xs text-muted-foreground cursor-default">
+									{formatRelativeTime(message.created_at)}
+								</span>
+							</TooltipTrigger>
+							<TooltipContent>
+								{formatDate(message.created_at, "YYYY-MM-DD HH:mm:ss")}
+							</TooltipContent>
+						</Tooltip>
 					</div>
 
 					{isOwner && !isEditing && (
