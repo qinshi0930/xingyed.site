@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { toast } from "sonner";
+
+import type { GuestbookMessage } from "@/common/types/guestbook";
 
 import { supabaseClient } from "@/common/libs/supabase-client";
 
 interface RealtimeListenerProps {
-	onNewMessage: () => void;
+	onRealtimeInsert: (message: GuestbookMessage) => void;
 }
 
-export const RealtimeListener = ({ onNewMessage }: RealtimeListenerProps) => {
+export const RealtimeListener = ({ onRealtimeInsert }: RealtimeListenerProps) => {
 	useEffect(() => {
 		const channel = supabaseClient
 			.channel("guestbook-changes")
@@ -21,9 +22,7 @@ export const RealtimeListener = ({ onNewMessage }: RealtimeListenerProps) => {
 					table: "guestbook_messages",
 				},
 				(payload) => {
-					console.log("New message received:", payload);
-					toast.info("收到新留言！");
-					onNewMessage();
+					onRealtimeInsert(payload.new as GuestbookMessage);
 				},
 			)
 			.subscribe();
@@ -31,7 +30,7 @@ export const RealtimeListener = ({ onNewMessage }: RealtimeListenerProps) => {
 		return () => {
 			supabaseClient.removeChannel(channel);
 		};
-	}, [onNewMessage]);
+	}, [onRealtimeInsert]);
 
 	return null;
 };
