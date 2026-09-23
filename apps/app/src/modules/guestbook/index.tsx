@@ -92,7 +92,6 @@ const Guestbook = ({ initialSession }: GuestbookProps) => {
 			toast.info("收到新留言！");
 			return [newMsg, ...prev];
 		});
-		setTotal((prev) => prev + 1);
 	}, []);
 
 	// --- 编辑/删除后刷新 ---
@@ -127,7 +126,10 @@ const Guestbook = ({ initialSession }: GuestbookProps) => {
 					onOptimisticRevert={handleOptimisticRevert}
 				/>
 
-				<RealtimeListener onRealtimeInsert={handleRealtimeInsert} />
+				<RealtimeListener
+					onRealtimeInsert={handleRealtimeInsert}
+					onTotalChange={setTotal}
+				/>
 
 				<MessageList
 					messages={messages}

@@ -34,7 +34,7 @@ export const auth = betterAuth({
 		schema: authSchema,
 	}),
 	session: {
-		// 开启 cookie 缓存，避免每次 getSession 打 DB，减少 Supabase 抖动导致的偶发未登录误判
+		// 开启 cookie 缓存，避免每次 getSession 打 DB，减少数据库抖动导致的偶发未登录误判
 		cookieCache: {
 			enabled: true,
 			maxAge: 5 * 60, // 5 分钟

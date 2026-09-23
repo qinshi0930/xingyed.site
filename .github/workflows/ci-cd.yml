@@ -108,11 +108,6 @@ jobs:
           # 数据库连接（构建时需要，用于 Next.js 静态分析 API 路由）
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
-          # Supabase 配置
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
           # Better Auth 配置
           BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
