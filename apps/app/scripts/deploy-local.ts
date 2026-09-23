@@ -64,8 +64,9 @@ async function main() {
 	console.log("\n📝 后续步骤:");
 	console.log("\n   1. 进入部署目录:");
 	console.log("      cd /var/www/xingyed.site");
-	console.log("\n   2. 启动基础设施（首次部署）:");
-	console.log("      podman-compose --env-file .env.production -f compose.infra.yml up -d");
+	console.log(
+		"\n   2. 基础设施: 使用共享的 infra 服务（postgres / redis / minio），无需在此启动",
+	);
 	console.log("\n   3. 构建应用镜像:");
 	console.log("      podman build -t xingye-site:stable .");
 	console.log("      podman tag xingye-site:stable xingye-site:canary");

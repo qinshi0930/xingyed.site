@@ -78,7 +78,8 @@ SMTP_PASS=your_password
 SMTP_FROM=your_email@163.com
 SMTP_TO=recipient@example.com
 
-# Redis 配置 (推荐使用 URL)
+# Redis 配置（使用共享的 infra 服务，本机为 localhost:6379）
+# 注意：容器内的 127.0.0.1 指向容器自身，生产环境需填写宿主机的内网地址
 REDIS_URL=redis://localhost:6379/0
 # 或者使用独立变量 (向后兼容)
 # REDIS_HOST=localhost
@@ -88,6 +89,20 @@ REDIS_URL=redis://localhost:6379/0
 
 # 其他 API Keys...
 ```
+
+## 基础设施
+
+本项目**不再自带 PostgreSQL / Redis 容器**，统一使用宿主机上共享的 `infra` 服务：
+
+| 服务               | 本地开发                   | 生产（容器内访问）                          |
+| ------------------ | -------------------------- | ------------------------------------------- |
+| Redis              | `redis://localhost:6379/0` | `redis://<宿主机内网IP>:6379/0`（需带密码） |
+| PostgreSQL / MinIO | 由 `infra` 提供            | 同左                                        |
+
+> 原先用于本地起 Redis/PostgreSQL 的 `podman-compose.infra.yml` 已废弃删除——
+> 它会与共享服务争抢 6379/5432 端口。本地开发直接连共享服务即可。
+>
+> 注意：容器内的 `127.0.0.1` 指向容器自身而非宿主机，因此生产环境必须使用宿主机的内网地址。
 
 ## 项目结构
 
@@ -136,4 +151,4 @@ packages/                    # 共享包
 
 ---
 
-*This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).*
+_This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app)._
