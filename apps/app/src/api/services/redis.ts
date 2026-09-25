@@ -2,6 +2,15 @@ import type { RedisOptions } from "ioredis";
 
 import Redis from "ioredis";
 
+/**
+ * 是否配置了 Redis。
+ *
+ * 未配置时（例如 Vercel 只读镜像）不应创建客户端：ioredis 会按 retryStrategy
+ * 持续重连并反复打印错误，既不产生价值又拖慢首次请求。
+ */
+export const isRedisConfigured = (): boolean =>
+	Boolean(process.env.REDIS_URL || process.env.REDIS_HOST);
+
 // Redis 连接配置（统一返回 URL 字符串）
 const getConnectionConfig = (): string => {
 	const redisUrl = process.env.REDIS_URL;
@@ -36,6 +45,7 @@ const getClientOptions = (): RedisOptions => ({
 declare global {
 	let __redisInstance: Redis | null;
 	let __redisListenersRegistered: boolean;
+	let __redisErrorLogged: boolean;
 }
 
 const getGlobalThis = () => {
@@ -44,6 +54,9 @@ const getGlobalThis = () => {
 	}
 	if (!(globalThis as any).__redisListenersRegistered) {
 		(globalThis as any).__redisListenersRegistered = false;
+	}
+	if (!(globalThis as any).__redisErrorLogged) {
+		(globalThis as any).__redisErrorLogged = false;
 	}
 	return globalThis as any;
 };
@@ -65,10 +78,18 @@ export const getRedis = (): Redis => {
 		g.__redisInstance = new Redis(connectionUrl, clientOptions);
 
 		g.__redisInstance.on("error", (err: Error) => {
-			console.error("Redis Client Error:", err);
+			// ioredis 断线后会持续重连，同一条错误会反复触发；只记录首次，
+			// 连接恢复时重置标记，避免日志被刷屏
+			if (!g.__redisErrorLogged) {
+				g.__redisErrorLogged = true;
+				console.error("Redis Client Error:", err);
+			}
 		});
 
-		g.__redisInstance.on("connect", () => {
+		// 用 ready 而不是 connect：密码错误或对端不可用时 ioredis 会反复触发 connect，
+		// 挂 connect 会导致日志被 "Redis Client Connected" 刷屏。
+		g.__redisInstance.on("ready", () => {
+			g.__redisErrorLogged = false;
 			console.log("Redis Client Connected");
 		});
 

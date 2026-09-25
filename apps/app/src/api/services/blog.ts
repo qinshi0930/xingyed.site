@@ -8,7 +8,7 @@ import remarkParse from "remark-parse";
 
 import type { BlogItemProps } from "@/common/types/blog";
 
-import { getRedis } from "@/api/services/redis";
+import { getRedis, isRedisConfigured } from "@/api/services/redis";
 
 // ==================== 类型定义 ====================
 
@@ -108,6 +108,11 @@ export const loadBlogFiles = (): BlogItemProps[] => {
  * @returns 博客数据数组
  */
 export const getCachedBlogs = async (): Promise<BlogItemProps[]> => {
+	// 未配置 Redis 时直接用文件系统：不创建客户端、不重连、不刷日志
+	if (!isRedisConfigured()) {
+		return loadBlogFiles();
+	}
+
 	try {
 		const redis = getRedis();
 
@@ -221,6 +226,11 @@ export const getBlogs = async ({
  * 这是正常行为，生产环境不会出现
  */
 export const warmBlogCache = async (): Promise<void> => {
+	if (!isRedisConfigured()) {
+		console.log("[Blog Service] Redis 未配置，跳过缓存预热（直接使用文件系统）");
+		return;
+	}
+
 	try {
 		const blogs = loadBlogFiles();
 		const redis = getRedis();
