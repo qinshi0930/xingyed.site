@@ -5,6 +5,7 @@ import { username } from "better-auth/plugins";
 
 import { db } from "@/api/db";
 import { authSchema } from "@/api/db/schema/auth-schema";
+import { IS_READONLY_SITE } from "@/common/constant/site";
 
 // 从 BETTER_AUTH_URL 推导 base URL 与主域，用于显式配置 trustedOrigins 与跨子域 Cookie
 // 避免仅依赖框架隐式读取环境变量导致运行时不一致
@@ -24,8 +25,11 @@ const rootDomain = (() => {
 export const auth = betterAuth({
 	// 显式 baseURL，避免运行时推断错误
 	baseURL,
-	// 显式 secret，与环境变量解耦，缺失时也能在启动阶段明确报错
-	secret: process.env.BETTER_AUTH_SECRET,
+	// 显式 secret，与环境变量解耦；
+	// 只读镜像不提供登录，缺省时给一个占位值，避免 better-auth 在生产模式初始化失败
+	secret:
+		process.env.BETTER_AUTH_SECRET ??
+		(IS_READONLY_SITE ? "readonly-mirror-auth-disabled" : undefined),
 	// 信任的 origin 白名单（用于 OAuth 回调与 CSRF 校验）
 	trustedOrigins: baseURL ? [baseURL] : undefined,
 	database: drizzleAdapter(db, {

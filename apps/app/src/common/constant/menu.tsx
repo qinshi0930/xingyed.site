@@ -14,6 +14,8 @@ import { SiJavascript } from "react-icons/si";
 
 import type { MenuItemProps } from "../types/menu";
 
+import { IS_READONLY_SITE } from "./site";
+
 const iconSize = 20;
 
 export const MENU_ITEMS: MenuItemProps[] = [
@@ -66,7 +68,8 @@ export const MENU_ITEMS: MenuItemProps[] = [
 		title: "Guestbook",
 		href: "/guestbook",
 		icon: <GuestbookIcon size={iconSize} />,
-		isShow: true,
+		// 只读镜像（Vercel）不提供留言板：依赖数据库与登录
+		isShow: !IS_READONLY_SITE,
 		isExternal: false,
 		eventName: "Pages: Guestbook",
 		type: "Pages",

@@ -1,4 +1,7 @@
 import { Hono } from "hono";
+import { createMiddleware } from "hono/factory";
+
+import { IS_READONLY_SITE } from "@/common/constant/site";
 
 import authRoute from "./routes/auth";
 import blogRoute from "./routes/blog";
@@ -36,6 +39,19 @@ app.get("/health", (c) => {
 		version: "1.0.0",
 	});
 });
+
+// 只读镜像（Vercel）拦截依赖数据库的交互路由：
+// 返回明确的 503，而不是让请求落到不可用的数据库上变成 500
+const readOnlyGuard = createMiddleware(async (c, next) => {
+	if (!IS_READONLY_SITE) return next();
+	return c.json({ success: false, error: "该功能仅在主站提供，当前部署为只读镜像" }, 503);
+});
+
+if (IS_READONLY_SITE) {
+	for (const path of ["/auth", "/auth/*", "/guestbook", "/guestbook/*"]) {
+		app.use(path, readOnlyGuard);
+	}
+}
 
 // 挂载子路由
 app.route("/auth", authRoute);

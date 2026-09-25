@@ -63,7 +63,22 @@ bash scripts/deploy/deploy.sh
 
 细节、回滚方式与产物打包注意事项见 [`scripts/deploy/README.md`](scripts/deploy/README.md)。
 
-外网另有 Vercel 部署，由 Vercel 平台按 `vercel.json` 自动构建，与本仓库的部署脚本互不影响。
+### Vercel（只读镜像）
+
+外网另有一套 Vercel 部署，定位为**只读镜像**：博客与页面正常提供，留言板与登录关闭。
+
+原因是留言板与登录依赖 PostgreSQL，而自托管生产库只监听阿里云的 `127.0.0.1:5432`，Vercel 访问不到，也不应为此把数据库暴露到公网。
+
+Vercel 项目需要配置：
+
+| 变量                        | 值             | 说明                                                                           |
+| --------------------------- | -------------- | ------------------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SITE_READONLY` | `1`            | 隐藏留言板入口、留言板页面返回 404、`/api/guestbook` 与 `/api/auth/*` 返回 503 |
+| `NEXT_PUBLIC_SITE_URL`      | 该 Vercel 域名 | 影响 metadata 的 base URL                                                      |
+
+不要配置 `DATABASE_URL` 与 `REDIS_URL`：前者已由只读模式拦截；后者不设时 Redis 客户端会快速失败并自动降级为读取文件系统（实测 `/api/blog` 仍返回 200）。
+
+自托管主站不要设置 `NEXT_PUBLIC_SITE_READONLY`，保持功能完整。
 
 ## 环境变量
 
