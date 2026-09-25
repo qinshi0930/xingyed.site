@@ -15,3 +15,11 @@ const TRUTHY_VALUES = new Set(["1", "true", "yes", "on"]);
 export const IS_READONLY_SITE = TRUTHY_VALUES.has(
 	(process.env.NEXT_PUBLIC_SITE_READONLY ?? "").trim().toLowerCase(),
 );
+
+/**
+ * ICP 备案号：仅国内自托管部署需要展示。
+ *
+ * 由构建期变量注入（见 scripts/deploy/release.sh）；
+ * Vercel 不设置该变量，页脚便不渲染备案信息。
+ */
+export const ICP_BEIAN = (process.env.NEXT_PUBLIC_ICP_BEIAN ?? "").trim();
