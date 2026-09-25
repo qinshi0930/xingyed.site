@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 
-import { getRedis } from "@/api/services/redis";
+import { getRedis, isRedisConfigured } from "@/api/services/redis";
 
 const app = new Hono();
 
@@ -11,6 +11,11 @@ app.get("/", async (c) => {
 
 	if (!slug) {
 		return c.json({ error: "slug parameter is required" }, 400);
+	}
+
+	if (!isRedisConfigured()) {
+		// 浏览量依赖 Redis，未配置时返回 0 而不是让请求失败
+		return c.json({ views: 0 });
 	}
 
 	try {
@@ -32,6 +37,11 @@ app.post("/", async (c) => {
 
 	if (!slug) {
 		return c.json({ error: "slug parameter is required" }, 400);
+	}
+
+	if (!isRedisConfigured()) {
+		// 未配置 Redis：自增无法持久化，直接返回 0，不报错
+		return c.json({ views: 0 });
 	}
 
 	try {

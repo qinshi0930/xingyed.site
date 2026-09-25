@@ -67,3 +67,6 @@ next-env.d.ts
 
 # downloads
 downloads/
+
+# deploy release output
+release-out/

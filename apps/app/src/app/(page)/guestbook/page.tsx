@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
 import { auth } from "@/api/auth";
 import Container from "@/common/components/elements/Container";
+import { IS_READONLY_SITE } from "@/common/constant/site";
 import Guestbook from "@/modules/guestbook";
 
 const PAGE_TITLE = "Guestbook";
@@ -14,6 +16,9 @@ export const metadata: Metadata = {
 };
 
 const GuestbookPage = async () => {
+	// 只读镜像（Vercel）不提供留言板，直接 404，避免暴露依赖数据库的页面
+	if (IS_READONLY_SITE) notFound();
+
 	// SSR 预取 session：消除 hydration 后首屏“未登录 → 已登录”闪烁
 	// .catch 兜底：DB 抖动 / cookie 缺失时降级为客户端拉取，不让整页 500
 	const initialSession = await auth.api
