@@ -63,6 +63,12 @@ bash scripts/deploy/deploy.sh
 
 细节、回滚方式与产物打包注意事项见 [`scripts/deploy/README.md`](scripts/deploy/README.md)。
 
+相关文档：
+
+- [`AGENTS.md`](AGENTS.md) —— 面向 AI 会话与协作者：部署入口、硬性约束、生产机结构
+- [`docs/guide/DEPLOY_GUIDE.md`](docs/guide/DEPLOY_GUIDE.md) —— 人类向完整指南：原理、步骤、回滚、排障
+- [`docs/guide/AUTO_DEPLOY_QUICKSTART.md`](docs/guide/AUTO_DEPLOY_QUICKSTART.md) —— 一页速查
+
 ### Vercel（只读镜像）
 
 外网另有一套 Vercel 部署，定位为**只读镜像**：博客与页面正常提供，留言板与登录关闭。

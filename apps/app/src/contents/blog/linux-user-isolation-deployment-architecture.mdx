@@ -1,0 +1,339 @@
+---
+id: 12
+title: "生产环境用户权限架构：admin / deploy / infra 各司其职"
+slug: "linux-user-isolation-deployment-architecture"
+date: "2026-09-25"
+excerpt: "把一台生产服务器拆成三个职责单一的账户：admin 管系统、deploy 管应用、infra 管基础设施。用 rootless Podman 与 systemd 用户单元，把权限边界变成结构约束而不是靠自觉。"
+featured_image: "/images/blog/linux-user-isolation-deployment-architecture.svg"
+categories: ["Linux", "DevOps"]
+tags: ["最小权限", "rootless Podman", "Quadlet", "systemd", "部署", "运维"]
+is_featured: false
+total_views_count: 0
+---
+
+个人服务器的起点往往是这样：一个 root，或者一个 `ubuntu` 账户，上面同时跑着数据库、对象存储、几个应用、反向代理，还有一堆部署脚本。部署靠 `sudo`，改配置靠 `vim`，出问题靠猜。
+
+一两个服务时这套结构看起来没问题，但它有三个结构性缺陷：
+
+1. **爆炸半径过大**：任何一次误操作都可能波及全部服务。应用被入侵，攻击者顺着同一个账户就能摸到数据库、配置和备份。
+2. **权限无法收敛**：应用容器既能读数据库密码，也能读 nginx 配置，还能改 crontab。想实施「应用只能碰自己的东西」时，你会发现没有可用的抓手。
+3. **审计无从谈起**：所有操作都来自同一个账户，`last`、`auth.log`、`ps` 里看不出谁改了什么。
+
+这篇记录我在自己服务器上做的一次重构：把职责拆成三个账户，并把边界交给操作系统层面的机制去保证。
+
+## 架构总览
+
+| 账户 | 职责 | 登录 | sudo | 典型操作 |
+| :-- | :-- | :-- | :-- | :-- |
+| `admin` | 系统管理与流量入口 | 允许 | 有 | 系统更新、nginx 配置与 reload、防火墙、创建账户 |
+| `deploy` | 应用部署与运行 | 允许（仅密钥） | 无 | 上传产物、切换镜像、重启自己的应用、查看日志 |
+| `infra` | 共享基础设施 | **禁止**（shell 为 nologin） | 无 | 由 systemd 拉起 PostgreSQL / Redis / MinIO |
+
+关键在于：**三者之间不是靠约定，而是靠机制隔离**。下面逐条说明这些机制，再给出落地步骤。
+
+## 隔离靠什么生效
+
+### 1. 文件系统权限
+
+每个账户的家目录是 `0700`，别人的进程读不到。配置与密钥按最小可见原则分发：应用的 `.env` 放在应用目录下、权限 `600`、属主是 `deploy`；基础设施的凭据放在 `/opt/infra/env/` 下、属主是 `infra`。应用账户根本读不到数据库管理员密码。
+
+### 2. rootless 容器：存储天然按用户隔离
+
+这是很多人会忽略的一点：**rootless Podman 的镜像、容器、卷存储是每个用户各自一套的**，位于各自的 `~/.local/share/containers/storage`：
+
+```bash
+podman info --format '{{.Store.GraphRoot}}'
+# /home/deploy/.local/share/containers/storage
+```
+
+效果是：
+
+- `deploy` 看不到、也动不了 `infra` 的容器与卷
+- 同一个镜像在两个账户下是**两份独立副本**，删掉一份不影响另一份
+- 清理旧账户时不会误伤在用服务
+
+### 3. systemd 用户单元 + linger：服务自启不依赖登录
+
+应用与基础设施都由**用户级 systemd** 管理（容器则用 Quadlet 生成单元）。配合 linger，开机后无需任何人登录就会拉起：
+
+```bash
+sudo loginctl enable-linger deploy infra
+loginctl show-user deploy | grep Linger     # Linger=yes
+```
+
+好处是：服务生命周期与 SSH 会话彻底解耦。以前那种「退出终端后服务跟着没了」的问题不会再出现。
+
+### 4. nologin：基础设施账户不接受登录
+
+`infra` 的 shell 设为 `/usr/sbin/nologin`。它仍然可以被 `sudo -u` 调用、被 systemd 拉起，但**没有任何交互式登录路径**。攻击面因此少一个维度：
+
+```bash
+sudo -u infra -H XDG_RUNTIME_DIR=/run/user/1004 bash     # 可以，供运维临时排查
+sudo -u infra -i bash                                    # 不允许，nologin 会拒绝
+```
+
+### 5. 端口与入口收敛
+
+对外只暴露 nginx 的 80/443。应用与基础设施**只监听回环地址**，由 nginx 统一分发：
+
+```bash
+ss -tln | grep -E ':(80|443|3000|5432|6379|9000)\b'
+# 0.0.0.0:80 / 0.0.0.0:443        <- nginx
+# 127.0.0.1:3000                  <- 应用
+# 127.0.0.1:5432 / 6379 / 9000    <- 基础设施
+```
+
+这样一来，即便数据库没有额外认证加固，它也不在公网上。
+
+## 详细实施步骤
+
+以下步骤适用于 Ubuntu 22.04/24.04 + rootless Podman 4.x，假设已有具备 sudo 的 `admin` 账户。
+
+### 步骤 1：规划并创建账户
+
+先规划 uid 与职责，避免与系统账户冲突：
+
+```bash
+sudo adduser --disabled-password --gecos "" deploy
+sudo adduser --disabled-password --gecos "" infra
+
+# 基础设施账户禁止交互登录
+sudo usermod -s /usr/sbin/nologin infra
+
+id deploy; id infra
+```
+
+`deploy` 保留可登录（部署需要），但只允许密钥登录（见步骤 6）。`infra` 不需要登录，因为它的服务由 systemd 拉起。
+
+### 步骤 2：为 rootless 容器做准备
+
+rootless Podman 需要为每个用户分配从属 uid/gid 区间，否则容器里的用户命名空间没法映射：
+
+```bash
+sudo usermod --add-subuids 65536-131071 --add-subgids 65536-131071 deploy
+sudo usermod --add-subuids 65536-131071 --add-subgids 65536-131071 infra
+
+grep -E '^(deploy|infra):' /etc/subuid /etc/subgid
+
+# 开机自启（无需登录即拉起用户级 systemd）
+sudo loginctl enable-linger deploy infra
+```
+
+顺手确认 rootless 可用（首次会初始化存储，略慢）：
+
+```bash
+sudo -u infra -H XDG_RUNTIME_DIR=/run/user/1004 podman info --format 'rootless={{.Host.Security.Rootless}}'
+# rootless=true
+```
+
+### 步骤 3：用 Quadlet 把基础设施交给 infra
+
+Quadlet 让你用声明式文件描述容器，systemd 在开机时自动生成并启动单元。文件放在相应用户的 `~/.config/containers/systemd/`：
+
+```ini
+# /home/infra/.config/containers/systemd/postgres.container（示例结构）
+[Unit]
+Description=PostgreSQL 16 (shared infra)
+
+[Container]
+Image=docker.io/library/postgres:16-alpine
+ContainerName=postgres
+EnvironmentFile=/opt/infra/env/postgres.env     # 只放该服务需要的凭据
+PublishPort=127.0.0.1:5432:5432                 # 只绑回环
+Volume=infra_pgdata:/var/lib/postgresql/data
+HealthCmd=pg_isready
+HealthInterval=10s
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+几个实践要点：
+
+- **每个服务一个 EnvironmentFile**，不要把全量凭据塞进一个大文件。数据库容器拿不到对象存储的密钥。
+- **凭据目录权限收紧**并归属 `infra`：`/opt/infra/env/` 设为 `700`，各文件 `600`。
+- 单元文件放好后执行 `systemctl --user daemon-reload`，再用 `systemctl --user start/status` 管理。
+
+### 步骤 4：应用以 deploy 的用户单元运行
+
+应用同样用 Quadlet 或手写用户单元，但归属 `deploy`，并且**与基础设施走宿主机回环通信**：
+
+```ini
+# /home/deploy/.config/containers/systemd/app.container（示例结构）
+[Unit]
+Description=Next.js app
+
+[Container]
+Image=localhost/app:current
+ContainerName=app
+Network=host                                    # 容器内 127.0.0.1 即宿主机
+EnvironmentFile=/opt/apps/app/.env.production    # 600 deploy:deploy
+Environment=NODE_ENV=production
+Environment=PORT=3000
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+`Network=host` 是这里的取舍：应用就能直接访问 `127.0.0.1:5432` 的数据库，不必为容器网络再做一层端口映射；代价是失去网络命名空间隔离，所以应用账户本身的权限边界就更重要——这也是前面几步的意义。
+
+### 步骤 5：nginx 由 admin 收敛入口
+
+只在 `admin` 下维护 nginx，把不同服务分发到不同域名或路径：
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name app.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+子应用可以用子域名 + 路径前缀分流，例如 `api.example.com/app-a/` 与 `api.example.com/app-b/` 指向不同后端端口；对象存储则可以单独用 `img.example.com` 反代到 MinIO，同时对路径做前缀约束。
+
+### 步骤 6：收紧登录方式
+
+```bash
+# 服务器端：只允许密钥登录
+sudo sshd -T | grep -Ei 'passwordauthentication|pubkeyauthentication|permitrootlogin'
+# passwordauthentication no / pubkeyauthentication yes / permitrootlogin no
+```
+
+部署账户使用专用密钥做本地到生产的连接，并且**只放行非交互命令**。同时注意：`usermod -L` 只锁密码，不影响密钥登录；真正要断掉某账户，需要同时处理 `authorized_keys`。
+
+### 步骤 7：数据层按应用隔离
+
+共享同一套 PostgreSQL 时，用「一个应用一个库 + 一个专属角色」：
+
+```sql
+CREATE ROLE app_a LOGIN PASSWORD '...';        -- 无 CREATEDB / 无 SUPERUSER
+CREATE DATABASE app_a OWNER app_a;
+REVOKE CONNECT ON DATABASE app_a FROM PUBLIC;  -- 别人连不进来
+GRANT CONNECT ON DATABASE app_a TO app_a;
+```
+
+对象存储同理：为每个应用建独立 bucket，并创建只对该 bucket 有读写权限的专用凭据，而不是把 root 凭据发给应用。这样即使应用的密钥泄露，影响范围也被限制在自己的数据里。
+
+### 步骤 8：部署流水线以 deploy 身份执行
+
+把构建与发布拆成两段，**发布过程只做加载与切换**，避免在生产机上编译：
+
+```bash
+# 开发机：构建镜像 → 导出 → 上传
+podman save --format docker-archive localhost/app:TAG | gzip > app-TAG.tar.gz
+scp app-TAG.tar.gz prod:/home/deploy/incoming/
+
+# 生产机（deploy）：加载 → 候选验证 → 切换 → 巡检 → 失败回滚
+gunzip -c incoming/app-TAG.tar.gz | podman load
+podman run -d --name app-canary --network=host -e PORT=3111 --env-file .env.production localhost/app:TAG
+curl -fsS http://127.0.0.1:3111/api/health      # 候选健康检查
+podman tag localhost/app:TAG localhost/app:current
+systemctl --user restart app.service
+```
+
+把每次发布写进一条记录（标签、提交、镜像 ID、上一版 ID），回滚就是把上一个镜像重新打上 `current` 再重启：
+
+```bash
+podman tag localhost/app:PREV_TAG localhost/app:current && systemctl --user restart app.service
+```
+
+这套流程的价值在于：**发布动作本身是可回滚的**，而且不依赖生产机上的构建工具链（国内服务器常常拉不动公网镜像仓库）。
+
+### 步骤 9：验证清单
+
+重构完成后，逐项确认边界真的生效：
+
+```bash
+# 账户与登录方式
+id deploy; id infra
+getent passwd infra | cut -d: -f7            # 应为 /usr/sbin/nologin
+
+# 自启
+loginctl show-user deploy | grep Linger
+
+# 各自的容器与存储互不可见
+podman info --format '{{.Store.GraphRoot}}'
+sudo -u infra -H XDG_RUNTIME_DIR=/run/user/$(id -u infra) podman info --format '{{.Store.GraphRoot}}'
+
+# 端口只暴露该暴露的
+ss -tln
+
+# 权限最小化
+sudo -u deploy test -r /opt/infra/env/postgres.env && echo '不该读到' || echo '读不到，符合预期'
+```
+
+## 落地时踩过的坑
+
+1. **`sudo -u user` 会继承当前工作目录**。如果你正处在 `0700` 的家目录里，目标用户无权进入，podman 会直接报 `cannot chdir to ...`。脚本里应显式 `cd /`。
+2. **Podman 的 `--env-file` 不解析引号**。写 `KEY="value"` 时引号会成为值的一部分，容器里拿到的是带引号的字符串；而应用的 dotenv 解析器又会剥掉引号。两边行为不一致，问题只在容器里出现，极难排查。统一不要加引号。
+3. **镜像存储按用户隔离**，所以「删掉某个旧账户的镜像」不会影响在用服务——但反过来，把镜像从 A 账户迁移到 B 账户时必须显式 `podman save` / `podman load`，不能指望共享。
+4. **`deluser --remove-all-files` 会留下空目录壳**，`/tmp`、`/var/tmp` 里的运行期残留也不会被清掉。
+5. **uid 复用风险**：删掉用户后，那些残留文件的属主变成裸数字 uid。将来新账户若复用了同一 uid，就会「继承」这些文件。所以退役后必须按 uid 复查：
+
+    ```bash
+    sudo find / -xdev -uid 1001 2>/dev/null
+    sudo find /tmp /var/tmp -uid 1001 2>/dev/null   # /tmp 可能是独立 tmpfs，-xdev 会跳过
+    ```
+
+6. **nologin 账户不能用 `sudo -u infra -i`**，会被 shell 拒绝；要用 `sudo -u infra -H XDG_RUNTIME_DIR=/run/user/UID bash`。
+7. **退役前先关 linger 并停掉用户管理器**，否则那个已经不存在的单元会持续产生 `not-found` 记录：
+
+    ```bash
+    sudo loginctl disable-linger olduser
+    sudo systemctl stop user@1001.service
+    ```
+
+## 账户退役流程
+
+账户退役比创建更需要谨慎，建议固定成流程：
+
+1. **只读清点**：先查清谁在依赖它。
+
+    ```bash
+    grep -rl olduser /etc/nginx /etc/systemd /etc/cron.d /etc/crontab /opt /srv 2>/dev/null
+    find / -xdev -user olduser -not -path '/home/olduser/*' 2>/dev/null
+    ps -u olduser -o pid,cmd --no-headers
+    crontab -l -u olduser
+    ```
+
+2. **凭据留档**：把 GPG 私钥、密码库、SSH key、token 之类的目录打包到安全位置，并确认归档可用。
+3. **结束会话与残留进程**：`loginctl terminate-user olduser`，必要时 `pkill -u olduser`。
+4. **删除账户**：`deluser --remove-all-files olduser`（连带同名组）。
+5. **按 uid 复查残留**并清理（见上面的坑 4、5）。
+6. **复核服务**：健康检查、端口、`nginx -t` 全部过一遍，确认没牵连在跑的服务。
+
+## 什么时候不必这么麻烦
+
+如果只是单机单服务、数据不急、随时可以重装，那么一个账户也能跑。但一旦满足下面任一条，这套结构就开始回本：
+
+- 有两个以上应用共享同一台机器
+- 涉及数据库、对象存储这类长期数据
+- 需要回滚能力（发布失败能切回上一版）
+- 机器上存在不该让应用看到的凭据
+
+而且迁移成本在项目初期最低——等到机器上塞满服务再改，就得停机搬数据了。
+
+## 小结
+
+三个账户带来的不只是「看起来整齐」，而是三条可以被验证的边界：
+
+- `admin` 独占系统与入口，应用出问题不会波及 nginx 与系统配置
+- `deploy` 只能碰自己的应用，读不到基础设施凭据
+- `infra` 不接受登录，只以服务形式存在，凭据分散在各自的 env 文件里
+
+更重要的是，这些边界由文件权限、rootless 容器存储、systemd 用户单元、nologin shell 这些**机制**强制执行。落地之后，想越界需要显式提权，而不是靠「记得不要动」。
+
+对我个人而言，最大的收益是两点：发布变成可回滚的机械动作；以及删除一个不再需要的账户时，能清楚地知道影响范围——这两点在单账户结构下都做不到。
