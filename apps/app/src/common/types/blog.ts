@@ -149,12 +149,3 @@ export interface BlogProps {
 export interface BlogFeaturedProps {
 	data: BlogItemProps[];
 }
-
-export interface CommentItemProps {
-	type_of: string;
-	id_code: string;
-	created_at: string;
-	body_html: string;
-	user: UserProps;
-	children: Comment[];
-}

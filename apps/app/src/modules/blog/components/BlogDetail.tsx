@@ -39,7 +39,6 @@ const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) =
 			<div className={clsx(!isMobile && "w-3/4")}>
 				<BlogHeader
 					title={title?.rendered}
-					comments_count={0}
 					reading_time_minutes={readingTimeMinutes}
 					published_at={date}
 					page_views_count={viewsCount}

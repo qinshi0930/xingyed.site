@@ -90,7 +90,6 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 			<BlogDetail {...blogData} />
 			{/* 客户端组件：页面加载后发送浏览量统计请求 */}
 			<TrackView slug={blogData.slug} />
-			<section id="comments" />
 		</Container>
 	);
 }

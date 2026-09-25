@@ -5,7 +5,6 @@ import { IS_READONLY_SITE } from "@/common/constant/site";
 
 import authRoute from "./routes/auth";
 import blogRoute from "./routes/blog";
-import commentsRoute from "./routes/comments";
 import contactRoute from "./routes/contact";
 import contentRoute from "./routes/content";
 import githubRoute from "./routes/github";
@@ -55,7 +54,6 @@ if (IS_READONLY_SITE) {
 // 挂载子路由
 app.route("/auth", authRoute);
 app.route("/blog", blogRoute);
-app.route("/comments", commentsRoute);
 app.route("/contact", contactRoute);
 app.route("/content", contentRoute);
 app.route("/github", githubRoute);

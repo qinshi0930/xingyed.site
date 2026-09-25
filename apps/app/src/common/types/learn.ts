@@ -37,7 +37,6 @@ export interface SubContentMetaProps {
 	created_at: string;
 	updated_at: string;
 	is_playground: boolean;
-	is_comment: boolean;
 	initial_code?: string;
 }
 
