@@ -8,7 +8,7 @@
 - **Hono 框架**: 使用 Hono 通过 `hono/vercel` 适配器提供 API 服务
 - **零 CORS**: 同域 API 调用,无需跨域配置
 - **Toast 通知**: 集成 Sonner 提供全局消息反馈
-- **Docker 部署**: 单容器单端口简化部署
+- **容器部署**: 单容器单端口，镜像由开发机构建后推送到自托管环境
 
 ## 技术栈
 
@@ -17,7 +17,7 @@
 - **样式**: Tailwind CSS + shadcn/ui
 - **包管理器**: Bun 1.3.11+
 - **构建**: Node.js + Turbopack (构建速度提升 57%)
-- **部署**: Docker + Podman
+- **部署**: Podman（自托管）+ Vercel（外网入口）
 
 ## 环境要求
 
@@ -52,24 +52,34 @@ bun run app:build
 bun run app:start
 ```
 
-### Docker 部署
+### 部署
+
+自托管生产环境（阿里云 + nginx）由本机执行脚本推送镜像，**不使用 GitHub Actions 部署**——云服务器在国内，工作流部署会从境外 IP 出网并频繁触发阿里云告警。
 
 ```bash
-# 构建镜像
-podman build -t xingyed-site .
-
-# 运行容器
-podman run -d -p 3000:3000 --env-file .env.production xingyed-site
-
-# 或使用 docker-compose
-podman-compose up -d
+# 完整发布：构建 → 本地冒烟 → 上传 → 候选验证 → 切换 → 巡检
+bash scripts/deploy/deploy.sh
 ```
+
+细节、回滚方式与产物打包注意事项见 [`scripts/deploy/README.md`](scripts/deploy/README.md)。
+
+外网另有 Vercel 部署，由 Vercel 平台按 `vercel.json` 自动构建，与本仓库的部署脚本互不影响。
 
 ## 环境变量
 
-复制 `.env.production.example` 为 `.env.production` 并配置:
+复制 `.env.example` 为 `.env.production` 并配置：
 
 ```bash
+# PostgreSQL（自托管环境使用共享 infra 服务，应用独占库）
+DATABASE_URL=postgresql://app_user:password@127.0.0.1:5432/app_db
+
+# Redis（博客缓存）
+REDIS_URL=redis://:password@127.0.0.1:6379/0
+
+# Better Auth
+BETTER_AUTH_URL=https://xingyed.xyz
+BETTER_AUTH_SECRET=
+
 # SMTP 配置(联系表单)
 SMTP_HOST=smtp.163.com
 SMTP_PORT=465
@@ -78,15 +88,6 @@ SMTP_PASS=your_password
 SMTP_FROM=your_email@163.com
 SMTP_TO=recipient@example.com
 
-# Redis 配置（使用共享的 infra 服务，本机为 localhost:6379）
-# 注意：容器内的 127.0.0.1 指向容器自身，生产环境需填写宿主机的内网地址
-REDIS_URL=redis://localhost:6379/0
-# 或者使用独立变量 (向后兼容)
-# REDIS_HOST=localhost
-# REDIS_PORT=6379
-# REDIS_PASSWORD=
-# REDIS_DB=0
-
 # 其他 API Keys...
 ```
 
@@ -94,15 +95,15 @@ REDIS_URL=redis://localhost:6379/0
 
 本项目**不再自带 PostgreSQL / Redis 容器**，统一使用宿主机上共享的 `infra` 服务：
 
-| 服务               | 本地开发                   | 生产（容器内访问）                          |
-| ------------------ | -------------------------- | ------------------------------------------- |
-| Redis              | `redis://localhost:6379/0` | `redis://<宿主机内网IP>:6379/0`（需带密码） |
-| PostgreSQL / MinIO | 由 `infra` 提供            | 同左                                        |
+| 服务       | 本地开发                   | 生产                                         |
+| ---------- | -------------------------- | -------------------------------------------- |
+| PostgreSQL | 由 `infra` 提供            | 共享 `infra` 实例，应用独占库与角色          |
+| Redis      | `redis://localhost:6379/0` | 共享 `infra` 实例，按 DB 序号或 key 前缀隔离 |
+| MinIO      | 由 `infra` 提供            | 共享 `infra` 实例，按 bucket 隔离            |
 
-> 原先用于本地起 Redis/PostgreSQL 的 `podman-compose.infra.yml` 已废弃删除——
-> 它会与共享服务争抢 6379/5432 端口。本地开发直接连共享服务即可。
+> 容器以 `Network=host` 运行，容器内的 `127.0.0.1` 就是宿主机，因此连接串可以直接写 `127.0.0.1:5432` / `127.0.0.1:6379`。
 >
-> 注意：容器内的 `127.0.0.1` 指向容器自身而非宿主机，因此生产环境必须使用宿主机的内网地址。
+> 仓库中曾有的 `podman-compose.yml` 与 `podman-compose.infra.yml` 已删除——它们会自带 Redis 并与共享服务争抢 6379/5432 端口，且与「构建镜像后整体推送」的部署方式重复。
 
 ## 项目结构
 
@@ -113,25 +114,27 @@ apps/app/                    # 主应用 @repo/app
 │   │   ├── api/[[...route]]/# Hono API 统一入口
 │   │   ├── (page)/          # 页面路由
 │   │   └── layout.tsx       # 根布局(含 Toaster)
-│   ├── modules/             # 业务模块
-│   │   ├── blog/            # 博客模块
-│   │   │   ├── api.ts       # Blog API (Hono)
-│   │   │   └── service.ts   # 业务逻辑
-│   │   └── contact/         # 联系表单模块
-│   │       ├── api.ts       # Contact API (Hono)
-│   │       └── components/  # 表单组件
-│   └── services/            # 前端服务层
+│   ├── api/                 # 服务端 API 实现
+│   │   ├── routes/          # Hono 子路由
+│   │   ├── db/              # Drizzle schema 与迁移
+│   │   └── services/        # 业务逻辑（博客、GitHub、WakaTime 等）
+│   └── modules/             # 前端业务模块
 ├── package.json
-└── Dockerfile
+└── scripts/                 # 应用内脚本
 
 packages/                    # 共享包
 ├── types/                   # @repo/types
 └── utils/                   # @repo/utils
+
+scripts/deploy/              # 部署流水线（见 scripts/deploy/README.md）
+Dockerfile                   # 镜像构建（基于已构建的 standalone 产物）
 ```
 
 ## API 端点
 
 - `GET /api/blog` - 获取博客列表(支持分页、搜索、分类)
+- `GET /api/guestbook` - 留言列表
+- `POST /api/guestbook` - 发表留言（需登录）
 - `POST /api/contact` - 提交联系表单
 
 ## 破坏性变更
