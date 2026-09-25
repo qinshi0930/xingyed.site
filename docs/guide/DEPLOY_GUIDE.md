@@ -1,245 +1,195 @@
-# GitHub Actions 自动部署配置指南
+# 部署指南
 
-## 📋 概述
+本文描述本仓库当前的部署方式。**旧文档里基于 GitHub Actions + SSH Secrets 的自动部署方案已废弃**——
+云服务器在国内，工作流部署会从境外 IP 出网并频繁触发云告警。
 
-本指南介绍如何配置 GitHub Actions 实现推送到 main 分支时自动部署到服务器。
+面向 AI 会话的简明版见仓库根目录 [`AGENTS.md`](../../AGENTS.md)。
 
-## 🔧 配置步骤
+## 一、两套部署目标
 
-### 1. 服务器准备
+| 目标                     | 地址                         | 说明                                         |
+| :----------------------- | :--------------------------- | :------------------------------------------- |
+| 自托管（阿里云 + nginx） | `https://xingyed.xyz`        | 功能完整；页脚显示 ICP 备案号                |
+| Vercel                   | `https://vercel.xingyed.xyz` | 只读镜像；留言板与登录关闭，页脚不显示备案号 |
 
-#### 1.1 生成 SSH 密钥对
+两套环境共用同一份代码，差异通过构建期变量控制（见第五节）。
+
+## 二、部署原理
+
+自托管部署只有一条路径：**在开发机构建镜像，推送到生产机加载切换**。
+
+```
+开发机                                  生产机（deploy 账户）
+──────────────────────────────────      ──────────────────────────────
+scripts/deploy/release.sh
+  ├─ bun install / app:build
+  ├─ 校验 standalone 产物与符号链接
+  ├─ 组装构建上下文 → podman build
+  ├─ 本地冒烟（/api/health）
+  └─ podman save → release-out/*.tar.gz
+                    │
+scripts/deploy/deploy.sh  │ scp
+  └───────────────────────┴──────────→  scripts/deploy/promote.sh
+                                          ├─ podman load
+                                          ├─ 候选容器验证（3111 端口，不动线上）
+                                          ├─ 切换 :current 并重启服务
+                                          ├─ 线上巡检，失败自动回滚
+                                          └─ 写 RELEASES.log、清理旧版本
+```
+
+这样做的三个理由：
+
+1. 生产机访问不了 Docker Hub（国内网络），在本地构建可避免生产机拉基础镜像
+2. 上传的是**已经跑通过冒烟测试的镜像**，而不是未经检验的中间产物
+3. 发布动作只剩「加载 + 切换 + 巡检」，可回滚、可重复
+
+## 三、前置条件
+
+### 开发机
+
+- Bun 1.3+、Podman 4.0+
+- 能通过 SSH 别名 `xingyed-prod` 连到生产机（密钥登录，定义在 `~/.ssh/config`）
+- 仓库位于 `~/workspace/xingyed.site`（脚本按仓库根目录定位，其他路径也可）
+
+### 生产机
+
+- 系统账户结构：`deploy`（应用）、`infra`（基础设施）、`admin`（系统与 nginx）
+- `deploy` 已启用 linger，并用 systemd 用户单元运行应用
+- `/opt/apps/xingyed-site/.env.production` 存在且权限为 `600 deploy:deploy`
+
+## 四、日常发布
 
 ```bash
-# 在服务器上执行
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_actions -N ""
+# 完整发布（构建 + 上传 + 切换 + 巡检）
+bash scripts/deploy/deploy.sh
 
-# 查看公钥（需要添加到 GitHub）
-cat ~/.ssh/github_actions.pub
+# 复用上次构建产物，只做上传与切换
+bash scripts/deploy/deploy.sh --skip-build
 
-# 查看私钥（需要添加到 GitHub Secrets）
-cat ~/.ssh/github_actions
+# 单独执行某一阶段（promote 在生产机执行）
+bash scripts/deploy/release.sh
+bash scripts/deploy/promote.sh <镜像包路径> <tag>
 ```
 
-#### 1.2 配置 SSH 授权密钥
+发布完成后可复核：
 
 ```bash
-# 将公钥添加到 authorized_keys
-cat ~/.ssh/github_actions.pub >> ~/.ssh/authorized_keys
-
-# 设置正确的权限
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/github_actions
+curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/health
+curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/guestbook
+ssh xingyed-prod 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 ```
 
-### 2. GitHub 配置
+## 五、环境变量与形态开关
 
-#### 2.1 添加 Secrets
+生产配置**不进版本库**，只存在于：
 
-进入仓库：`Settings → Secrets and variables → Actions → New repository secret`
+- 生产机 `/opt/apps/xingyed-site/.env.production`（600 deploy:deploy）
+- Vercel 项目设置（Production 环境）
 
-添加以下 Secrets：
+仓库里的 `.env.example` 是字段清单。关键键名：
 
-| Secret 名称 | 值 | 说明 |
-|------------|-----|------|
-| `SSH_HOST` | `your.server.ip` | 服务器 IP 地址或域名 |
-| `SSH_USER` | `your_username` | SSH 登录用户名 |
-| `SSH_PRIVATE_KEY` | `-----BEGIN...` | 服务器生成的私钥内容 |
+| 分组     | 键                                                                                                          |
+| :------- | :---------------------------------------------------------------------------------------------------------- |
+| 数据库   | `DATABASE_URL`                                                                                              |
+| 缓存     | `REDIS_URL`                                                                                                 |
+| 认证     | `BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`                                                                     |
+| GitHub   | `APP_ID`、`APP_PEM_KEY_BASE64`、`APP_INSTALLATION_ID`、`AUTH_GITHUB_CLIENT_ID`、`AUTH_GITHUB_CLIENT_SECRET` |
+| 邮件     | `SMTP_*`                                                                                                    |
+| 形态开关 | `NEXT_PUBLIC_SITE_READONLY`、`NEXT_PUBLIC_ICP_BEIAN`、`NEXT_PUBLIC_SITE_URL`                                |
 
-#### 2.2 添加方式
+形态开关的语义：
+
+| 变量                        | 自托管     | Vercel | 效果                                                                              |
+| :-------------------------- | :--------- | :----- | :-------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_READONLY` | 不设       | `1`    | 关闭留言板与登录；`/api/guestbook`、`/api/auth/*` 返回 503，`/guestbook` 返回 404 |
+| `NEXT_PUBLIC_ICP_BEIAN`     | 构建时注入 | 不设   | 页脚渲染 ICP 备案号                                                               |
+
+注意：`NEXT_PUBLIC_*` 在**构建期内联**，因此：
+
+- 自托管侧由 `release.sh` 在 `bun run app:build` 时注入
+- Vercel 侧改完环境变量**必须重新部署**，仅保存设置不生效
+
+## 六、回滚
+
+`promote.sh` 在切换前会记录当前线上镜像 ID，任何巡检失败都会自动打回。手工回滚：
 
 ```bash
-# 方式 1：通过 GitHub Web 界面
-Settings → Secrets and variables → Actions → New repository secret
-
-# 方式 2：通过 GitHub CLI
-gh secret set SSH_HOST -b"your.server.ip"
-gh secret set SSH_USER -b"your_username"
-gh secret set SSH_PRIVATE_KEY < ~/.ssh/github_actions
+ssh xingyed-prod
+podman images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep xingyed-site
+podman tag localhost/xingyed-site:<旧标签> localhost/xingyed-site:current
+systemctl --user restart xingyed-site.service
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3000/api/health
 ```
 
-### 3. 配置部署脚本
+版本保留策略：生产机保留最近数个时间戳标签，`:current` 指向线上版本；
+早期两个历史标签（Supabase 时代的构建）刻意保留，用于极深回滚。
 
-#### 3.1 修改项目路径
-
-编辑 `.github/workflows/deploy.yml` 或 `deploy-advanced.yml`：
-
-```yaml
-env:
-  PROJECT_PATH: /home/youruser/xingyed.site  # 修改为实际路径
-```
-
-#### 3.2 选择 Workflow 文件
-
-- **deploy.yml** - 简单版本，适合快速部署
-- **deploy-advanced.yml** - 高级版本，包含健康检查和详细日志
-
-重命名你想要的文件为 `deploy.yml`：
+## 七、日常运维命令
 
 ```bash
-# 使用简单版本
-mv .github/workflows/deploy.yml .github/workflows/deploy.yml
+# 服务状态与日志
+systemctl --user status xingyed-site.service
+journalctl --user -u xingyed-site.service -n 100 --no-pager
 
-# 或使用高级版本
-mv .github/workflows/deploy-advanced.yml .github/workflows/deploy.yml
+# 容器与端口
+podman ps --format '{{.Names}} | {{.Status}} | {{.Ports}}'
+ss -tln | grep -E ':(80|443|3000|5432|6379|9000)\b'
+
+# 基础设施（infra 账户）
+sudo -u infra -H XDG_RUNTIME_DIR=/run/user/$(id -u infra) systemctl --user status postgres redis minio
+
+# nginx
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### 4. 测试部署
+## 八、首次在新机器上部署
 
-#### 4.1 手动触发
+1. 按 `AGENTS.md` 的「生产机结构」创建 `deploy` / `infra` 账户，启用 linger
+2. 部署 infra 三件套（PostgreSQL / Redis / MinIO），只监听 `127.0.0.1`
+3. 在共享 PostgreSQL 中为应用建库建角色，并把迁移跑完
+4. 写入 `/opt/apps/xingyed-site/.env.production`（600 deploy:deploy）
+5. 安装 Quadlet/用户单元并启动，确认 `http://127.0.0.1:3000/api/health` 返回 200
+6. 由 `admin` 配置 nginx vhost，把域名指向 `127.0.0.1:3000`
+7. 在开发机配置 SSH 别名 `xingyed-prod`，然后执行 `bash scripts/deploy/deploy.sh` 完成首次发布
 
-```bash
-# 推送代码触发部署
-git add .
-git commit -m "test: trigger auto deploy"
-git push origin main
+## 九、常见问题
+
+### 接口正常但页面 502 或 404
+
+多半是容器只监听了私网地址。standalone 会用容器内的 `HOSTNAME` 作为监听地址，
+若单元里没有显式设置，可能解析成主机名并绑到私网 IP：
+
+```ini
+Environment=HOSTNAME=0.0.0.0
 ```
 
-#### 4.2 查看部署状态
+### 容器启动即退出，日志报 `Cannot find module 'next'`
 
-1. 进入 GitHub 仓库
-2. 点击 `Actions` 标签
-3. 查看 `Deploy to Server` workflow 运行状态
-4. 点击运行查看详情和日志
+standalone 的 `node_modules` 全是相对符号链接。若打包产物时改写了链接目标（例如 GNU tar 的
+`--transform` 默认会连符号链接目标一起改），链接会失效。`release.sh` 在构建镜像前会显式解析该链接做前置校验。
 
-### 5. 高级配置
+### 页面里的环境变量没生效
 
-#### 5.1 添加健康检查端点
+`NEXT_PUBLIC_*` 在构建期内联：改了值必须重新构建，仅重启容器无效。
+自托管侧改注入值或环境变量后重新发布；Vercel 侧重新部署。
 
-在应用中添加健康检查 API（如果还没有）：
+### 修改 `.env` 后值里带了引号
 
-```typescript
-// apps/app/src/app/api/health/route.ts
-import { NextResponse } from 'next/server';
+`podman --env-file` 不解析引号，`KEY="value"` 会把引号写进环境变量；
+而 Next 的 dotenv 解析器会剥掉引号。两边行为不一致，统一不要加引号。
 
-export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-}
-```
+### 以其他用户执行 podman 报 `cannot chdir`
 
-#### 5.2 配置部署通知
+`sudo -u <user>` 会继承当前工作目录。若当前目录是 `0700` 且目标用户无权进入，podman 会直接失败。
+脚本里应显式 `cd /`。
 
-在 workflow 中添加通知（可选）：
+### Vercel 部署失败
 
-```yaml
-# 钉钉通知
-- name: 📢 钉钉通知
-  if: always()
-  run: |
-    curl -X POST 'https://oapi.dingtalk.com/robot/send?access_token=YOUR_TOKEN' \
-      -H 'Content-Type: application/json' \
-      -d '{
-        "msgtype": "text",
-        "text": {
-          "content": "部署${{ job.status == 'success' && '成功' || '失败' }}！"
-        }
-      }'
+先看 Vercel 后台的构建日志，并确认三项：Root Directory 为 `apps/app`、Build Command 为
+`bun run build`、Node 版本与项目匹配。注意 Vercel 用 **commit status** 上报部署，
+GitHub 的 Deployments API 里可能查不到。
 
-# 飞书通知
-- name: 📢 飞书通知
-  if: always()
-  run: |
-    curl -X POST 'https://open.feishu.cn/open-apis/bot/v2/hook/YOUR_TOKEN' \
-      -H 'Content-Type: application/json' \
-      -d '{
-        "msg_type": "text",
-        "content": {
-          "text": "部署${{ job.status == 'success' && '成功' || '失败' }}！"
-        }
-      }'
-```
+### 只读镜像上留言板应该报错吗
 
-#### 5.3 配置构建测试后再部署
-
-修改 `deploy.yml`：
-
-```yaml
-jobs:
-  deploy:
-    needs: [build-test]  # 等待 build-test 成功后再部署
-```
-
-### 6. 故障排查
-
-#### 6.1 SSH 连接失败
-
-```bash
-# 在本地测试 SSH 连接
-ssh -i ~/.ssh/github_actions your_user@your_server
-
-# 检查服务器 SSH 配置
-cat /etc/ssh/sshd_config | grep -E "PubkeyAuthentication|AuthorizedKeysFile"
-```
-
-#### 6.2 部署脚本报错
-
-```bash
-# 在服务器上手动执行部署脚本
-cd /path/to/project
-git pull origin main
-podman-compose down
-podman-compose up -d --build
-
-# 查看日志
-podman-compose logs -f
-```
-
-#### 6.3 权限问题
-
-```bash
-# 确保 SSH 密钥权限正确
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/github_actions
-chmod 600 ~/.ssh/authorized_keys
-
-# 确保用户有 podman 权限
-usermod -aG podman your_user
-```
-
-## 📊 部署流程
-
-```
-开发者 push 代码到 main
-    ↓
-GitHub Actions 自动触发
-    ↓
-通过 SSH 连接到服务器
-    ↓
-执行部署脚本：
-  1. git pull（拉取最新代码）
-  2. podman-compose down（停止旧容器）
-  3. podman-compose up -d --build（构建并启动新容器）
-  4. 健康检查（验证服务正常）
-    ↓
-部署完成，发送通知
-```
-
-## 🎯 最佳实践
-
-1. **使用非 root 用户** - 创建专门的部署用户
-2. **启用 SSH 密钥认证** - 禁用密码登录
-3. **定期清理旧镜像** - 避免磁盘空间不足
-4. **添加健康检查** - 确保部署成功
-5. **配置通知** - 及时了解部署状态
-6. **备份数据** - 部署前备份重要数据
-7. **灰度发布** - 重要更新先在测试环境验证
-
-## 🔒 安全建议
-
-1. 使用最小权限的 SSH 密钥
-2. 定期轮换 SSH 密钥
-3. 不要在代码中硬编码密钥
-4. 使用 GitHub Secrets 管理敏感信息
-5. 限制 Actions 的权限范围
-6. 启用 GitHub 的分支保护
-
-## 📚 相关资源
-
-- [GitHub Actions 文档](https://docs.github.com/en/actions)
-- [appleboy/ssh-action](https://github.com/appleboy/ssh-action)
-- [Podman 文档](https://docs.podman.io/)
+应该。Vercel 侧 `/api/guestbook` 与 `/api/auth/*` 返回 503、`/guestbook` 返回 404 是设计行为；
+自托管侧同样接口应返回 200。

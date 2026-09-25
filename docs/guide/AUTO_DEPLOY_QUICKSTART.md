@@ -1,114 +1,51 @@
-# 🚀 自动部署快速配置
+# 部署速查
 
-## 3 步完成自动部署配置
+完整说明见 [`DEPLOY_GUIDE.md`](DEPLOY_GUIDE.md)；面向 AI 会话的版本见 [`AGENTS.md`](../../AGENTS.md)。
 
-### 步骤 1: 生成 SSH 密钥（服务器）
-
-```bash
-# 在服务器上执行
-ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/github_actions -N ""
-
-# 查看公钥
-cat ~/.ssh/github_actions.pub
-
-# 添加到授权列表
-cat ~/.ssh/github_actions.pub >> ~/.ssh/authorized_keys
-chmod 600 ~/.ssh/authorized_keys
-```
-
-### 步骤 2: 配置 GitHub Secrets
-
-进入：`GitHub 仓库 → Settings → Secrets and variables → Actions`
-
-添加 3 个 Secrets：
-
-| Secret | 值 | 示例 |
-|--------|-----|------|
-| `SSH_HOST` | 服务器IP | `123.45.67.89` |
-| `SSH_USER` | 用户名 | `root` 或 `ubuntu` |
-| `SSH_PRIVATE_KEY` | 私钥内容 | `cat ~/.ssh/github_actions` |
-
-**获取私钥：**
-```bash
-# 在服务器上执行，复制完整输出
-cat ~/.ssh/github_actions
-```
-
-### 步骤 3: 修改部署路径
-
-编辑 `.github/workflows/deploy.yml`：
-
-```yaml
-env:
-  PROJECT_PATH: /home/youruser/xingyed.site  # 改成你的实际路径
-```
-
-## ✅ 测试部署
+## 一条命令发布
 
 ```bash
-# 推送代码触发自动部署
-git add .
-git commit -m "test: auto deploy"
-git push origin main
+# 在开发机的仓库根目录执行
+bash scripts/deploy/deploy.sh
 ```
 
-## 📊 查看部署状态
+脚本自动完成：构建 → 本地冒烟 → 上传 → 候选容器验证 → 切换 `:current` → 重启服务 →
+线上巡检 → 失败自动回滚 → 写发布记录。
 
-1. 打开 GitHub 仓库
-2. 点击 `Actions` 标签
-3. 查看 `Deploy to Server` 运行状态
-4. 点击看详细日志
+## 发布后检查
 
-## 🎯 部署流程
-
-```
-git push → GitHub Actions → SSH 到服务器 → 自动部署
-                                    ↓
-                            1. git pull
-                            2. podman-compose down
-                            3. podman-compose up -d --build
-                            4. 健康检查
-                                    ↓
-                              ✅ 部署完成！
-```
-
-## 🔧 可选：启用健康检查
-
-在应用添加健康检查 API：
-
-```typescript
-// apps/app/src/app/api/health/route.ts
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  return NextResponse.json({ status: 'ok' });
-}
-```
-
-## ⚠️ 常见问题
-
-**Q: SSH 连接失败？**
 ```bash
-# 测试 SSH 连接
-ssh -i ~/.ssh/github_actions your_user@your_server
+curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/health         # 期望 200
+curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/guestbook      # 期望 200
+curl -s -o /dev/null -w '%{http_code}\n' https://vercel.xingyed.xyz/api/health  # 期望 200
+ssh xingyed-prod 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 ```
 
-**Q: 部署脚本报错？**
+## 出问题怎么办
+
 ```bash
-# 在服务器手动执行
-cd /path/to/project
-podman-compose up -d --build
-podman-compose logs -f
+# 1) 看线上日志
+ssh xingyed-prod 'journalctl --user -u xingyed-site.service -n 80 --no-pager'
+
+# 2) 回滚到上一版
+ssh xingyed-prod
+podman images --format '{{.Repository}}:{{.Tag}}' | grep xingyed-site
+podman tag localhost/xingyed-site:<上一版标签> localhost/xingyed-site:current
+systemctl --user restart xingyed-site.service
 ```
 
-**Q: 权限问题？**
-```bash
-# 确保 SSH 权限正确
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/github_actions
-chmod 600 ~/.ssh/authorized_keys
-```
+## 四条铁律
 
-## 📖 详细文档
+1. 不用 GitHub Actions 部署（境外 IP 会触发云告警），CI 只跑 lint 与类型检查
+2. 不直推 main（pre-push 钩子会拦），走分支 + PR + squash
+3. 密钥不入库，只在生产机的 `.env.production` 与 Vercel 设置里
+4. `NEXT_PUBLIC_*` 改完必须重新构建，重启不生效
 
-查看 [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md) 获取完整配置指南。
+## 两种部署形态
+
+|             | 自托管 `xingyed.xyz`       | Vercel `vercel.xingyed.xyz` |
+| :---------- | :------------------------- | :-------------------------- |
+| 定位        | 功能完整                   | 只读镜像                    |
+| 留言板/登录 | 可用                       | 关闭（503 / 404）           |
+| ICP 备案号  | 页脚显示                   | 不显示                      |
+| 部署方式    | `scripts/deploy/deploy.sh` | 推送 main 后自动构建        |
