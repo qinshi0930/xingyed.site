@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useTheme } from "next-themes";
 import { usePathname } from "next/navigation";
 
+import { ICP_BEIAN } from "@/common/constant/site";
 import useHasMounted from "@/common/hooks/useHasMounted";
 
 import HeaderSidebar from "./header/HeaderSidebar";
@@ -50,17 +51,20 @@ const Layout = ({ children }: LayoutProps) => {
 						</main>
 					</div>
 				)}
-				<footer className="mt-auto flex justify-center gap-1 py-6 text-sm text-neutral-600 dark:text-neutral-400">
-					<span>ICP备案号：</span>
-					<a
-						href="https://beian.miit.gov.cn/"
-						target="_blank"
-						rel="noreferrer noopener"
-						className="hover:text-neutral-900 dark:hover:text-neutral-200"
-					>
-						赣ICP备2025078961号
-					</a>
-				</footer>
+				{/* 备案信息仅国内自托管部署展示：Vercel 侧不注入该变量，故不渲染 */}
+				{ICP_BEIAN && (
+					<footer className="mt-auto flex justify-center gap-1 py-6 text-sm text-neutral-600 dark:text-neutral-400">
+						<span>ICP备案号：</span>
+						<a
+							href="https://beian.miit.gov.cn/"
+							target="_blank"
+							rel="noreferrer noopener"
+							className="hover:text-neutral-900 dark:hover:text-neutral-200"
+						>
+							{ICP_BEIAN}
+						</a>
+					</footer>
+				)}
 			</div>
 		</>
 	);

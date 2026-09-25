@@ -58,7 +58,8 @@ log "1/7 安装依赖"
 bun install --frozen-lockfile >/dev/null
 
 log "2/7 构建 Next.js standalone 产物"
-bun run app:build
+# 自托管部署需要展示 ICP 备案号；Vercel 不注入该变量，页脚便不渲染
+NEXT_PUBLIC_ICP_BEIAN="${NEXT_PUBLIC_ICP_BEIAN:-赣ICP备2025078961号}" bun run app:build
 
 # ---------- 2. 校验产物 ----------
 log "3/7 校验产物结构与符号链接"
