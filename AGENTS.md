@@ -22,8 +22,9 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
 ```
 
 - 运行手册：[`scripts/deploy/README.md`](scripts/deploy/README.md)
-- 生产机连接：开发机 `~/.ssh/config` 里的别名 `xingyed-prod`
-  （`deploy@101.132.156.78:6622`，仅密钥登录）
+- 生产机连接：开发机 `~/.ssh/config` 里的别名 `xingyed-prod`（仅密钥登录）。
+  真实主机、端口与用户见仓库根目录 `.env.ops`（已 gitignore，不入库），
+  键名与用法见文末「生产机连接信息」
 - 发布记录：生产机 `/opt/apps/xingyed-site/RELEASES.log`
 
 ## 不可违反的约束
@@ -91,3 +92,23 @@ curl -s -o /dev/null -w '%{http_code}\n' https://vercel.xingyed.xyz/api/health
 - rootless 容器的镜像存储按用户隔离：迁移镜像必须显式 `podman save` / `podman load`
 - 删除账户后会有目录壳与 `/tmp` 残留，需按 uid 复查（`find / -xdev -uid <uid>`）
 - 更多见 [`docs/guide/DEPLOY_GUIDE.md`](docs/guide/DEPLOY_GUIDE.md) 的「常见问题」一节
+
+## 生产机连接信息
+
+本文刻意不写真实主机与端口——本仓库是公开仓库。真实值放在**仓库根目录的 `.env.ops`**，
+该文件被 `.gitignore` 的 `.env*` 规则忽略，不会提交：
+
+```dotenv
+PROD_SSH_HOST=<生产机域名或 IP>
+PROD_SSH_PORT=<SSH 端口>
+PROD_SSH_USER=deploy
+PROD_SSH_ALIAS=xingyed-prod
+PROD_APP_DIR=/opt/apps/xingyed-site
+PROD_ENV_FILE=/opt/apps/xingyed-site/.env.production
+PROD_RELEASES_LOG=/opt/apps/xingyed-site/RELEASES.log
+PROD_INFRA_ENV_DIR=/opt/infra/env
+```
+
+- 同一台开发机上的 AI 会话可直接读取 `.env.ops` 取这些值；仓库里只保留**键名**
+- 换新机器时按上述键名重建该文件，或在 `~/.ssh/config` 里配好 `PROD_SSH_ALIAS` 对应的别名
+- 其余命令一律通过别名引用生产机（例如 `ssh xingyed-prod` 或 `ssh "$(PROD_SSH_ALIAS)"`）
