@@ -8,7 +8,6 @@ import { formatDate } from "@/common/libs/utils/time";
 
 interface BlogHeaderProps {
 	title: string;
-	comments_count?: number;
 	reading_time_minutes?: number;
 	page_views_count?: number | null;
 	published_at?: string;

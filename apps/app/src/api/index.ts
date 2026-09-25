@@ -5,14 +5,12 @@ import { IS_READONLY_SITE } from "@/common/constant/site";
 
 import authRoute from "./routes/auth";
 import blogRoute from "./routes/blog";
-import commentsRoute from "./routes/comments";
 import contactRoute from "./routes/contact";
 import contentRoute from "./routes/content";
 import githubRoute from "./routes/github";
 import guestbookRoute from "./routes/guestbook";
 import learnRoute from "./routes/learn";
 import projectsRoute from "./routes/projects";
-import readStatsRoute from "./routes/read-stats";
 import spotifyRoute from "./routes/spotify";
 import viewsRoute from "./routes/views";
 import { warmBlogCache } from "./services/blog";
@@ -56,14 +54,12 @@ if (IS_READONLY_SITE) {
 // 挂载子路由
 app.route("/auth", authRoute);
 app.route("/blog", blogRoute);
-app.route("/comments", commentsRoute);
 app.route("/contact", contactRoute);
 app.route("/content", contentRoute);
 app.route("/github", githubRoute);
 app.route("/guestbook", guestbookRoute);
 app.route("/learn", learnRoute);
 app.route("/projects", projectsRoute);
-app.route("/read-stats", readStatsRoute);
 app.route("/spotify", spotifyRoute);
 app.route("/views", viewsRoute);
 
