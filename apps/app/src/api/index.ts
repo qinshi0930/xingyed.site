@@ -12,7 +12,6 @@ import githubRoute from "./routes/github";
 import guestbookRoute from "./routes/guestbook";
 import learnRoute from "./routes/learn";
 import projectsRoute from "./routes/projects";
-import readStatsRoute from "./routes/read-stats";
 import spotifyRoute from "./routes/spotify";
 import viewsRoute from "./routes/views";
 import { warmBlogCache } from "./services/blog";
@@ -63,7 +62,6 @@ app.route("/github", githubRoute);
 app.route("/guestbook", guestbookRoute);
 app.route("/learn", learnRoute);
 app.route("/projects", projectsRoute);
-app.route("/read-stats", readStatsRoute);
 app.route("/spotify", spotifyRoute);
 app.route("/views", viewsRoute);
 
