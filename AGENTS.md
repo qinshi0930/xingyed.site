@@ -51,11 +51,11 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
 
 ## 生产机结构（自托管）
 
-| 账户     | 职责       | 说明                                                       |
-| :------- | :--------- | :--------------------------------------------------------- |
-| `admin`  | 系统与入口 | sudo、nginx、防火墙                                        |
-| `deploy` | 应用       | `/opt/apps/<app>`、systemd 用户单元、无 sudo               |
-| `infra`  | 基础设施   | PostgreSQL / Redis / MinIO，Quadlet 单元，shell 为 nologin |
+| 账户     | 职责       | 说明                                                 |
+| :------- | :--------- | :--------------------------------------------------- |
+| `admin`  | 系统与入口 | sudo、nginx、防火墙                                  |
+| `deploy` | 应用       | `/opt/apps/<app>`、systemd 用户单元、无 sudo         |
+| `infra`  | 基础设施   | PostgreSQL / Redis / MinIO，Quadlet 单元，仅密钥登录 |
 
 - 应用与 infra 只监听 `127.0.0.1`；对外只有 nginx 的 80/443
 - 应用容器使用 `Network=host`，因此 `127.0.0.1:5432` 就是宿主机的数据库地址

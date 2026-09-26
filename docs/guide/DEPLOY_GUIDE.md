@@ -135,7 +135,9 @@ journalctl --user -u xingyed-site.service -n 100 --no-pager
 podman ps --format '{{.Names}} | {{.Status}} | {{.Ports}}'
 ss -tln | grep -E ':(80|443|3000|5432|6379|9000)\b'
 
-# 基础设施（infra 账户）
+# 基础设施：建议直接以 infra 身份登录（职责清晰、审计真实）
+ssh infra@<生产机> 'systemctl --user status postgres redis minio'
+# 或从管理账户临时切换（必须显式指定 XDG_RUNTIME_DIR）
 sudo -u infra -H XDG_RUNTIME_DIR=/run/user/$(id -u infra) systemctl --user status postgres redis minio
 
 # nginx
