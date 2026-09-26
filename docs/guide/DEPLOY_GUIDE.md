@@ -110,6 +110,27 @@ bash scripts/deploy/preview.sh --down   # 下线预览
 4. 安装 nginx vhost：`scripts/deploy/nginx/preview.xingyed.xyz.conf`，`nginx -t` 后 reload
 5. DNS 增加 `preview` 记录指向本机；证书复用现有通配符 `*.xingyed.xyz`，无需新申请
 
+### 预览入口的安装细节
+
+```bash
+# 基础认证文件：属主必须是 root:www-data、权限 640，否则 nginx worker 读不到会返回 500
+sudo sh -c 'printf "preview:%s\n" "$(openssl passwd -apr1)" > /etc/nginx/.htpasswd-preview'
+sudo chown root:www-data /etc/nginx/.htpasswd-preview && sudo chmod 640 /etc/nginx/.htpasswd-preview
+
+# vhost
+sudo install -m 644 scripts/deploy/nginx/preview.xingyed.xyz.conf /etc/nginx/sites-available/preview.xingyed.xyz
+sudo ln -sfn /etc/nginx/sites-available/preview.xingyed.xyz /etc/nginx/sites-enabled/preview.xingyed.xyz
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+验证（本机带 SNI 探测，避免命中默认 server）：
+
+```bash
+R='--resolve preview.xingyed.xyz:443:127.0.0.1'
+curl -sk -o /dev/null -w '%{http_code}\n' $R https://preview.xingyed.xyz/                       # 期望 401
+curl -sk -o /dev/null -w '%{http_code}\n' -u 'preview:<密码>' $R https://preview.xingyed.xyz/   # 期望 200
+```
+
 ### 注意
 
 预览的 `BETTER_AUTH_URL` 指向 preview 域名，因此 GitHub OAuth 回调需要把
