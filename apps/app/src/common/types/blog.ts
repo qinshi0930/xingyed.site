@@ -1,3 +1,5 @@
+import type { TocItem } from "remark-flexible-toc";
+
 export interface UserProps {
 	name: string;
 	username: string;
@@ -60,6 +62,8 @@ export interface BlogItemProps {
 
 export interface BlogDetailProps {
 	id: number;
+	/** 服务端从 markdown 抽取的目录（extractToc），由页面作为 prop 传入 */
+	toc?: TocItem[];
 	date: string;
 	date_gmt?: string;
 	modified: string;
