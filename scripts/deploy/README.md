@@ -52,7 +52,7 @@ bash scripts/deploy/promote.sh   # 这一步在生产机执行
 - **回滚**：promote.sh 在切换前记录原镜像 ID。若线上巡检失败，自动 `podman tag <prev> :current` 并重启。手工回滚同理——把某个历史标签重新打成 `:current` 再重启单元即可。
 - **发布记录**：生产机 `/opt/apps/xingyed-site/RELEASES.log`。
 - **环境变量**：生产机 `/opt/apps/xingyed-site/.env.production`（600，deploy:deploy），不进入版本库。key 列表见 `.env.example`。
-- **SSH 别名**：`xingyed-prod` 定义在开发机 `~/.ssh/config`，对应生产机 `deploy@101.132.156.78:6622`。
+- **SSH 别名**：`aliyun-prod-deploy` 定义在开发机 `~/.ssh/config`，对应生产机 `deploy@101.132.156.78:6622`。
 
 ## 构建产物的坑（务必保留 release.sh 中的校验）
 

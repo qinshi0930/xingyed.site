@@ -73,7 +73,7 @@ function Toc({ toc }: TocProps) {
 						</button>
 						{expandToc && (
 							<motion.div
-								className="p-6 border rounded-xl bg-neutral-800"
+								className="p-6 border border-neutral-200 rounded-xl bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800"
 								initial={{ x: "100%", opacity: 0 }}
 								animate={{ x: "0%", opacity: 1 }}
 							>
@@ -90,7 +90,7 @@ function Toc({ toc }: TocProps) {
 				</div>
 			)}
 			{!isMobile && (
-				<nav className="p-6 border rounded-xl bg-neutral-800">
+				<nav className="p-6 border border-neutral-200 rounded-xl bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
 					<div className="flex items-center gap-2 pb-4">
 						<MenuIcon size={18} />
 						<p>菜单</p>

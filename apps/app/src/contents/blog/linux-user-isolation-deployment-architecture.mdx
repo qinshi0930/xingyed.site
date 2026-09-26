@@ -27,7 +27,7 @@ total_views_count: 0
 | :-- | :-- | :-- | :-- | :-- |
 | `admin` | 系统管理与流量入口 | 允许 | 有 | 系统更新、nginx 配置与 reload、防火墙、创建账户 |
 | `deploy` | 应用部署与运行 | 允许（仅密钥） | 无 | 上传产物、切换镜像、重启自己的应用、查看日志 |
-| `infra` | 共享基础设施 | **禁止**（shell 为 nologin） | 无 | 由 systemd 拉起 PostgreSQL / Redis / MinIO |
+| `infra` | 共享基础设施 | **允许**（仅密钥登录） | 无 | 由 systemd 拉起 PostgreSQL / Redis / MinIO |
 
 关键在于：**三者之间不是靠约定，而是靠机制隔离**。下面逐条说明这些机制，再给出落地步骤。
 
@@ -63,14 +63,29 @@ loginctl show-user deploy | grep Linger     # Linger=yes
 
 好处是：服务生命周期与 SSH 会话彻底解耦。以前那种「退出终端后服务跟着没了」的问题不会再出现。
 
-### 4. nologin：基础设施账户不接受登录
+### 4. infra 只接受密钥登录
 
-`infra` 的 shell 设为 `/usr/sbin/nologin`。它仍然可以被 `sudo -u` 调用、被 systemd 拉起，但**没有任何交互式登录路径**。攻击面因此少一个维度：
+`infra` 的 shell 保持可登录，但**只允许密钥认证**：服务端关闭密码认证，且只有运维者的公钥在它的 `authorized_keys` 里。
+
+这里刻意**不**把它设成 `nologin`，原因是职责分离——`infra` 与 `deploy` 是两套独立职责，需要管理基础设施时应当**直接以 `infra` 身份登录**：
 
 ```bash
-sudo -u infra -H XDG_RUNTIME_DIR=/run/user/1004 bash     # 可以，供运维临时排查
-sudo -u infra -i bash                                    # 不允许，nologin 会拒绝
+ssh infra@<生产机>
+systemctl --user status postgres redis minio   # 该角色的服务由它自己的用户级 systemd 管理
 ```
+
+如果改用 `nologin`，运维就只剩「从 `deploy` 或 `admin` 用 `sudo -u infra` 切过去」这一条路。这样做有两个代价：
+
+1. **职责变模糊**：操作名义上属于 infra 的资产，实际身份却是 deploy/admin，出问题时很难说清是谁在做什么
+2. **审计失真**：`auth.log`、`last` 里记录的是切换前的账户，看不出真实操作者
+
+三种做法的对比：
+
+| 做法 | 优点 | 代价 |
+| :-- | :-- | :-- |
+| `nologin` + `sudo -u` 切换 | 无交互登录路径 | 职责与审计都变模糊，运维别扭 |
+| **仅密钥登录（本文采用）** | 职责清晰、审计真实、运维顺手 | 多一个可登录账户；但它本就掌握数据，且禁用密码认证后风险可控 |
+| 复用同一个账户 | 最省事 | 边界消失，回到本文开头的问题 |
 
 ### 5. 端口与入口收敛
 
@@ -97,8 +112,8 @@ ss -tln | grep -E ':(80|443|3000|5432|6379|9000)\b'
 sudo adduser --disabled-password --gecos "" deploy
 sudo adduser --disabled-password --gecos "" infra
 
-# 基础设施账户禁止交互登录
-sudo usermod -s /usr/sbin/nologin infra
+# 两个账户都只允许密钥登录：服务端关闭密码认证，
+# 并把运维者公钥分别写入 ~deploy/.ssh/authorized_keys 与 ~infra/.ssh/authorized_keys
 
 id deploy; id infra
 ```
@@ -259,7 +274,8 @@ podman tag localhost/app:PREV_TAG localhost/app:current && systemctl --user rest
 ```bash
 # 账户与登录方式
 id deploy; id infra
-getent passwd infra | cut -d: -f7            # 应为 /usr/sbin/nologin
+getent passwd infra | cut -d: -f7            # 应为可登录 shell（如 /bin/bash）
+sudo sshd -T | grep -i passwordauthentication # 应为 no：只认密钥
 
 # 自启
 loginctl show-user deploy | grep Linger
@@ -288,7 +304,7 @@ sudo -u deploy test -r /opt/infra/env/postgres.env && echo '不该读到' || ech
     sudo find /tmp /var/tmp -uid 1001 2>/dev/null   # /tmp 可能是独立 tmpfs，-xdev 会跳过
     ```
 
-6. **nologin 账户不能用 `sudo -u infra -i`**，会被 shell 拒绝；要用 `sudo -u infra -H XDG_RUNTIME_DIR=/run/user/UID bash`。
+6. **以其他用户身份执行 `systemctl --user` 或 `podman` 时必须显式带 `XDG_RUNTIME_DIR`**（如 `sudo -u infra -H XDG_RUNTIME_DIR=/run/user/$(id -u infra) ...`），否则可能落到错误的运行时目录。这也是本文推荐「直接以对应身份登录」的原因之一。
 7. **退役前先关 linger 并停掉用户管理器**，否则那个已经不存在的单元会持续产生 `not-found` 记录：
 
     ```bash
@@ -332,8 +348,8 @@ sudo -u deploy test -r /opt/infra/env/postgres.env && echo '不该读到' || ech
 
 - `admin` 独占系统与入口，应用出问题不会波及 nginx 与系统配置
 - `deploy` 只能碰自己的应用，读不到基础设施凭据
-- `infra` 不接受登录，只以服务形式存在，凭据分散在各自的 env 文件里
+- `infra` 只接受密钥登录，凭据分散在各自的 env 文件里
 
-更重要的是，这些边界由文件权限、rootless 容器存储、systemd 用户单元、nologin shell 这些**机制**强制执行。落地之后，想越界需要显式提权，而不是靠「记得不要动」。
+更重要的是，这些边界由文件权限、rootless 容器存储、systemd 用户单元、仅密钥登录这些**机制**强制执行。落地之后，想越界需要显式提权，而不是靠「记得不要动」。
 
 对我个人而言，最大的收益是两点：发布变成可回滚的机械动作；以及删除一个不再需要的账户时，能清楚地知道影响范围——这两点在单账户结构下都做不到。
