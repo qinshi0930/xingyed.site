@@ -27,7 +27,10 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
   键名与用法见文末「生产机连接信息」
 - 发布记录：生产机 `/opt/apps/xingyed-site/RELEASES.log`
 - **分支预览**：`bash scripts/deploy/preview.sh` —— 把当前分支部署到生产机 3200 端口
-  （`https://preview.xingyed.xyz`），使用独立数据库与 Redis 1 号库，不影响线上；`--down` 下线
+  （`https://preview.xingyed.xyz`），使用独立数据库与 Redis 1 号库，不影响线上；`--down` 下线。
+  入口认证（nginx basic auth）凭据在 `.env.ops`：`PREVIEW_BASIC_AUTH_USER` / `PREVIEW_BASIC_AUTH_PASSWORD`
+- **本地运维上下文**：`.env.ops` **只保留仓库根目录这一份**（权限 `600`，被 `.gitignore` 的 `.env*` 覆盖），
+  不要在家目录再放副本——两处值会漂移，且家目录副本的作用域不清晰
 
 ## 不可违反的约束
 
