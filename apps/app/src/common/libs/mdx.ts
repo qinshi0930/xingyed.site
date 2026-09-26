@@ -22,7 +22,8 @@ export const loadMdxFiles = (slug: string): MdxFileProps[] => {
 		return [];
 	}
 
-	const files = fs.readdirSync(dirPath);
+	// 只读内容文件；目录里出现杂项（如 .DS_Store、README）时不再拿去解析
+	const files = fs.readdirSync(dirPath).filter((file) => file.endsWith(".mdx"));
 
 	const contents = files.map((file) => {
 		const filePath = path.join(dirPath, file);
@@ -32,8 +33,15 @@ export const loadMdxFiles = (slug: string): MdxFileProps[] => {
 		const mdxCompiler = remark().use(remarkParse).use(remarkGfm).use(remarkMdx);
 		const mdxContent = mdxCompiler.processSync(content).toString();
 
+		// 与 api/services/blog.ts 的 loadBlogFiles 保持同一规则：
+		// frontmatter 的 slug 优先，否则回退到文件名（去掉扩展名）
+		const frontMatterSlug = data.slug;
+
 		return {
-			slug: file.replace(".mdx", ""),
+			slug:
+				typeof frontMatterSlug === "string" && frontMatterSlug.length > 0
+					? frontMatterSlug
+					: file.replace(/\.mdx$/, ""),
 			frontMatter: data,
 			content: mdxContent,
 		};
@@ -44,6 +52,12 @@ export const loadMdxFiles = (slug: string): MdxFileProps[] => {
 
 export const getMdxFileCount = (slug: string) => {
 	const dirPath = path.join(process.cwd(), "src", "contents", slug);
+
+	// 目录不存在时返回 0，而不让 readdirSync 抛 ENOENT（路由层会变成 500）
+	if (!fs.existsSync(dirPath)) {
+		return 0;
+	}
+
 	const files = fs.readdirSync(dirPath);
 	const mdxFiles = files.filter((file) => file.endsWith(".mdx"));
 	return mdxFiles.length;
