@@ -54,6 +54,21 @@ bash scripts/deploy/promote.sh   # 这一步在生产机执行
 - **环境变量**：生产机 `/opt/apps/xingyed-site/.env.production`（600，deploy:deploy），不进入版本库。key 列表见 `.env.example`。
 - **SSH 别名**：`xingyed-prod` 定义在开发机 `~/.ssh/config`，对应生产机 `deploy@101.132.156.78:6622`。
 
+## 分支预览环境
+
+用于 review 分支版本：把当前检出构建成镜像，部署到生产机的 3200 端口，**不影响线上**。
+
+```bash
+bash scripts/deploy/preview.sh              # 当前分支 → 预览
+bash scripts/deploy/preview.sh --skip-build # 复用上次构建产物
+bash scripts/deploy/preview.sh --down       # 下线预览（停服务 + 删 :preview 镜像）
+```
+
+- 访问地址：`https://preview.xingyed.xyz`（nginx 基础认证，配置见 `scripts/deploy/nginx/preview.xingyed.xyz.conf`）
+- 隔离：独立数据库 `xingyed_site_preview` + Redis **1 号库**，与线上数据、缓存互不干扰
+- 镜像：`:preview` 独立标签，切换只重启 `xingyed-site-preview.service`
+- 首次搭建见 [`docs/guide/DEPLOY_GUIDE.md`](../../docs/guide/DEPLOY_GUIDE.md) 的「分支预览环境」
+
 ## 构建产物的坑（务必保留 release.sh 中的校验）
 
 Next.js standalone 的 `node_modules` 全是相对符号链接，例如：

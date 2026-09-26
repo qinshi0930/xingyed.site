@@ -26,6 +26,8 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
   真实主机、端口与用户见仓库根目录 `.env.ops`（已 gitignore，不入库），
   键名与用法见文末「生产机连接信息」
 - 发布记录：生产机 `/opt/apps/xingyed-site/RELEASES.log`
+- **分支预览**：`bash scripts/deploy/preview.sh` —— 把当前分支部署到生产机 3200 端口
+  （`https://preview.xingyed.xyz`），使用独立数据库与 Redis 1 号库，不影响线上；`--down` 下线
 
 ## 不可违反的约束
 

@@ -79,6 +79,43 @@ curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/guestbook
 ssh xingyed-prod 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 ```
 
+## 分支预览环境
+
+线上只跑主干。需要在真实服务器上 review 分支版本时使用预览环境：
+
+```bash
+bash scripts/deploy/preview.sh          # 构建当前分支并发布预览
+bash scripts/deploy/preview.sh --down   # 下线预览
+```
+
+| 项目     | 值                                                                  |
+| :------- | :------------------------------------------------------------------ |
+| 访问地址 | `https://preview.xingyed.xyz`（nginx 基础认证）                     |
+| 服务单元 | `xingyed-site-preview.service`（Quadlet，监听 `127.0.0.1:3200`）    |
+| 镜像标签 | `localhost/xingyed-site:preview`（与 `:current` 完全独立）          |
+| 数据库   | `xingyed_site_preview`（独立库，schema 与线上一致）                 |
+| 缓存     | 同一 Redis 实例的 **1 号库**（线上用 0 号，避免共用 `blog:all` 键） |
+| 环境文件 | `/opt/apps/xingyed-site/.env.preview`（600 deploy:deploy）          |
+
+隔离设计的三个理由：分支可能带未完成的迁移，独立库避免污染线上数据；
+共用 Redis 但分库，避免预览写坏线上博客缓存；镜像与 systemd 单元都独立，预览重启不影响线上。
+
+### 首次搭建步骤
+
+1. 在共享 PostgreSQL 中建库建角色并跑迁移（`xingyed_site_preview`，schema 与线上一致）
+2. 写 `/opt/apps/xingyed-site/.env.preview`：以线上 env 为基础，覆盖 `DATABASE_URL`、
+   `REDIS_URL`（切到 1 号库）、`BETTER_AUTH_URL`、`BETTER_AUTH_SECRET`
+3. 安装 Quadlet 单元 `~/.config/containers/systemd/xingyed-site-preview.container`
+   （`Image=...:preview`、`PORT=3200`），然后 `systemctl --user daemon-reload && systemctl --user start xingyed-site-preview.service`
+4. 安装 nginx vhost：`scripts/deploy/nginx/preview.xingyed.xyz.conf`，`nginx -t` 后 reload
+5. DNS 增加 `preview` 记录指向本机；证书复用现有通配符 `*.xingyed.xyz`，无需新申请
+
+### 注意
+
+预览的 `BETTER_AUTH_URL` 指向 preview 域名，因此 GitHub OAuth 回调需要把
+`https://preview.xingyed.xyz/api/auth/callback/github` 也加入 GitHub OAuth 应用；
+否则预览上的登录会失败（纯 UI 评审不受影响）。预览库是空的，留言板初始为空列表属正常。
+
 ## 五、环境变量与形态开关
 
 生产配置**不进版本库**，只存在于：
