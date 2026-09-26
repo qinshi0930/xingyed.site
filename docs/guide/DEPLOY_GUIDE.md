@@ -81,7 +81,8 @@ ssh aliyun-prod-deploy 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 
 ## 分支预览环境
 
-线上只跑主干。需要在真实服务器上 review 分支版本时使用预览环境：
+线上只跑主干。**合并到 main 之前，请先把分支上到预览自检**——预览与线上同构（同一份镜像构建产物、同一套 nginx），
+是合并前最接近真实的验证：
 
 ```bash
 bash scripts/deploy/preview.sh          # 构建当前分支并发布预览
@@ -153,9 +154,9 @@ curl -sk -o /dev/null -w '%{http_code}\n' -u 'preview:<密码>' $R https://previ
 
 ### 注意
 
-预览的 `BETTER_AUTH_URL` 指向 preview 域名，因此 GitHub OAuth 回调需要把
-`https://preview.xingyed.xyz/api/auth/callback/github` 也加入 GitHub OAuth 应用；
-否则预览上的登录会失败（纯 UI 评审不受影响）。预览库是空的，留言板初始为空列表属正常。
+预览**不接** GitHub 登录，只用于 UI 与接口评审。若将来确实需要，需把
+`https://preview.xingyed.xyz/api/auth/callback/github` 加入 GitHub OAuth 应用（因为 `BETTER_AUTH_URL` 指向 preview 域名）。
+预览库是空的，留言板初始为空列表属正常。
 
 ## 五、环境变量与形态开关
 

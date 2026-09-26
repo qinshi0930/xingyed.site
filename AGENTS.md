@@ -26,9 +26,13 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
   真实主机、端口与用户见仓库根目录 `.env.ops`（已 gitignore，不入库），
   键名与用法见文末「生产机连接信息」
 - 发布记录：生产机 `/opt/apps/xingyed-site/RELEASES.log`
-- **分支预览**：`bash scripts/deploy/preview.sh` —— 把当前分支部署到生产机 3200 端口
-  （`https://preview.xingyed.xyz`），使用独立数据库与 Redis 1 号库，不影响线上；`--down` 下线。
-  入口认证（nginx basic auth）凭据在 `.env.ops`：`PREVIEW_BASIC_AUTH_USER` / `PREVIEW_BASIC_AUTH_PASSWORD`
+- **分支预览 = 合并前的验证关卡**：`bash scripts/deploy/preview.sh` 把**当前分支**部署到生产机 3200 端口
+  （`https://preview.xingyed.xyz`），使用独立数据库与 Redis 1 号库，不影响线上；`--down` 下线
+  - 流程：**改分支 → 上预览自检 → 通过后再合并 → 合并后 `deploy.sh` 上线上**
+  - 预览与线上同构（同一份镜像构建产物、同一套 nginx），是合并前最接近真实的验证；
+    只做本地验证很可能漏掉只在线上才暴露的问题
+  - 入口认证（nginx basic auth）凭据在 `.env.ops`：`PREVIEW_BASIC_AUTH_USER` / `PREVIEW_BASIC_AUTH_PASSWORD`
+  - 预览**不接** GitHub 登录，只用于 UI / 接口评审；预览库为空、留言板为空列表属正常
 - **本地运维上下文**：`.env.ops` **只保留仓库根目录这一份**（权限 `600`，被 `.gitignore` 的 `.env*` 覆盖），
   不要在家目录再放副本——两处值会漂移，且家目录副本的作用域不清晰
 
