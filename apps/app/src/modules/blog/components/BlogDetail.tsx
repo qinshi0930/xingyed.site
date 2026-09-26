@@ -1,9 +1,6 @@
 "use client";
-import type { TocItem } from "remark-flexible-toc";
 
 import clsx from "clsx";
-import { isEqual } from "lodash";
-import { useCallback, useState } from "react";
 import useSWR from "swr";
 
 import type { BlogDetailProps } from "@/common/types/blog";
@@ -17,7 +14,7 @@ import { fetcher } from "@/services/fetcher";
 
 import BlogHeader from "./BlogHeader";
 
-const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) => {
+const BlogDetail = ({ id, title, date, slug, content, tags, toc }: BlogDetailProps) => {
 	const { data: viewsData } = useSWR(`/api/views?slug=${slug}&id=${id}`, fetcher);
 	const isMobile = useIsMobile();
 
@@ -25,14 +22,6 @@ const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) =
 	const tagList = tags || [];
 
 	const readingTimeMinutes = calculateReadingTime(content?.markdown) ?? 0;
-
-	const [tocData, setTocData] = useState<TocItem[] | undefined>(undefined);
-
-	const handleTocChanged = useCallback((newToc: TocItem[]) => {
-		if (!isEqual(tocData, newToc)) {
-			setTocData(newToc);
-		}
-	}, []);
 
 	return (
 		<section className={clsx(!isMobile && "flex gap-6")}>
@@ -44,11 +33,7 @@ const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) =
 					page_views_count={viewsCount}
 				/>
 				<div className="space-y-6 leading-[1.8] dark:text-neutral-300 ">
-					{content?.rendered && (
-						<MDXComponent onTocChanged={handleTocChanged}>
-							{content?.markdown}
-						</MDXComponent>
-					)}
+					{content?.rendered && <MDXComponent>{content?.markdown}</MDXComponent>}
 				</div>
 				{tagList?.length >= 1 && (
 					<div className="my-10 space-y-2">
@@ -68,10 +53,10 @@ const BlogDetail = ({ id, title, date, slug, content, tags }: BlogDetailProps) =
 				)}
 				<Breakline className="!my-10" />
 			</div>
-			{tocData && (
+			{toc && toc.length > 0 && (
 				<div className={clsx(!isMobile && "w-1/4")}>
 					<div className="sticky top-10">
-						<Toc toc={tocData} />
+						<Toc toc={toc} />
 					</div>
 				</div>
 			)}

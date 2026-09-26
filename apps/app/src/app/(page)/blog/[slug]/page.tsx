@@ -8,6 +8,7 @@ import BackButton from "@/common/components/elements/BackButton";
 import Container from "@/common/components/elements/Container";
 import TrackView from "@/common/components/elements/TrackView";
 import { formatExcerpt } from "@/common/helpers";
+import { extractToc } from "@/common/libs/mdx";
 import BlogDetail from "@/modules/blog/components/BlogDetail";
 
 interface BlogDetailPageProps {
@@ -83,11 +84,12 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
 	}
 
 	const blogData = apiResponse.posts[0];
+	const toc = extractToc(blogData.content?.markdown ?? "");
 
 	return (
 		<Container data-aos="fade-up">
 			<BackButton url="/blog" />
-			<BlogDetail {...blogData} />
+			<BlogDetail {...blogData} toc={toc} />
 			{/* 客户端组件：页面加载后发送浏览量统计请求 */}
 			<TrackView slug={blogData.slug} />
 		</Container>
