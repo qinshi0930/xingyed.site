@@ -22,7 +22,7 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
 ```
 
 - 运行手册：[`scripts/deploy/README.md`](scripts/deploy/README.md)
-- 生产机连接：开发机 `~/.ssh/config` 里的别名 `xingyed-prod`（仅密钥登录）。
+- 生产机连接：开发机 `~/.ssh/config` 里的两个别名——`aliyun-prod-deploy`（应用，deploy 账户）与 `aliyun-prod-infra`（基础设施，infra 账户），均为仅密钥登录。
   真实主机、端口与用户见仓库根目录 `.env.ops`（已 gitignore，不入库），
   键名与用法见文末「生产机连接信息」
 - 发布记录：生产机 `/opt/apps/xingyed-site/RELEASES.log`
@@ -66,7 +66,7 @@ bash scripts/deploy/deploy.sh --skip-build  # 复用上次构建产物
 `deploy.sh` 在切换前记录原镜像，巡检失败会自动回滚。手工回滚：
 
 ```bash
-ssh xingyed-prod
+ssh aliyun-prod-deploy
 podman images | grep xingyed-site             # 找到上一版标签
 podman tag localhost/xingyed-site:<旧标签> localhost/xingyed-site:current
 systemctl --user restart xingyed-site.service
@@ -98,17 +98,30 @@ curl -s -o /dev/null -w '%{http_code}\n' https://vercel.xingyed.xyz/api/health
 本文刻意不写真实主机与端口——本仓库是公开仓库。真实值放在**仓库根目录的 `.env.ops`**，
 该文件被 `.gitignore` 的 `.env*` 规则忽略，不会提交：
 
+命名约定：**[服务商]-[环境]-[角色]**（例如 `aliyun-prod-deploy`），便于以后接入其它云服务商时扩展。
+
 ```dotenv
-PROD_SSH_HOST=<生产机域名或 IP>
-PROD_SSH_PORT=<SSH 端口>
-PROD_SSH_USER=deploy
-PROD_SSH_ALIAS=xingyed-prod
-PROD_APP_DIR=/opt/apps/xingyed-site
-PROD_ENV_FILE=/opt/apps/xingyed-site/.env.production
-PROD_RELEASES_LOG=/opt/apps/xingyed-site/RELEASES.log
-PROD_INFRA_ENV_DIR=/opt/infra/env
+ALIYUN_PROD_SSH_HOST=<生产机域名或 IP>
+ALIYUN_PROD_SSH_PORT=<SSH 端口>
+
+# 应用部署（deploy 账户）
+ALIYUN_PROD_DEPLOY_USER=deploy
+ALIYUN_PROD_DEPLOY_ALIAS=aliyun-prod-deploy
+ALIYUN_PROD_DEPLOY_KEY=~/.ssh/aliyun-prod-deploy
+
+# 基础设施（infra 账户，独立密钥）
+ALIYUN_PROD_INFRA_USER=infra
+ALIYUN_PROD_INFRA_ALIAS=aliyun-prod-infra
+ALIYUN_PROD_INFRA_KEY=~/.ssh/aliyun-prod-infra
+
+# 生产机路径约定
+ALIYUN_PROD_APP_DIR=/opt/apps/xingyed-site
+ALIYUN_PROD_ENV_FILE=/opt/apps/xingyed-site/.env.production
+ALIYUN_PROD_RELEASES_LOG=/opt/apps/xingyed-site/RELEASES.log
+ALIYUN_PROD_INFRA_ENV_DIR=/opt/infra/env
 ```
 
 - 同一台开发机上的 AI 会话可直接读取 `.env.ops` 取这些值；仓库里只保留**键名**
-- 换新机器时按上述键名重建该文件，或在 `~/.ssh/config` 里配好 `PROD_SSH_ALIAS` 对应的别名
-- 其余命令一律通过别名引用生产机（例如 `ssh xingyed-prod` 或 `ssh "$(PROD_SSH_ALIAS)"`）
+- 换新机器时按上述键名重建该文件，并在 `~/.ssh/config` 里配好两个别名
+- 命令一律通过别名引用生产机：`ssh aliyun-prod-deploy`（应用）/ `ssh aliyun-prod-infra`（基础设施）
+- 两个角色使用**独立密钥**：任一密钥泄露不会连带另一个账户

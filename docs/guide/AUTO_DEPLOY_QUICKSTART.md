@@ -18,17 +18,17 @@ bash scripts/deploy/deploy.sh
 curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/health         # 期望 200
 curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/guestbook      # 期望 200
 curl -s -o /dev/null -w '%{http_code}\n' https://vercel.xingyed.xyz/api/health  # 期望 200
-ssh xingyed-prod 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
+ssh aliyun-prod-deploy 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 ```
 
 ## 出问题怎么办
 
 ```bash
 # 1) 看线上日志
-ssh xingyed-prod 'journalctl --user -u xingyed-site.service -n 80 --no-pager'
+ssh aliyun-prod-deploy 'journalctl --user -u xingyed-site.service -n 80 --no-pager'
 
 # 2) 回滚到上一版
-ssh xingyed-prod
+ssh aliyun-prod-deploy
 podman images --format '{{.Repository}}:{{.Tag}}' | grep xingyed-site
 podman tag localhost/xingyed-site:<上一版标签> localhost/xingyed-site:current
 systemctl --user restart xingyed-site.service

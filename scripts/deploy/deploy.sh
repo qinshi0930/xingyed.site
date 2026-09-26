@@ -13,7 +13,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-REMOTE_HOST="${REMOTE_HOST:-xingyed-prod}"
+REMOTE_HOST="${REMOTE_HOST:-aliyun-prod-deploy}"
 REMOTE_DIR="/opt/apps/xingyed-site/incoming"
 OUT_DIR="${OUT_DIR:-release-out}"
 

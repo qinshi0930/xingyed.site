@@ -48,7 +48,7 @@ scripts/deploy/deploy.sh  │ scp
 ### 开发机
 
 - Bun 1.3+、Podman 4.0+
-- 能通过 SSH 别名 `xingyed-prod` 连到生产机（密钥登录，定义在 `~/.ssh/config`）
+- 能通过 SSH 别名 `aliyun-prod-deploy` 连到生产机（密钥登录，定义在 `~/.ssh/config`）
 - 仓库位于 `~/workspace/xingyed.site`（脚本按仓库根目录定位，其他路径也可）
 
 ### 生产机
@@ -76,7 +76,7 @@ bash scripts/deploy/promote.sh <镜像包路径> <tag>
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/health
 curl -s -o /dev/null -w '%{http_code}\n' https://xingyed.xyz/api/guestbook
-ssh xingyed-prod 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
+ssh aliyun-prod-deploy 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 ```
 
 ## 五、环境变量与形态开关
@@ -114,7 +114,7 @@ ssh xingyed-prod 'tail -3 /opt/apps/xingyed-site/RELEASES.log'
 `promote.sh` 在切换前会记录当前线上镜像 ID，任何巡检失败都会自动打回。手工回滚：
 
 ```bash
-ssh xingyed-prod
+ssh aliyun-prod-deploy
 podman images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep xingyed-site
 podman tag localhost/xingyed-site:<旧标签> localhost/xingyed-site:current
 systemctl --user restart xingyed-site.service
@@ -136,7 +136,7 @@ podman ps --format '{{.Names}} | {{.Status}} | {{.Ports}}'
 ss -tln | grep -E ':(80|443|3000|5432|6379|9000)\b'
 
 # 基础设施：建议直接以 infra 身份登录（职责清晰、审计真实）
-ssh infra@<生产机> 'systemctl --user status postgres redis minio'
+ssh aliyun-prod-infra 'systemctl --user status postgres redis minio'
 # 或从管理账户临时切换（必须显式指定 XDG_RUNTIME_DIR）
 sudo -u infra -H XDG_RUNTIME_DIR=/run/user/$(id -u infra) systemctl --user status postgres redis minio
 
@@ -152,7 +152,7 @@ sudo nginx -t && sudo systemctl reload nginx
 4. 写入 `/opt/apps/xingyed-site/.env.production`（600 deploy:deploy）
 5. 安装 Quadlet/用户单元并启动，确认 `http://127.0.0.1:3000/api/health` 返回 200
 6. 由 `admin` 配置 nginx vhost，把域名指向 `127.0.0.1:3000`
-7. 在开发机配置 SSH 别名 `xingyed-prod`，然后执行 `bash scripts/deploy/deploy.sh` 完成首次发布
+7. 在开发机 `~/.ssh/config` 配置别名 `aliyun-prod-deploy`（应用）与 `aliyun-prod-infra`（基础设施），然后执行 `bash scripts/deploy/deploy.sh` 完成首次发布
 
 ## 九、常见问题
 
